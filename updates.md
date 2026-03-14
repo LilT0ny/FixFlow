@@ -1,26 +1,27 @@
-# 🔄 Actualización de Flujo de Trabajo y Multimedia - Mecánica Celular
+# 🔄 Actualización: Venta Directa y Adaptabilidad de Impresión
 
-## 1. Gestión de Evidencia Fotográfica (Módulo Equipos)
-* **Sistema de Registro Visual:** Implementar tres estados de captura de imagen para cada orden:
-    1. **FOTO INICIAL (Antes):** Se captura al momento de crear el registro (Nuevo Dispositivo).
-    2. **FOTO PROCESO (Durante):** Editable desde la ventana de "Equipos Registrados" mientras el equipo está en reparación.
-    3. **FOTO FINAL (Entrega):** Obligatoria o sugerida al momento de cambiar el estado a "Entregado".
-* **Visualización:** En la tabla de "Equipos Registrados", permitir previsualizar estas fotos en un modal de galería.
+## 1. Generación de Nota de Venta Manual (Venta Directa)
+* **Nueva Funcionalidad:** Permitir crear una Nota de Venta sin necesidad de que exista un dispositivo previo en estado "Entregado".
+* **Flujo:** - Añadir un botón `[ + Nueva Nota de Venta ]` en el módulo de caja o facturación.
+    - Permitir agregar ítems manualmente (Descripción, Cantidad, Precio Unitario).
+    - Opción de seleccionar un cliente existente o usar "Consumidor Final".
+* **Consistencia:** Las ventas manuales deben impactar el cuadre de caja de la misma forma que las liquidaciones de reparaciones.
 
-## 2. Lógica de Documentos y Estados
-* **Estado: NUEVO / EN REPARACIÓN:**
-    - El único documento generado es el **Comprobante de Retiro (Ticket Térmico)** definido previamente. 
-    - No debe permitir generar Nota de Venta en estos estados.
-* **Estado: ENTREGADO (Trigger de Venta):**
-    - Al cambiar el estado a "Entregado", el sistema debe:
-        1. Solicitar el cobro del saldo pendiente (Costo Total - Abono).
-        2. Habilitar automáticamente el botón **"Generar Nota de Venta"**.
-    - **Nota:** La Nota de Venta debe jalar todos los datos del registro (Cliente, Trabajo Realizado, Costos) para evitar doble digitación.
+## 2. Optimización de Formatos de Impresión (Responsividad de Papel)
+Implementar hojas de estilo (CSS `@media print`) específicas para cada ancho:
 
-## 3. Integración de Layouts
-* **Ticket de Ingreso:** Documento de control para el cliente (basado en Foto 2).
-* **Nota de Venta:** Documento final de cierre (basado en Foto 1) generado ÚNICAMENTE tras la entrega exitosa y el pago.
+### A. Formato 58mm (Ticket Estrecho)
+* **Ajustes:** Reducir márgenes al mínimo (0mm). Tamaño de fuente: 8pt - 9pt.
+* **Layout:** Logo centrado pequeño, texto de términos y condiciones en bloque denso sin sangrías para ahorrar papel. Columnas de la tabla: Cant | Descripción | Total (combinar P.Unit y Desc si es necesario).
 
-## 4. Validaciones Multimedia
-* Las fotos deben optimizarse (redimensionar) antes de subir al servidor/storage para no saturar el sistema.
-* Formatos aceptados: .jpg, .jpeg, .png.
+### B. Formato 80mm (Ticket Estándar)
+* **Ajustes:** Tamaño de fuente: 10pt.
+* **Layout:** Columnas completas: Cant | Detalle | P.Unit | Total. Espaciado claro entre secciones y código de barras/QR legible al final.
+
+### C. Formato A4 (Documento Legal)
+* **Ajustes:** Layout profesional con bordes y sombreados ligeros.
+* **Layout:** Logo en la esquina superior izquierda. Espacio amplio para descripción técnica. 
+* **Firmas:** Incluir obligatoriamente campos de firma para "Entregué Conforme" y "Recibí Conforme" en la base de la página.
+
+## 3. Selector de Impresión Pre-Render
+* Antes de enviar a la impresora, el sistema debe mostrar un **Preview** (Vista previa) que cambie dinámicamente según el formato (58mm, 80mm, A4) seleccionado por el usuario en el modal de confirmación. 

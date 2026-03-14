@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppContext } from '../store/AppContext';
-import { Search, Printer, MessageCircle, X, Smartphone, Clock, FileText, Wrench, CheckCircle, Trash2, DollarSign, Camera } from 'lucide-react';
-import type { OrderStatus, ServiceOrder } from '../types';
+import { Search, Printer, MessageCircle, X, Smartphone, Clock, FileText, Wrench, CheckCircle, Trash2, DollarSign, Camera, Edit2 } from 'lucide-react';
+import type { OrderStatus, ServiceOrder, CustomerData } from '../types';
 import { printReceipt } from '../utils/printHelpers';
 
 type FilterTab = 'all' | 'pendientes' | 'reparados' | 'entregados';
@@ -22,12 +22,19 @@ export const DeviceList = () => {
   // Delivered Modal specific fields
   const [finalAmount, setFinalAmount] = useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia'>('efectivo');
+  const [billingCustomer, setBillingCustomer] = useState<CustomerData | null>(null);
+
+  // Nota de Venta Confirmation Modal State
+  const [notaVentaConfirmModal, setNotaVentaConfirmModal] = useState<{ isOpen: boolean, order: ServiceOrder } | null>(null);
 
   // Delete Confirmation Modal State
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean, orderId: string } | null>(null);
 
   // Photos View Modal
   const [photosModal, setPhotosModal] = useState<{ isOpen: boolean, orderToEdit: ServiceOrder | null } | null>(null);
+
+  // Edit Order Modal State
+  const [editModal, setEditModal] = useState<{ isOpen: boolean, order: ServiceOrder } | null>(null);
 
   const filteredOrders = orders.filter(o => {
     // Filter by Tab
@@ -89,9 +96,9 @@ export const DeviceList = () => {
     setIsPrintModalOpen(true);
   };
 
-  const handlePrint = () => {
+  const handlePrint = (docType: 'ticket' | 'nota-venta' = 'ticket') => {
     if (orderToPrint) {
-      printReceipt(orderToPrint, selectedFormat);
+      printReceipt(orderToPrint, selectedFormat, docType);
     }
     setIsPrintModalOpen(false);
   };
@@ -101,6 +108,25 @@ export const DeviceList = () => {
     const { orderId, newStatus } = statusConfirmModal;
     
     updateOrderStatus(orderId, newStatus);
+    if (billingCustomer) {
+      updateOrder(orderId, { billingCustomer });
+      const orderToUpdate = orders.find(o => o.id === orderId);
+      if (orderToUpdate && billingCustomer.documentId !== '9999999999999') {
+        const hasNewAddress = billingCustomer.address && billingCustomer.address !== orderToUpdate.customer.address;
+        const hasNewEmail = billingCustomer.email && billingCustomer.email !== orderToUpdate.customer.email;
+        if (hasNewAddress || hasNewEmail) {
+          if (window.confirm("¿Deseas guardar permanentemente esta información adicional en la ficha del cliente original?")) {
+            updateOrder(orderId, { 
+              customer: { 
+                ...orderToUpdate.customer, 
+                address: billingCustomer.address || orderToUpdate.customer.address, 
+                email: billingCustomer.email || orderToUpdate.customer.email 
+              } 
+            });
+          }
+        }
+      }
+    }
 
     if (newStatus === 'entregado' && typeof finalAmount === 'number') {
       const pagado = payments.filter(p => p.orderId === orderId && p.transactionType === 'ingreso').reduce((sum, p) => sum + p.amount, 0);
@@ -131,6 +157,7 @@ export const DeviceList = () => {
     
     setStatusConfirmModal(null);
     setFinalAmount('');
+    setBillingCustomer(null);
   };
 
   const confirmDelete = () => {
@@ -143,10 +170,11 @@ export const DeviceList = () => {
     return payments.filter(p => p.orderId === orderId && p.transactionType === 'ingreso').reduce((sum, p) => sum + p.amount, 0);
   };
 
-  const handleFileUpload = (order: ServiceOrder, stage: 'durante' | 'despues', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (order: ServiceOrder, stage: 'antes' | 'durante' | 'despues', e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     const currentPhotos = order.repair.evidencePhotos || [];
-    if (currentPhotos.length >= 3) return;
+    const stagePhotosCount = currentPhotos.filter(p => p.stage === stage).length;
+    if (stagePhotosCount >= 3) return;
     
     const file = e.target.files?.[0];
     if (file) {
@@ -262,6 +290,13 @@ export const DeviceList = () => {
                     {getStatusLabel(order.status)}
                   </span>
                   <button 
+                    onClick={() => setEditModal({ isOpen: true, order })}
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                    title="Editar Registro"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button 
                     onClick={() => setDeleteConfirmModal({ isOpen: true, orderId: order.id })}
                     className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                     title="Eliminar Registro"
@@ -299,7 +334,7 @@ export const DeviceList = () => {
                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"
                      >
                        <Camera className="w-4 h-4" />
-                       Gestionar Evidencias ({order.repair.evidencePhotos.length}/3)
+                       Gestionar Evidencias ({order.repair.evidencePhotos.length}/9)
                      </button>
                    </div>
                  ) : (
@@ -309,7 +344,7 @@ export const DeviceList = () => {
                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-semibold transition-colors border border-gray-200"
                      >
                        <Camera className="w-4 h-4" />
-                       Añadir Evidencias (0/3)
+                       Añadir Evidencias (0/9)
                      </button>
                    </div>
                  )}
@@ -321,7 +356,15 @@ export const DeviceList = () => {
                 <label className="sr-only">Cambiar Estado</label>
                 <select
                   value={order.status}
-                  onChange={(e) => setStatusConfirmModal({ isOpen: true, orderId: order.id, newStatus: e.target.value as OrderStatus })}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as OrderStatus;
+                    if (newStatus === 'entregado') {
+                      setBillingCustomer({ ...order.customer, address: '' });
+                    } else {
+                      setBillingCustomer(null);
+                    }
+                    setStatusConfirmModal({ isOpen: true, orderId: order.id, newStatus });
+                  }}
                   className="w-full text-sm font-semibold rounded-xl px-3 py-2 cursor-pointer outline-none border border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white"
                 >
                   {statusList.map(opt => (
@@ -342,9 +385,7 @@ export const DeviceList = () => {
                 {order.status === 'entregado' && (
                   <button 
                     onClick={() => {
-                      setOrderToPrint(order);
-                      setSelectedFormat('A4'); // Force Nota de Venta format
-                      handlePrint();
+                      setNotaVentaConfirmModal({ isOpen: true, order });
                     }}
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
                     title="Generar Nota de Venta"
@@ -380,62 +421,73 @@ export const DeviceList = () => {
       {/* Modal Configuración Impresión */}
       {isPrintModalOpen && orderToPrint && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in slide-in-from-bottom-8 duration-300 relative">
-            <button 
-              onClick={() => setIsPrintModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-8 duration-300 relative">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
+               <h3 className="text-xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+                <Printer className="w-6 h-6 text-blue-600"/> 
+                Imprimir Recibo
+              </h3>
+              <button 
+                onClick={() => setIsPrintModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             
-            <h3 className="text-xl font-bold tracking-tight text-gray-900 mb-1 flex items-center gap-2">
-              <Printer className="w-6 h-6 text-blue-600"/> 
-              Imprimir Recibo
-            </h3>
-            <p className="text-sm text-gray-500 mb-6 font-medium">Orden #{orderToPrint.orderNumber}</p>
-            
-            <div className="space-y-4">
-              <label className="block text-sm font-semibold text-gray-700">Formato de Impresión</label>
+            <div className="p-6 flex-1 overflow-y-auto">
+              <p className="text-sm text-gray-500 mb-6 font-medium">Orden #{orderToPrint.orderNumber}</p>
               
-              <div className="grid gap-3">
-                {[
-                  { id: '58mm', label: 'Ticket Térmico (58mm)', desc: 'Impresora básica' },
-                  { id: '80mm', label: 'Ticket Térmico (80mm)', desc: 'Impresora ancha' }
-                ].map(format => (
-                  <label 
-                    key={format.id} 
-                    className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      selectedFormat === format.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex h-5 items-center">
-                      <input 
-                        type="radio" 
-                        name="print-format" 
-                        value={format.id}
-                        checked={selectedFormat === format.id}
-                        onChange={(e) => setSelectedFormat(e.target.value)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-600" 
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className={`block text-sm font-bold ${selectedFormat === format.id ? 'text-blue-900' : 'text-gray-900'}`}>
-                        {format.label}
-                      </span>
-                      <span className="block text-xs text-gray-500 mt-0.5">{format.desc}</span>
-                    </div>
-                  </label>
-                ))}
+              <div className="space-y-4">
+                <label className="block text-sm font-semibold text-gray-700">Formato de Impresión</label>
+                
+                <div className="grid gap-3">
+                  {[
+                    { id: '58mm', label: 'Ticket Térmico (58mm)', desc: 'Impresora básica' },
+                    { id: '80mm', label: 'Ticket Térmico (80mm)', desc: 'Impresora ancha' },
+                    { id: 'A4', label: 'Hoja Normal (A4)', desc: 'Impresora estándar' }
+                  ].map(format => (
+                    <label 
+                      key={format.id} 
+                      className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        selectedFormat === format.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex h-5 items-center">
+                        <input 
+                          type="radio" 
+                          name="print-format" 
+                          value={format.id}
+                          checked={selectedFormat === format.id}
+                          onChange={(e) => setSelectedFormat(e.target.value)}
+                          className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-600" 
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className={`block text-sm font-bold ${selectedFormat === format.id ? 'text-blue-900' : 'text-gray-900'}`}>
+                          {format.label}
+                        </span>
+                        <span className="block text-xs text-gray-500 mt-0.5">{format.desc}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
+            </div>
 
-              <div className="pt-4 mt-2 border-t border-gray-100">
-                <button 
-                  onClick={handlePrint}
-                  className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors active:scale-95 shadow-sm"
-                >
-                  <Printer className="w-4 h-4" /> Enviar a Imprimir
-                </button>
-              </div>
+            <div className="p-6 border-t border-gray-100 space-y-2 shrink-0">
+              <button 
+                onClick={() => handlePrint('ticket')}
+                className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors active:scale-95 shadow-sm"
+              >
+                <Printer className="w-4 h-4" /> Imprimir Ticket
+              </button>
+              <button 
+                onClick={() => handlePrint('nota-venta')}
+                className="w-full flex justify-center items-center gap-2 bg-gray-900 text-white py-3 px-4 rounded-xl font-bold hover:bg-black transition-colors active:scale-95 shadow-sm"
+              >
+                <FileText className="w-4 h-4" /> Generar Nota de Venta
+              </button>
             </div>
           </div>
         </div>
@@ -444,97 +496,156 @@ export const DeviceList = () => {
       {/* Modal Confirmación de Estado */}
       {statusConfirmModal?.isOpen && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-center mb-4">
-               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                 <MessageCircle className="w-8 h-8 text-blue-600" />
-               </div>
-            </div>
-            <h3 className="text-xl font-bold tracking-tight text-center text-gray-900 mb-2">
-              ¿Actualizar Estado?
-            </h3>
-            <p className="text-sm text-center text-gray-500 mb-6">
-              El dispositivo pasará a estar: <strong className="text-gray-900">{getStatusLabel(statusConfirmModal.newStatus)}</strong>.<br/><br/>
-              {statusConfirmModal.newStatus !== 'entregado' && (
-                "Al confirmar, se abrirá WhatsApp automáticamente para notificar al cliente del cambio."
-              )}
-            </p>
-
-            {statusConfirmModal.newStatus === 'entregado' && (
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-6 space-y-4">
-                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Monto Total de Reparación ($)</label>
-                    <div className="relative">
-                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                       <input 
-                         type="number" 
-                         min="0"
-                         step="0.01"
-                         className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 font-semibold"
-                         value={finalAmount}
-                         onChange={(e) => setFinalAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                         placeholder="Ej. 45.00"
-                       />
-                    </div>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            <div className="p-6 flex-1 overflow-y-auto">
+              <div className="flex justify-center mb-4">
+                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                   <MessageCircle className="w-8 h-8 text-blue-600" />
                  </div>
-
-                 {typeof finalAmount === 'number' && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Abono previo:</span>
-                      <span className="font-semibold text-gray-900">${getPagado(statusConfirmModal.orderId).toFixed(2)}</span>
-                    </div>
-                 )}
-
-                 {typeof finalAmount === 'number' && finalAmount - getPagado(statusConfirmModal.orderId) > 0 && (
-                   <>
-                    <div className="flex justify-between items-center text-sm border-t border-gray-200 pt-3">
-                      <span className="font-bold text-gray-900">Saldo Pendiente a Cobrar:</span>
-                      <span className="font-bold text-blue-600 text-lg">${(finalAmount - getPagado(statusConfirmModal.orderId)).toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2 mt-2">Método de pago para el saldo</label>
-                      <div className="grid grid-cols-2 gap-2">
-                         <button 
-                           onClick={() => setPaymentMethod('efectivo')}
-                           className={`py-2 px-3 text-sm font-semibold rounded-xl border transition-colors ${paymentMethod === 'efectivo' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                         >
-                           Efectivo
-                         </button>
-                         <button 
-                           onClick={() => setPaymentMethod('transferencia')}
-                           className={`py-2 px-3 text-sm font-semibold rounded-xl border transition-colors ${paymentMethod === 'transferencia' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                         >
-                           Transferencia
-                         </button>
-                      </div>
-                    </div>
-                   </>
-                 )}
-                 {typeof finalAmount === 'number' && finalAmount - getPagado(statusConfirmModal.orderId) <= 0 && (
-                   <div className="flex justify-center text-sm border-t border-gray-200 pt-3 text-green-600 font-bold">
-                     Saldo completado
-                   </div>
-                 )}
               </div>
-            )}
+              <h3 className="text-xl font-bold tracking-tight text-center text-gray-900 mb-2">
+                ¿Actualizar Estado?
+              </h3>
+              <p className="text-sm text-center text-gray-500 mb-6 font-medium">
+                El dispositivo pasará a estar: <strong className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{getStatusLabel(statusConfirmModal.newStatus)}</strong>
+              </p>
+              
+              <div className="text-sm text-center text-gray-500 mb-6 italic">
+                {statusConfirmModal.newStatus !== 'entregado' && (
+                  "Al confirmar, se abrirá WhatsApp automáticamente para notificar al cliente del cambio."
+                )}
+              </div>
+
+              {statusConfirmModal.newStatus === 'entregado' && (
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-2 space-y-4">
+                   <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Monto Total de Reparación ($)</label>
+                      <div className="relative">
+                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                         <input 
+                           type="number" 
+                           min="0"
+                           step="0.01"
+                           className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 font-semibold"
+                           value={finalAmount}
+                           onChange={(e) => setFinalAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                           placeholder="Ej. 45.00"
+                         />
+                      </div>
+                   </div>
+
+                   {typeof finalAmount === 'number' && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Abono previo:</span>
+                        <span className="font-semibold text-gray-900">${getPagado(statusConfirmModal.orderId).toFixed(2)}</span>
+                      </div>
+                   )}
+
+                   {typeof finalAmount === 'number' && finalAmount - getPagado(statusConfirmModal.orderId) > 0 && (
+                     <>
+                      <div className="flex justify-between items-center text-sm border-t border-gray-200 pt-3">
+                        <span className="font-bold text-gray-900">Saldo Pendiente:</span>
+                        <span className="font-bold text-blue-600 text-lg">${(finalAmount - getPagado(statusConfirmModal.orderId)).toFixed(2)}</span>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 mt-2">Método de pago para el saldo</label>
+                        <div className="grid grid-cols-2 gap-2">
+                           <button 
+                             onClick={() => setPaymentMethod('efectivo')}
+                             className={`py-2 px-3 text-sm font-semibold rounded-xl border transition-colors ${paymentMethod === 'efectivo' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                           >
+                             Efectivo
+                           </button>
+                           <button 
+                             onClick={() => setPaymentMethod('transferencia')}
+                             className={`py-2 px-3 text-sm font-semibold rounded-xl border transition-colors ${paymentMethod === 'transferencia' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                           >
+                             Transferencia
+                           </button>
+                        </div>
+                      </div>
+                     </>
+                   )}
+                   {typeof finalAmount === 'number' && finalAmount - getPagado(statusConfirmModal.orderId) <= 0 && (
+                     <div className="flex justify-center text-sm border-t border-gray-200 pt-3 text-green-600 font-bold">
+                       Saldo completado
+                     </div>
+                   )}
+
+                   {/* Datos de Facturación */}
+                   {billingCustomer && (
+                     <div className="pt-4 border-t border-gray-200 mt-4 space-y-3">
+                       <div className="flex justify-between items-center mb-2">
+                         <h4 className="text-sm font-bold text-gray-900">Datos de Facturación</h4>
+                         <button
+                           onClick={() => {
+                             const ord = orders.find(o => o.id === statusConfirmModal.orderId);
+                             setBillingCustomer({ fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '9999999999', address: 'QUITO', email: ord?.customer?.email || '' });
+                           }}
+                           className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded-md font-semibold transition-colors"
+                         >
+                           Cons. Final
+                         </button>
+                       </div>
+                       <div className="space-y-2">
+                         <input 
+                           type="text" 
+                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white uppercase"
+                           placeholder="Razón Social / Nombres"
+                           value={billingCustomer.fullName}
+                           onChange={e => setBillingCustomer({ ...billingCustomer, fullName: e.target.value.toUpperCase() })}
+                         />
+                         <div className="grid grid-cols-2 gap-2">
+                           <input 
+                             type="text" 
+                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                             placeholder="CI / RUC"
+                             value={billingCustomer.documentId}
+                             onChange={e => setBillingCustomer({ ...billingCustomer, documentId: e.target.value })}
+                           />
+                           <input 
+                             type="text" 
+                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white uppercase"
+                             placeholder="Dirección"
+                             value={billingCustomer.address || ''}
+                             onChange={e => setBillingCustomer({ ...billingCustomer, address: e.target.value.toUpperCase() })}
+                           />
+                         </div>
+                         <input 
+                           type="email" 
+                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                           placeholder="Email"
+                           value={billingCustomer.email || ''}
+                           onChange={e => setBillingCustomer({ ...billingCustomer, email: e.target.value })}
+                         />
+                       </div>
+                     </div>
+                   )}
+                </div>
+              )}
+            </div>
             
-            <div className="flex gap-3">
-              <button 
-                onClick={() => {
-                  setStatusConfirmModal(null);
-                  setFinalAmount('');
-                }}
-                className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={confirmStatusChange}
-                disabled={statusConfirmModal.newStatus === 'entregado' && finalAmount === ''}
-                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Confirmar
-              </button>
+            <div className="p-6 pt-4 border-t border-gray-100 bg-white rounded-b-3xl shrink-0">
+              <div className="flex gap-3">
+                 <button 
+                   onClick={() => {
+                     setStatusConfirmModal(null);
+                     setFinalAmount('');
+                     setBillingCustomer(null);
+                   }}
+                  className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmStatusChange}
+                  disabled={statusConfirmModal.newStatus === 'entregado' && finalAmount === ''}
+                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Confirmar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -552,9 +663,24 @@ export const DeviceList = () => {
             <h3 className="text-xl font-bold tracking-tight text-center text-gray-900 mb-2">
               ¿Eliminar Registro?
             </h3>
-            <p className="text-sm text-center text-gray-500 mb-6">
+            <p className="text-sm text-center text-gray-500 mb-4">
               Esta acción moverá el registro a la papelera oculta. ¿Estás seguro de continuar?
             </p>
+            
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-6 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-red-700">Orden:</span>
+                <span className="font-bold text-red-900 text-right">#{orders.find(o => o.id === deleteConfirmModal.orderId)?.orderNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-red-700">Cliente:</span>
+                <span className="font-bold text-red-900 text-right">{orders.find(o => o.id === deleteConfirmModal.orderId)?.customer.fullName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-red-700">Equipo:</span>
+                <span className="font-bold text-red-900 text-right">{orders.find(o => o.id === deleteConfirmModal.orderId)?.device.brand} {orders.find(o => o.id === deleteConfirmModal.orderId)?.device.model}</span>
+              </div>
+            </div>
             
             <div className="flex gap-3">
               <button 
@@ -615,21 +741,32 @@ export const DeviceList = () => {
                    </div>
                  ))}
 
-                 {(!photosModal.orderToEdit.repair.evidencePhotos || photosModal.orderToEdit.repair.evidencePhotos.length < 3) && (
+                 {(!photosModal.orderToEdit.repair.evidencePhotos || photosModal.orderToEdit.repair.evidencePhotos.length < 9) && (
                    <div className="aspect-video flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl overflow-hidden hover:border-blue-400 transition-colors bg-gray-50 hover:bg-blue-50">
-                     <div className="space-y-2 text-center flex flex-col items-center justify-center w-full h-full">
-                       <Camera className="mx-auto h-8 w-8 text-gray-400" />
-                       <div className="flex flex-col gap-2 w-full mt-2">
-                          <label className="relative cursor-pointer rounded-lg px-3 py-2 bg-white border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 w-full text-center">
-                            <span>Subir "Durante"</span>
-                            <input type="file" className="sr-only" onChange={(e) => handleFileUpload(photosModal.orderToEdit!, 'durante', e)} accept="image/*" />
-                          </label>
-                          <label className="relative cursor-pointer rounded-lg px-3 py-2 bg-white border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 w-full text-center">
-                            <span>Subir "Final" (Entrega)</span>
-                            <input type="file" className="sr-only" onChange={(e) => handleFileUpload(photosModal.orderToEdit!, 'despues', e)} accept="image/*" />
-                          </label>
+                     <div className="space-y-2 text-center flex flex-col items-center justify-center w-full h-full p-2">
+                       <Camera className="mx-auto h-6 w-6 text-gray-400" />
+                       <p className="text-xs font-semibold text-gray-600">Añadir Nueva</p>
+                       <div className="flex flex-col gap-1.5 w-full mt-2 overflow-y-auto max-h-24 no-scrollbar">
+                          {((photosModal.orderToEdit.repair.evidencePhotos || []).filter(p => p.stage === 'antes').length < 3) && (
+                            <label className="relative cursor-pointer rounded-lg px-2 py-1.5 bg-white border border-gray-200 shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 w-full text-center">
+                              <span>Subir "Antes"</span>
+                              <input type="file" className="sr-only" onChange={(e) => handleFileUpload(photosModal.orderToEdit!, 'antes', e)} accept="image/*" />
+                            </label>
+                          )}
+                          {((photosModal.orderToEdit.repair.evidencePhotos || []).filter(p => p.stage === 'durante').length < 3) && (
+                            <label className="relative cursor-pointer rounded-lg px-2 py-1.5 bg-white border border-gray-200 shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 w-full text-center">
+                              <span>Subir "Durante"</span>
+                              <input type="file" className="sr-only" onChange={(e) => handleFileUpload(photosModal.orderToEdit!, 'durante', e)} accept="image/*" />
+                            </label>
+                          )}
+                          {((photosModal.orderToEdit.repair.evidencePhotos || []).filter(p => p.stage === 'despues').length < 3) && (
+                            <label className="relative cursor-pointer rounded-lg px-2 py-1.5 bg-white border border-gray-200 shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 w-full text-center">
+                              <span>Subir "Final"</span>
+                              <input type="file" className="sr-only" onChange={(e) => handleFileUpload(photosModal.orderToEdit!, 'despues', e)} accept="image/*" />
+                            </label>
+                          )}
                        </div>
-                       <p className="text-xs text-gray-500 pt-2">{3 - (photosModal.orderToEdit.repair.evidencePhotos?.length || 0)} espacios libres</p>
+                       <p className="text-[10px] text-gray-500 pt-1">Máx. 3 x etapa</p>
                      </div>
                    </div>
                  )}
@@ -647,6 +784,189 @@ export const DeviceList = () => {
           </div>
         </div>
       )}
+
+      {/* Modal Confirmación Nota de Venta */}
+      {notaVentaConfirmModal?.isOpen && notaVentaConfirmModal.order && (
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-center mb-4">
+               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                 <FileText className="w-8 h-8 text-blue-600" />
+               </div>
+            </div>
+            <h3 className="text-xl font-bold tracking-tight text-center text-gray-900 mb-2">
+              Verificando Facturación
+            </h3>
+            <p className="text-sm text-center text-gray-500 mb-4">
+              Revisa los datos fiscales antes de generar el comprobante legal de la orden #{notaVentaConfirmModal.order.orderNumber}.
+            </p>
+            
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6 space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Razón Social:</span>
+                <span className="font-bold text-gray-900 text-right">{notaVentaConfirmModal.order.billingCustomer?.fullName || notaVentaConfirmModal.order.customer.fullName || 'CONSUMIDOR FINAL'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">RUC/CI:</span>
+                <span className="font-bold text-gray-900 text-right">{notaVentaConfirmModal.order.billingCustomer?.documentId || notaVentaConfirmModal.order.customer.documentId || '9999999999999'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Total a Facturar:</span>
+                <span className="font-bold text-blue-600 text-right">${(Number(notaVentaConfirmModal.order.repair.repairTotalCost) || 0).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <label className="block text-sm font-semibold text-gray-700">Formato de Impresión</label>
+              <div className="grid gap-3">
+                {[
+                  { id: '58mm', label: 'Ticket Térmico (58mm)' },
+                  { id: '80mm', label: 'Ticket Térmico (80mm)' },
+                  { id: 'A4', label: 'Hoja Normal (A4)' }
+                ].map(format => (
+                  <label 
+                    key={format.id} 
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      selectedFormat === format.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="nota-format" 
+                      value={format.id}
+                      checked={selectedFormat === format.id}
+                      onChange={(e) => setSelectedFormat(e.target.value)}
+                      className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-600" 
+                    />
+                    <span className={`block text-sm font-bold ${selectedFormat === format.id ? 'text-blue-900' : 'text-gray-900'}`}>
+                      {format.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setNotaVentaConfirmModal(null)}
+                className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+              >
+                Revisar
+              </button>
+              <button 
+                onClick={() => {
+                  setOrderToPrint(notaVentaConfirmModal.order);
+                  // Not hardcoding A4 anymore, we respect selectedFormat
+                  setNotaVentaConfirmModal(null);
+                  setTimeout(() => handlePrint('nota-venta'), 50);
+                }}
+                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                Generar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Order Modal */}
+      {editModal?.isOpen && editModal.order && (
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                   <Edit2 className="w-6 h-6 text-blue-600" />
+                 </div>
+                 <h3 className="text-xl font-bold text-gray-900">
+                   Editar Orden #{editModal.order.orderNumber}
+                 </h3>
+              </div>
+              
+              {/* Cliente */}
+              <div className="space-y-3">
+                 <h4 className="font-semibold text-gray-900 border-b pb-2">Datos del Cliente</h4>
+                 <div>
+                   <label className="block text-xs text-gray-500 mb-1">Nombre Completo</label>
+                   <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.fullName} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, fullName: e.target.value.toUpperCase() } } })} />
+                 </div>
+                 <div className="grid grid-cols-2 gap-3">
+                   <div>
+                     <label className="block text-xs text-gray-500 mb-1">Cédula/RUC</label>
+                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.documentId} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, documentId: e.target.value.toUpperCase() } } })} />
+                   </div>
+                   <div>
+                     <label className="block text-xs text-gray-500 mb-1">Teléfono</label>
+                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.phone} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, phone: e.target.value.toUpperCase() } } })} />
+                   </div>
+                 </div>
+                 <div>
+                   <label className="block text-xs text-gray-500 mb-1">Correo Electrónico</label>
+                   <input type="email" className="w-full px-3 py-2 border rounded-xl text-sm" value={editModal.order.customer.email || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, email: e.target.value } } })} />
+                 </div>
+              </div>
+
+              {/* Equipo & Falla */}
+              <div className="space-y-3 pt-4 border-t">
+                 <h4 className="font-semibold text-gray-900 border-b pb-2">Datos del Equipo</h4>
+                 <div className="grid grid-cols-2 gap-3">
+                   <div>
+                     <label className="block text-xs text-gray-500 mb-1">Marca</label>
+                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.brand} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, brand: e.target.value.toUpperCase() } } })} />
+                   </div>
+                   <div>
+                     <label className="block text-xs text-gray-500 mb-1">Modelo</label>
+                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.model} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, model: e.target.value.toUpperCase() } } })} />
+                   </div>
+                 </div>
+                 <div>
+                   <label className="block text-xs text-gray-500 mb-1">IMEI/SN</label>
+                   <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.serialNumber || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, serialNumber: e.target.value.toUpperCase() } } })} />
+                 </div>
+                 <div>
+                   <label className="block text-xs text-gray-500 mb-1">Problema Reportado</label>
+                   <textarea className="w-full px-3 py-2 border rounded-xl text-sm uppercase" rows={2} value={editModal.order.repair.reportedIssue} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, reportedIssue: e.target.value.toUpperCase() } } })} />
+                 </div>
+              </div>
+
+              {/* Finanzas */}
+              <div className="space-y-3 pt-4 border-t">
+                 <h4 className="font-semibold text-gray-900 border-b pb-2">Costos</h4>
+                 <div className="grid grid-cols-2 gap-3">
+                   <div>
+                     <label className="block text-xs text-gray-500 mb-1">Costo Total ($)</label>
+                     <input type="number" step="0.01" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.repair.repairTotalCost || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, repairTotalCost: parseFloat(e.target.value) || 0 } } })} />
+                   </div>
+                   <div>
+                     <label className="block text-xs text-gray-500 mb-1">Abono Inicial ($)</label>
+                     <input type="number" step="0.01" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.repair.initialDeposit || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, initialDeposit: parseFloat(e.target.value) || 0 } } })} />
+                   </div>
+                 </div>
+              </div>
+            </div>
+
+            <div className="p-6 pt-4 border-t border-gray-100 bg-white rounded-b-3xl shrink-0">
+               <div className="flex gap-3">
+                 <button 
+                   onClick={() => setEditModal(null)}
+                   className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                 >
+                   Cancelar
+                 </button>
+                 <button 
+                   onClick={() => {
+                     updateOrder(editModal.order.id, editModal.order);
+                     setEditModal(null);
+                   }}
+                   className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                 >
+                   Guardar Cambios
+                 </button>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

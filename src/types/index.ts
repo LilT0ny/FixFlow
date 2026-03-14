@@ -2,6 +2,8 @@ export interface CustomerData {
   fullName: string;
   documentId: string; // Cédula
   phone: string;
+  email?: string;
+  address?: string;
 }
 
 export interface DeviceData {
@@ -36,6 +38,7 @@ export interface ServiceOrder {
   id: string;
   orderNumber: string;
   customer: CustomerData;
+  billingCustomer?: CustomerData;
   device: DeviceData;
   repair: RepairDetails;
   status: OrderStatus;
@@ -47,6 +50,13 @@ export type PaymentMethod = 'efectivo' | 'transferencia';
 export type PaymentType = 'reparacion' | 'repuestos' | 'arriendo' | 'servicios' | 'insumos' | 'otro';
 export type TransactionType = 'ingreso' | 'egreso';
 
+export interface SaleItem {
+  id: string;
+  description: string;
+  quantity: number;
+  price: number;
+}
+
 export interface PaymentTransaction {
   id: string;
   date: string;
@@ -56,4 +66,8 @@ export interface PaymentTransaction {
   transactionType: TransactionType;
   description: string;
   orderId?: string; // Optional if it's just a general part sale without an order
+  customer?: CustomerData; // For manual sales
+  billingCustomer?: CustomerData;
+  items?: SaleItem[]; // For manual sales with multiple items
+  saleNumber?: string;
 }

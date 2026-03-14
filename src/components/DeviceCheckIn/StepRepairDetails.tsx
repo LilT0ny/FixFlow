@@ -25,7 +25,8 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    if (photos.length >= 3) return;
+    const antesPhotosCount = photos.filter(p => p.stage === 'antes').length;
+    if (antesPhotosCount >= 3) return;
     
     const file = e.target.files?.[0];
     if (file) {
@@ -139,7 +140,7 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Fotos de Evidencia (Máx. 3)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Fotos de Evidencia Inicial (Máx. 3)</label>
           
           <div className="flex flex-wrap gap-4">
             {photos.map((photo, index) => (
@@ -157,7 +158,7 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
               </div>
             ))}
             
-            {photos.length < 3 && (
+            {photos.filter(p => p.stage === 'antes').length < 3 && (
               <div className="flex-1 min-w-[140px] flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl overflow-hidden hover:border-blue-400 transition-colors bg-gray-50 hover:bg-blue-50 cursor-pointer">
                 <div className="space-y-1 text-center">
                   <Camera className="mx-auto h-12 w-12 text-gray-400" />
@@ -167,7 +168,7 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
                       <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileUpload} accept="image/*" />
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500 pt-1">{3 - photos.length} restante(s)</p>
+                  <p className="text-xs text-gray-500 pt-1">{3 - photos.filter(p => p.stage === 'antes').length} restante(s)</p>
                 </div>
               </div>
             )}

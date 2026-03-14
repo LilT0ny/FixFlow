@@ -107,7 +107,8 @@ export const CheckInReceipt: React.FC<CheckInReceiptProps> = ({ data, orderNumbe
               <div className="grid gap-3">
                 {[
                   { id: '58mm', label: 'Ticket Térmico (58mm)', desc: 'Impresora básica' },
-                  { id: '80mm', label: 'Ticket Térmico (80mm)', desc: 'Impresora ancha' }
+                  { id: '80mm', label: 'Ticket Térmico (80mm)', desc: 'Impresora ancha' },
+                  { id: 'A4', label: 'Hoja Normal (A4)', desc: 'Impresora estándar' }
                 ].map(format => (
                   <label 
                     key={format.id} 

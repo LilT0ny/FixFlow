@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, CreditCard, Phone } from 'lucide-react';
+import { User, CreditCard, Phone, Mail } from 'lucide-react';
 import type { CustomerData } from '../../types';
 
 interface StepCustomerProps {
@@ -69,6 +69,23 @@ export const StepCustomer: React.FC<StepCustomerProps> = ({ data, onChange, onNe
               onChange={(e) => onChange({ ...data, phone: e.target.value.toUpperCase() })}
             />
           </div>
+        </div>
+
+        <div>
+           <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span className="text-red-500">*</span></label>
+           <div className="relative">
+             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <Mail className="h-5 w-5 text-gray-400" />
+             </div>
+             <input
+               type="email"
+               required
+               className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-3 transition-colors"
+               placeholder="Ej. cliente@correo.com"
+               value={data.email || ''}
+               onChange={(e) => onChange({ ...data, email: e.target.value })}
+             />
+           </div>
         </div>
       </div>
 

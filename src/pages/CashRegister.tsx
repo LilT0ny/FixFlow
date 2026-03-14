@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAppContext } from '../store/AppContext';
-import { DollarSign, Wallet, ArrowDownRight, TrendingUp, Calculator, Wrench } from 'lucide-react';
-import type { PaymentMethod, PaymentType, TransactionType } from '../types';
+import { DollarSign, Wallet, ArrowDownRight, TrendingUp, Calculator, Wrench, ShoppingBag, Plus, Trash2, User, FileText, X } from 'lucide-react';
+import type { PaymentMethod, PaymentType, TransactionType, SaleItem, CustomerData } from '../types';
+import { printReceipt } from '../utils/printHelpers';
 
 export const CashRegister = () => {
   const { payments, addPayment } = useAppContext();
@@ -39,6 +40,14 @@ export const CashRegister = () => {
     description: ''
   });
 
+  const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [saleData, setSaleData] = useState({
+    customer: { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', email: '', address: '' } as CustomerData,
+    items: [{ id: '1', description: '', quantity: 1, price: 0 }] as SaleItem[],
+    method: 'efectivo' as PaymentMethod,
+    format: '58mm'
+  });
+
   const handleCreatePayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPayment.amount || isNaN(Number(newPayment.amount))) return;
@@ -55,6 +64,62 @@ export const CashRegister = () => {
     setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
   };
 
+  const handleCreateSale = (e: React.FormEvent) => {
+    e.preventDefault();
+    const total = saleData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    if (total <= 0) return;
+
+    const saleNumber = `VNT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const description = saleData.items.map(i => `${i.quantity}x ${i.description}`).join(', ');
+
+    const newTransaction = {
+      amount: total,
+      method: saleData.method,
+      type: 'repuestos' as PaymentType,
+      transactionType: 'ingreso' as TransactionType,
+      description: `Venta Directa: ${description}`,
+      customer: saleData.customer,
+      items: saleData.items,
+      saleNumber: saleNumber,
+      date: new Date().toISOString()
+    };
+
+    addPayment(newTransaction);
+    
+    // Print the receipt
+    printReceipt(newTransaction as any, saleData.format, 'nota-venta');
+
+    setIsSaleModalOpen(false);
+    setSaleData({
+      customer: { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', email: '', address: '' },
+      items: [{ id: '1', description: '', quantity: 1, price: 0 }],
+      method: 'efectivo',
+      format: '58mm'
+    });
+  };
+
+  const addSaleItem = () => {
+    setSaleData({
+      ...saleData,
+      items: [...saleData.items, { id: Date.now().toString(), description: '', quantity: 1, price: 0 }]
+    });
+  };
+
+  const removeSaleItem = (id: string) => {
+    if (saleData.items.length === 1) return;
+    setSaleData({
+      ...saleData,
+      items: saleData.items.filter(item => item.id !== id)
+    });
+  };
+
+  const updateSaleItem = (id: string, updates: Partial<SaleItem>) => {
+    setSaleData({
+      ...saleData,
+      items: saleData.items.map(item => item.id === id ? { ...item, ...updates } : item)
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -64,6 +129,13 @@ export const CashRegister = () => {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
+          <button 
+            onClick={() => setIsSaleModalOpen(true)}
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            + Nueva Nota de Venta
+          </button>
           <button 
             onClick={() => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
@@ -217,8 +289,7 @@ export const CashRegister = () => {
           </table>
         </div>
       </div>
-
-      {/* Modal */}
+      {/* Basic Transaction Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 overflow-y-auto w-full transition-opacity">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 m-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
@@ -312,10 +383,186 @@ export const CashRegister = () => {
           </div>
         </div>
       )}
+
+      {/* Manual Sale Modal */}
+      {isSaleModalOpen && (
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-blue-600 flex items-center gap-2">
+                <FileText className="w-6 h-6" />
+                Nueva Nota de Venta (Venta Directa)
+              </h3>
+              <button onClick={() => setIsSaleModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSale} className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Customer Info */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-gray-900 flex items-center gap-2 border-b pb-2">
+                  <User className="w-4 h-4 text-blue-500" />
+                  Información del Cliente
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre / Razón Social</label>
+                    <input 
+                      type="text" 
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={saleData.customer.fullName}
+                      onChange={e => setSaleData({...saleData, customer: {...saleData.customer, fullName: e.target.value.toUpperCase()}})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">RUC / Cédula</label>
+                    <input 
+                      type="text" 
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={saleData.customer.documentId}
+                      onChange={e => setSaleData({...saleData, customer: {...saleData.customer, documentId: e.target.value}})}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                   <button 
+                    type="button"
+                    onClick={() => setSaleData({...saleData, customer: { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', email: '', address: '' }})}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                   >
+                     Usar Consumidor Final
+                   </button>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-blue-500" />
+                    Detalle de Venta
+                  </h4>
+                  <button 
+                    type="button" 
+                    onClick={addSaleItem}
+                    className="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" /> Añadir Ítem
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {saleData.items.map((item) => (
+                    <div key={item.id} className="grid grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <div className="col-span-1">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Cant</label>
+                        <input 
+                          type="number" 
+                          min="1"
+                          className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={item.quantity}
+                          onChange={e => updateSaleItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
+                        />
+                      </div>
+                      <div className="col-span-6">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Descripción</label>
+                        <input 
+                          type="text" 
+                          placeholder="Ej. Mica de Privacidad iPhone 13"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none uppercase"
+                          value={item.description}
+                          onChange={e => updateSaleItem(item.id, { description: e.target.value.toUpperCase() })}
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">P. Unit ($)</label>
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                          value={item.price}
+                          onChange={e => updateSaleItem(item.id, { price: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="col-span-1">
+                         <button 
+                          type="button"
+                          onClick={() => removeSaleItem(item.id)}
+                          className="w-full aspect-square flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                         >
+                           <Trash2 className="w-5 h-5" />
+                         </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Print Config & Totals */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Formato de Impresión</label>
+                    <div className="flex gap-2">
+                       {['58mm', '80mm', 'A4'].map(f => (
+                         <button
+                           key={f}
+                           type="button"
+                           onClick={() => setSaleData({...saleData, format: f})}
+                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${saleData.format === f ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'}`}
+                         >
+                           {f}
+                         </button>
+                       ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Método de Pago</label>
+                    <div className="flex gap-2">
+                       {['efectivo', 'transferencia'].map(m => (
+                         <button
+                           key={m}
+                           type="button"
+                           onClick={() => setSaleData({...saleData, method: m as PaymentMethod})}
+                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all capitalize ${saleData.method === m ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'}`}
+                         >
+                           {m}
+                         </button>
+                       ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 rounded-3xl p-6 text-white flex flex-col justify-center items-center">
+                  <p className="text-gray-400 text-sm font-semibold mb-1">TOTAL A PAGAR</p>
+                  <h3 className="text-4xl font-black text-white">$
+                    {saleData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0).toFixed(2)}
+                  </h3>
+                </div>
+              </div>
+            </form>
+
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3 sticky bottom-0">
+               <button 
+                type="button"
+                onClick={() => setIsSaleModalOpen(false)}
+                className="flex-1 bg-white border border-gray-300 py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-100 transition-colors"
+               >
+                 Cancelar
+               </button>
+               <button 
+                type="button"
+                onClick={handleCreateSale}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition-colors shadow-lg active:scale-95"
+               >
+                 Procesar & Imprimir
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-function ShoppingBag(props: React.SVGProps<SVGSVGElement>) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
-}
