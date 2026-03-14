@@ -2,6 +2,20 @@ import type { ServiceOrder, DeviceCheckInForm, PaymentTransaction, SaleItem, Cus
 
 type OrderForNotaVenta = ServiceOrder | (PaymentTransaction & { orderNumber?: string; total?: number; items?: SaleItem[]; description?: string; customer?: CustomerData; billingCustomer?: CustomerData; });
 type OrderForTicket = DeviceCheckInForm & { orderNumber: string; createdAt: string; billingCustomer?: CustomerData };
+type PrintableOrderData = {
+  createdAt?: string;
+  date?: string;
+  amount?: number;
+  total?: number;
+  orderNumber?: string;
+  saleNumber?: string;
+  description?: string;
+  items?: SaleItem[];
+  customer?: CustomerData;
+  billingCustomer?: CustomerData;
+  device?: ServiceOrder['device'];
+  repair?: ServiceOrder['repair'];
+};
 
 export const printReceipt = (
   order: OrderForNotaVenta | OrderForTicket,
@@ -15,7 +29,7 @@ export const printReceipt = (
   }
 
   // Type narrowing for common properties and safe access
-  const orderData = order as any; 
+  const orderData: PrintableOrderData = order;
   const date = new Date(orderData.createdAt || orderData.date || new Date()).toLocaleDateString();
   const time = new Date(orderData.createdAt || orderData.date || new Date()).toLocaleTimeString([], { hour12: false });
   const logoPath = '/Logo.svg';
@@ -25,7 +39,7 @@ export const printReceipt = (
     const items: SaleItem[] = orderData.items || [
       {
         id: 'SERV-01',
-        description: orderData.device ? `Reparación: ${orderData.device.brand} ${orderData.device.model} - ${orderData.repair.reportedIssue}` : orderData.description || 'Servicio Técnico',
+        description: orderData.device ? `Reparación: ${orderData.device.brand} ${orderData.device.model} - ${orderData.repair?.reportedIssue || ''}` : orderData.description || 'Servicio Técnico',
         quantity: 1,
         price: totalAmount
       }

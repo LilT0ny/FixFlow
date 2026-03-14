@@ -365,6 +365,8 @@ export const DeviceList = () => {
                     }
                     setStatusConfirmModal({ isOpen: true, orderId: order.id, newStatus });
                   }}
+                  title="Cambiar estado de la orden"
+                  aria-label="Cambiar estado de la orden"
                   className="w-full text-sm font-semibold rounded-xl px-3 py-2 cursor-pointer outline-none border border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white"
                 >
                   {statusList.map(opt => (
@@ -429,6 +431,8 @@ export const DeviceList = () => {
               </h3>
               <button 
                 onClick={() => setIsPrintModalOpen(false)}
+                title="Cerrar modal de impresión"
+                aria-label="Cerrar modal de impresión"
                 className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -714,6 +718,8 @@ export const DeviceList = () => {
                </div>
                <button 
                  onClick={() => setPhotosModal(null)}
+                 title="Cerrar modal de evidencias"
+                 aria-label="Cerrar modal de evidencias"
                  className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
                >
                  <X className="w-5 h-5" />
@@ -887,21 +893,21 @@ export const DeviceList = () => {
                  <h4 className="font-semibold text-gray-900 border-b pb-2">Datos del Cliente</h4>
                  <div>
                    <label className="block text-xs text-gray-500 mb-1">Nombre Completo</label>
-                   <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.fullName} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, fullName: e.target.value.toUpperCase() } } })} />
+                   <input type="text" title="Nombre completo del cliente" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.fullName} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, fullName: e.target.value.toUpperCase() } } })} />
                  </div>
                  <div className="grid grid-cols-2 gap-3">
                    <div>
                      <label className="block text-xs text-gray-500 mb-1">Cédula/RUC</label>
-                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.documentId} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, documentId: e.target.value.toUpperCase() } } })} />
+                     <input type="text" title="Cédula o RUC del cliente" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.documentId} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, documentId: e.target.value.toUpperCase() } } })} />
                    </div>
                    <div>
                      <label className="block text-xs text-gray-500 mb-1">Teléfono</label>
-                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.phone} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, phone: e.target.value.toUpperCase() } } })} />
+                     <input type="text" title="Teléfono del cliente" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.customer.phone} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, phone: e.target.value.toUpperCase() } } })} />
                    </div>
                  </div>
                  <div>
                    <label className="block text-xs text-gray-500 mb-1">Correo Electrónico</label>
-                   <input type="email" className="w-full px-3 py-2 border rounded-xl text-sm" value={editModal.order.customer.email || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, email: e.target.value } } })} />
+                   <input type="email" title="Correo electrónico del cliente" className="w-full px-3 py-2 border rounded-xl text-sm" value={editModal.order.customer.email || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, customer: { ...editModal.order.customer, email: e.target.value } } })} />
                  </div>
               </div>
 
@@ -911,20 +917,20 @@ export const DeviceList = () => {
                  <div className="grid grid-cols-2 gap-3">
                    <div>
                      <label className="block text-xs text-gray-500 mb-1">Marca</label>
-                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.brand} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, brand: e.target.value.toUpperCase() } } })} />
+                     <input type="text" title="Marca del equipo" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.brand} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, brand: e.target.value.toUpperCase() } } })} />
                    </div>
                    <div>
                      <label className="block text-xs text-gray-500 mb-1">Modelo</label>
-                     <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.model} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, model: e.target.value.toUpperCase() } } })} />
+                     <input type="text" title="Modelo del equipo" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.model} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, model: e.target.value.toUpperCase() } } })} />
                    </div>
                  </div>
                  <div>
                    <label className="block text-xs text-gray-500 mb-1">IMEI/SN</label>
-                   <input type="text" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.serialNumber || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, serialNumber: e.target.value.toUpperCase() } } })} />
+                   <input type="text" title="IMEI o serial del equipo" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.device.serialNumber || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, device: { ...editModal.order.device, serialNumber: e.target.value.toUpperCase() } } })} />
                  </div>
                  <div>
                    <label className="block text-xs text-gray-500 mb-1">Problema Reportado</label>
-                   <textarea className="w-full px-3 py-2 border rounded-xl text-sm uppercase" rows={2} value={editModal.order.repair.reportedIssue} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, reportedIssue: e.target.value.toUpperCase() } } })} />
+                   <textarea title="Problema reportado del equipo" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" rows={2} value={editModal.order.repair.reportedIssue} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, reportedIssue: e.target.value.toUpperCase() } } })} />
                  </div>
               </div>
 
@@ -934,11 +940,11 @@ export const DeviceList = () => {
                  <div className="grid grid-cols-2 gap-3">
                    <div>
                      <label className="block text-xs text-gray-500 mb-1">Costo Total ($)</label>
-                     <input type="number" step="0.01" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.repair.repairTotalCost || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, repairTotalCost: parseFloat(e.target.value) || 0 } } })} />
+                     <input type="number" step="0.01" title="Costo total de reparación" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.repair.repairTotalCost || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, repairTotalCost: parseFloat(e.target.value) || 0 } } })} />
                    </div>
                    <div>
                      <label className="block text-xs text-gray-500 mb-1">Abono Inicial ($)</label>
-                     <input type="number" step="0.01" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.repair.initialDeposit || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, initialDeposit: parseFloat(e.target.value) || 0 } } })} />
+                     <input type="number" step="0.01" title="Abono inicial" className="w-full px-3 py-2 border rounded-xl text-sm uppercase" value={editModal.order.repair.initialDeposit || ''} onChange={e => setEditModal({ ...editModal, order: { ...editModal.order, repair: { ...editModal.order.repair, initialDeposit: parseFloat(e.target.value) || 0 } } })} />
                    </div>
                  </div>
               </div>

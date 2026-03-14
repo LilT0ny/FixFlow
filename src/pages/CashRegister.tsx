@@ -165,6 +165,8 @@ export const CashRegister = () => {
             type="date"
             value={dateFilter}
             onChange={e => setDateFilter(e.target.value)}
+            title="Filtrar por fecha"
+            aria-label="Filtrar por fecha"
             className="pl-3 pr-4 py-2 w-full sm:w-auto border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium transition-shadow items-center justify-center text-gray-700"
           />
         </div>
@@ -333,6 +335,8 @@ export const CashRegister = () => {
                   <select 
                     value={newPayment.method}
                     onChange={(e) => setNewPayment({...newPayment, method: e.target.value as PaymentMethod})}
+                    title="Método de pago"
+                    aria-label="Método de pago"
                     className="w-full px-3 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm font-medium bg-white"
                   >
                     <option value="efectivo">Efectivo</option>
@@ -344,6 +348,8 @@ export const CashRegister = () => {
                   <select 
                     value={newPayment.type}
                     onChange={(e) => setNewPayment({...newPayment, type: e.target.value as PaymentType})}
+                    title="Categoría de transacción"
+                    aria-label="Categoría de transacción"
                     className="w-full px-3 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm font-medium bg-white"
                   >
                     {newPayment.transactionType === 'ingreso' ? (
@@ -393,7 +399,7 @@ export const CashRegister = () => {
                 <FileText className="w-6 h-6" />
                 Nueva Nota de Venta (Venta Directa)
               </h3>
-              <button onClick={() => setIsSaleModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setIsSaleModalOpen(false)} title="Cerrar modal de venta" aria-label="Cerrar modal de venta" className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -410,6 +416,7 @@ export const CashRegister = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre / Razón Social</label>
                     <input 
                       type="text" 
+                      title="Nombre o razón social"
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none"
                       value={saleData.customer.fullName}
                       onChange={e => setSaleData({...saleData, customer: {...saleData.customer, fullName: e.target.value.toUpperCase()}})}
@@ -419,6 +426,7 @@ export const CashRegister = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">RUC / Cédula</label>
                     <input 
                       type="text" 
+                      title="RUC o cédula"
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                       value={saleData.customer.documentId}
                       onChange={e => setSaleData({...saleData, customer: {...saleData.customer, documentId: e.target.value}})}
@@ -460,6 +468,7 @@ export const CashRegister = () => {
                         <input 
                           type="number" 
                           min="1"
+                          title="Cantidad"
                           className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none"
                           value={item.quantity}
                           onChange={e => updateSaleItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
@@ -480,6 +489,7 @@ export const CashRegister = () => {
                         <input 
                           type="number" 
                           step="0.01"
+                          title="Precio unitario"
                           className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none font-bold"
                           value={item.price}
                           onChange={e => updateSaleItem(item.id, { price: parseFloat(e.target.value) || 0 })}
@@ -489,6 +499,8 @@ export const CashRegister = () => {
                          <button 
                           type="button"
                           onClick={() => removeSaleItem(item.id)}
+                          title="Eliminar ítem"
+                          aria-label="Eliminar ítem"
                           className="w-full aspect-square flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                          >
                            <Trash2 className="w-5 h-5" />
