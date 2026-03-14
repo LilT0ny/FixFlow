@@ -23,6 +23,8 @@ const initialData: FormType = {
   repair: {
     reportedIssue: '',
     evidencePhotos: [],
+    initialDeposit: '',
+    repairTotalCost: '',
   },
 };
 

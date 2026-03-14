@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, Printer, Download, RefreshCw, X } from 'lucide-react';
+import { CheckCircle, Printer,  RefreshCw,  X } from 'lucide-react';
 import type { DeviceCheckInForm } from '../../types';
 import { printReceipt } from '../../utils/printHelpers';
 
@@ -12,7 +12,6 @@ interface CheckInReceiptProps {
 export const CheckInReceipt: React.FC<CheckInReceiptProps> = ({ data, orderNumber, onReset }) => {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState('58mm');
-  const [isPdfMode, setIsPdfMode] = useState(false);
 
   const handlePrint = () => {
     printReceipt({...data, orderNumber, createdAt: new Date().toISOString() }, selectedFormat);
@@ -70,18 +69,7 @@ export const CheckInReceipt: React.FC<CheckInReceiptProps> = ({ data, orderNumbe
              className="flex-1 bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl font-medium shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-95 flex items-center justify-center gap-2"
            >
              <Printer className="h-4 w-4" />
-             Imprimir
-           </button>
-           <button 
-             onClick={() => {
-                setIsPdfMode(true);
-                setSelectedFormat('A4'); // PDF is best viewed in A4 Usually
-                setIsPrintModalOpen(true);
-             }}
-             className="flex-1 bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl font-medium shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-95 flex items-center justify-center gap-2"
-           >
-             <Download className="h-4 w-4" />
-             PDF
+             Imprimir Ticket de Ingreso
            </button>
         </div>
       </div>
@@ -109,7 +97,7 @@ export const CheckInReceipt: React.FC<CheckInReceiptProps> = ({ data, orderNumbe
             
             <h3 className="text-xl font-bold tracking-tight text-gray-900 mb-1 flex items-center gap-2">
               <Printer className="w-6 h-6 text-blue-600"/> 
-              {isPdfMode ? 'Descargar PDF' : 'Imprimir Recibo'}
+              Imprimir Ticket
             </h3>
             <p className="text-sm text-gray-500 mb-6 font-medium">Orden #{orderNumber}</p>
             
@@ -119,8 +107,7 @@ export const CheckInReceipt: React.FC<CheckInReceiptProps> = ({ data, orderNumbe
               <div className="grid gap-3">
                 {[
                   { id: '58mm', label: 'Ticket Térmico (58mm)', desc: 'Impresora básica' },
-                  { id: '80mm', label: 'Ticket Térmico (80mm)', desc: 'Impresora ancha' },
-                  { id: 'A4', label: 'Hoja Normal (A4)', desc: 'Impresora estándar' }
+                  { id: '80mm', label: 'Ticket Térmico (80mm)', desc: 'Impresora ancha' }
                 ].map(format => (
                   <label 
                     key={format.id} 
@@ -149,11 +136,6 @@ export const CheckInReceipt: React.FC<CheckInReceiptProps> = ({ data, orderNumbe
               </div>
 
               <div className="pt-4 mt-2 border-t border-gray-100 flex flex-col gap-3">
-                {isPdfMode && (
-                  <p className="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                    💡 <strong>Tip:</strong> Para guardar como PDF, selecciona "Guardar como PDF / Save as PDF" en la lista de impresoras.
-                  </p>
-                )}
                 <button 
                   onClick={handlePrint}
                   className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 transition-colors active:scale-95 shadow-sm"

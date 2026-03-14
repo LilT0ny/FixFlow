@@ -63,13 +63,28 @@ export const CashRegister = () => {
           <p className="text-gray-500 mt-1">Registra e inspecciona los ingresos del día.</p>
         </div>
         
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-sm flex items-center gap-2 hover:bg-blue-700 transition"
-        >
-          <DollarSign className="w-5 h-5" />
-          Registrar Ingreso
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button 
+            onClick={() => {
+              setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
+              setIsModalOpen(true);
+            }}
+            className="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
+          >
+            <DollarSign className="w-5 h-5" />
+            + Registrar Ingreso
+          </button>
+          <button 
+            onClick={() => {
+              setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
+              setIsModalOpen(true);
+            }}
+            className="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
+          >
+            <Wallet className="w-5 h-5" />
+            - Registrar Egreso
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
@@ -207,25 +222,12 @@ export const CashRegister = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 overflow-y-auto w-full transition-opacity">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 m-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
-            <h3 className="text-xl font-bold tracking-tight text-gray-900 mb-6 flex items-center gap-2"><Wallet className="h-6 w-6 text-blue-600"/> Nuevo Movimiento</h3>
+            <h3 className={`text-xl font-bold tracking-tight mb-6 flex items-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'text-green-700' : 'text-red-600'}`}>
+              <Wallet className={`h-6 w-6 ${newPayment.transactionType === 'ingreso' ? 'text-green-600' : 'text-red-500'}`}/> 
+              {newPayment.transactionType === 'ingreso' ? 'Nuevo Ingreso' : 'Nuevo Egreso'}
+            </h3>
             
             <form onSubmit={handleCreatePayment} className="space-y-4">
-              <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-4">
-                <button
-                  type="button"
-                  onClick={() => setNewPayment({...newPayment, transactionType: 'ingreso', type: 'reparacion'})}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${newPayment.transactionType === 'ingreso' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  Ingreso
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewPayment({...newPayment, transactionType: 'egreso', type: 'otro'})}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${newPayment.transactionType === 'egreso' ? 'bg-white shadow-sm text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  Egreso
-                </button>
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Monto ($)</label>
                 <div className="relative">
@@ -249,8 +251,8 @@ export const CashRegister = () => {
                   required
                   value={newPayment.description}
                   onChange={(e) => setNewPayment({...newPayment, description: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm"
-                  placeholder="Ej. Cambio de batería iPhone 11"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm uppercase"
+                  placeholder={newPayment.transactionType === 'ingreso' ? "Ej. Cambio de batería iPhone 11" : "Ej. Pago de Internet"}
                 />
               </div>
 
@@ -301,7 +303,7 @@ export const CashRegister = () => {
                  </button>
                  <button 
                   type="submit" 
-                  className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl font-medium shadow-sm border border-transparent hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className={`flex-1 text-white px-4 py-3 rounded-xl font-bold shadow-sm border border-transparent focus:ring-2 focus:ring-offset-2 transition-all active:scale-95 flex items-center justify-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'}`}
                  >
                    Guardar
                  </button>

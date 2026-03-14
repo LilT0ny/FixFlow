@@ -51,7 +51,7 @@ export const StepDevice: React.FC<StepDeviceProps> = ({ data, onChange, onNext, 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Marca <span className="text-red-500">*</span></label>
             <input
               type="text"
               required
@@ -62,7 +62,7 @@ export const StepDevice: React.FC<StepDeviceProps> = ({ data, onChange, onNext, 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Modelo <span className="text-red-500">*</span></label>
             <input
               type="text"
               required
@@ -75,7 +75,7 @@ export const StepDevice: React.FC<StepDeviceProps> = ({ data, onChange, onNext, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">IMEI / Serial</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">IMEI <span className="text-red-500">*</span></label>
           <div className="relative">
              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <QrCode className="h-5 w-5 text-gray-400" />
@@ -83,10 +83,16 @@ export const StepDevice: React.FC<StepDeviceProps> = ({ data, onChange, onNext, 
             <input
               type="text"
               required
+              maxLength={15}
+              pattern="\d{15}"
+              title="El IMEI debe tener exactamente 15 dígitos numéricos"
               className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-3 transition-colors uppercase"
-              placeholder="Número de serie o IMEI"
+              placeholder="Número de serie o IMEI (15 dígitos)"
               value={data.serialNumber}
-              onChange={(e) => onChange({ ...data, serialNumber: e.target.value.toUpperCase() })}
+              onChange={(e) => {
+                const digitsOnly = e.target.value.replace(/\D/g, '').substring(0, 15);
+                onChange({ ...data, serialNumber: digitsOnly });
+              }}
             />
           </div>
         </div>

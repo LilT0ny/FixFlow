@@ -7,6 +7,7 @@ interface AppContextType {
   payments: PaymentTransaction[];
   addOrder: (data: DeviceCheckInForm) => ServiceOrder;
   updateOrderStatus: (id: string, status: OrderStatus) => void;
+  updateOrder: (id: string, updates: Partial<ServiceOrder>) => void;
   deleteOrder: (id: string) => void;
   addPayment: (payment: Omit<PaymentTransaction, 'id' | 'date'>) => void;
   isAuthenticated: boolean;
@@ -60,8 +61,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addOrder = (data: DeviceCheckInForm) => {
     const newOrder: ServiceOrder = {
-      id: `ord-${Math.random().toString(36).substring(2, 9)}`,
-      orderNumber: `REP-${Math.floor(Math.random() * 900000) + 100000}`,
+      id: `ord-${crypto.randomUUID().split('-')[0]}`,
+      orderNumber: `REP-${Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / 4294967295 * 900000) + 100000}`,
       ...data,
       status: 'recibido',
       createdAt: new Date().toISOString()
@@ -86,13 +87,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
+  const updateOrder = (id: string, updates: Partial<ServiceOrder>) => {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+  };
+
   const deleteOrder = (id: string) => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, deleted: true } : o));
   };
 
   const addPayment = (paymentData: Omit<PaymentTransaction, 'id' | 'date'>) => {
     const newPayment: PaymentTransaction = {
-      id: `pay-${Math.random().toString(36).substring(2, 9)}`,
+      id: `pay-${crypto.randomUUID().split('-')[0]}`,
       date: new Date().toISOString(),
       ...paymentData
     };
@@ -110,7 +115,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ orders: orders.filter(o => !o.deleted), payments, addOrder, updateOrderStatus, deleteOrder, addPayment, isAuthenticated, login, logout }}>
+    <AppContext.Provider value={{ orders: orders.filter(o => !o.deleted), payments, addOrder, updateOrderStatus, updateOrder, deleteOrder, addPayment, isAuthenticated, login, logout }}>
       {children}
     </AppContext.Provider>
   );

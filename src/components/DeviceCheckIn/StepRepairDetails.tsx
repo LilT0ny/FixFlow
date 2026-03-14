@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Wrench, Camera, X, DollarSign } from 'lucide-react';
-import type { RepairDetails } from '../../types';
+import type { RepairDetails, EvidencePhoto } from '../../types';
 
 interface StepRepairDetailsProps {
   data: RepairDetails;
@@ -10,10 +10,16 @@ interface StepRepairDetailsProps {
 }
 
 export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onChange, onSubmit, onBack }) => {
-  const [photos, setPhotos] = useState<string[]>(data.evidencePhotos || []);
+  const [photos, setPhotos] = useState<EvidencePhoto[]>(data.evidencePhotos || []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const abono = data.initialDeposit || 0;
+    const costo = data.repairTotalCost || 0;
+    if (abono > costo) {
+      alert('El abono no puede ser mayor al costo total de la reparación.');
+      return;
+    }
     onSubmit();
   };
 
@@ -26,9 +32,41 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        const newPhotos = [...photos, base64String];
-        setPhotos(newPhotos);
-        onChange({ ...data, evidencePhotos: newPhotos });
+        
+        // Resize image to optimize Before Saving to JSON
+        const img = new Image();
+        img.src = base64String;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+          const newPhoto: EvidencePhoto = { stage: 'antes', url: resizedBase64 };
+          const newPhotos = [...photos, newPhoto];
+          setPhotos(newPhotos);
+          onChange({ ...data, evidencePhotos: newPhotos });
+        };
       };
       reader.readAsDataURL(file);
     }
@@ -44,7 +82,7 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
     <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in duration-300">
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Falla Reportada por el Cliente</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Trabajo a realizar / Falla <span className="text-red-500">*</span></label>
           <div className="relative">
              <div className="absolute top-3 left-3 pointer-events-none">
                 <Wrench className="h-5 w-5 text-gray-400" />
@@ -60,22 +98,44 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Abono Inicial (Opcional)</label>
-          <div className="relative">
-             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <DollarSign className="h-5 w-5 text-gray-400" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-1">Costo Total Estimado ($) <span className="text-red-500">*</span></label>
+             <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                   <DollarSign className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                 type="number"
+                 required
+                 min="0"
+                 step="0.01"
+                 className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-3 transition-colors"
+                 placeholder="Ej. 45.00"
+                 value={data.repairTotalCost === undefined ? '' : data.repairTotalCost}
+                 onChange={(e) => onChange({ ...data, repairTotalCost: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                />
              </div>
-             <input
-              type="number"
-              min="0"
-              step="0.01"
-              className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-3 transition-colors"
-              placeholder="Ej. 10.00"
-              value={data.initialDeposit === undefined ? '' : data.initialDeposit}
-              onChange={(e) => onChange({ ...data, initialDeposit: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-             />
-          </div>
+           </div>
+
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-1">Abono Inicial ($)</label>
+             <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                   <DollarSign className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                 type="number"
+                 min="0"
+                 max={data.repairTotalCost || undefined}
+                 step="0.01"
+                 className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-3 transition-colors"
+                 placeholder="Ej. 10.00"
+                 value={data.initialDeposit === undefined ? '' : data.initialDeposit}
+                 onChange={(e) => onChange({ ...data, initialDeposit: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                />
+             </div>
+           </div>
         </div>
 
         <div>
@@ -84,7 +144,8 @@ export const StepRepairDetails: React.FC<StepRepairDetailsProps> = ({ data, onCh
           <div className="flex flex-wrap gap-4">
             {photos.map((photo, index) => (
               <div key={index} className="relative inline-block">
-                <img src={photo} alt={`Evidencia ${index + 1}`} className="h-32 w-32 object-cover rounded-xl border-2 border-gray-200 shadow-sm" />
+                <img src={photo.url} alt={`Evidencia ${index + 1}`} className="h-32 w-32 object-cover rounded-xl border-2 border-gray-200 shadow-sm" />
+                <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-md uppercase font-bold">{photo.stage}</span>
                 <button
                   type="button"
                   onClick={() => removePhoto(index)}

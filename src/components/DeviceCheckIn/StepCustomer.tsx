@@ -18,7 +18,7 @@ export const StepCustomer: React.FC<StepCustomerProps> = ({ data, onChange, onNe
     <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in zoom-in duration-300">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo <span className="text-red-500">*</span></label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <User className="h-5 w-5 text-gray-400" />
@@ -29,13 +29,16 @@ export const StepCustomer: React.FC<StepCustomerProps> = ({ data, onChange, onNe
               className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-3 transition-colors uppercase"
               placeholder="Ej. JUAN PÉREZ"
               value={data.fullName}
-              onChange={(e) => onChange({ ...data, fullName: e.target.value.toUpperCase() })}
+              onChange={(e) => {
+                const validText = e.target.value.toUpperCase().replace(/[^A-ZÑ\s]/g, '');
+                onChange({ ...data, fullName: validText });
+              }}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cédula o Documento</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Cédula o Documento <span className="text-red-500">*</span></label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <CreditCard className="h-5 w-5 text-gray-400" />

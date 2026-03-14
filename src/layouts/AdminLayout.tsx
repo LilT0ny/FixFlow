@@ -12,10 +12,10 @@ export const AdminLayout = () => {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-10 transition-transform">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <span className="text-white font-bold text-lg leading-none">R</span>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src="/Logo.svg" alt="Logo Mecánica Celular" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900">RepairSys</h1>
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">Mecánica Celular</h1>
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -67,10 +67,10 @@ export const AdminLayout = () => {
         {/* Sidebar - Mobile */}
         <aside className={`fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-40 transform transition-transform duration-300 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
            <div className="p-6 flex items-center gap-3 border-b">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-lg leading-none">R</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img src="/Logo.svg" alt="Logo Mecánica Celular" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">RepairSys</h1>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900">Mecánica Celular</h1>
           </div>
           <nav className="p-4 space-y-2">
             <NavLink to="/" end onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}>

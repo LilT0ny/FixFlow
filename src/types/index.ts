@@ -12,10 +12,16 @@ export interface DeviceData {
   physicalCondition: string;
 }
 
+export interface EvidencePhoto {
+  stage: 'antes' | 'durante' | 'despues';
+  url: string;
+}
+
 export interface RepairDetails {
   reportedIssue: string;
-  evidencePhotos: string[]; // For UI preview simulation
+  evidencePhotos: EvidencePhoto[]; // Handling photo categorization
   initialDeposit?: number | ''; // Empty string allows for empty form inputs
+  repairTotalCost?: number | ''; // New field for agreed total cost
 }
 
 export interface DeviceCheckInForm {
