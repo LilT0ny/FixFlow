@@ -2,13 +2,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useAppContext } from './store/AppContext';
 import { AdminLayout } from './layouts/AdminLayout';
-import { Dashboard } from './pages/Dashboard';
-import { DeviceList } from './pages/DeviceList';
+import { DashboardFeature } from './features/Dashboard/DashboardFeature';
+import { DeviceListFeature } from './features/DeviceList/DeviceListFeature';
 import { CashRegister } from './pages/CashRegister';
 import { Reports } from './pages/Reports';
 import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
-import { CheckInForm } from './components/DeviceCheckIn/CheckInForm';
+import { RegistroReparacionFeature } from './features/RegistroReparacion/RegistroReparacionFeature';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAppContext();
@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <AppProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/sistema-reparacion">
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -26,9 +26,9 @@ function App() {
 
           {/* Admin routes with sidebar */}
           <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<Dashboard />} />
-            <Route path="check-in" element={<CheckInForm />} />
-            <Route path="devices" element={<DeviceList />} />
+            <Route index element={<DashboardFeature />} />
+            <Route path="check-in" element={<RegistroReparacionFeature />} />
+            <Route path="devices" element={<DeviceListFeature />} />
             <Route path="cash" element={<CashRegister />} />
             <Route path="reports" element={<Reports />} />
           </Route>

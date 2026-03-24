@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { useAppContext } from '../store/AppContext';
-import { DollarSign, Wallet, ArrowDownRight, TrendingUp, Calculator, Wrench, ShoppingBag, Plus, Trash2, User, FileText, X } from 'lucide-react';
+import { usePayments } from '../hooks/usePayments'; // MVC Controller
+import { DollarSign, Wallet, ArrowDownRight, TrendingUp, Calculator, Wrench, ShoppingBag, Plus, Trash2, User, FileText, X, Printer } from 'lucide-react';
 import type { PaymentMethod, PaymentType, TransactionType, SaleItem, CustomerData } from '../types';
 import { printReceipt } from '../utils/printHelpers';
 
+import { Button } from '../components/atoms/Button';
+import { Input } from '../components/atoms/Input';
+import { Card } from '../components/atoms/Card';
+
 export const CashRegister = () => {
-  const { payments, addPayment } = useAppContext();
+  // Using MVC Controller Hooks
+  const { payments, addPayment } = usePayments();
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'all'>('all');
   
   // Basic date filter to today
@@ -48,11 +53,11 @@ export const CashRegister = () => {
     format: '58mm'
   });
 
-  const handleCreatePayment = (e: React.FormEvent) => {
+  const handleCreatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPayment.amount || isNaN(Number(newPayment.amount))) return;
     
-    addPayment({
+    await addPayment({
       amount: Number(newPayment.amount),
       method: newPayment.method,
       type: newPayment.type,
@@ -64,7 +69,7 @@ export const CashRegister = () => {
     setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
   };
 
-  const handleCreateSale = (e: React.FormEvent) => {
+  const handleCreateSale = async (e: React.FormEvent) => {
     e.preventDefault();
     const total = saleData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     if (total <= 0) return;
@@ -80,14 +85,13 @@ export const CashRegister = () => {
       description: `Venta Directa: ${description}`,
       customer: saleData.customer,
       items: saleData.items,
-      saleNumber: saleNumber,
-      date: new Date().toISOString()
+      saleNumber: saleNumber
     };
 
-    addPayment(newTransaction);
+    const added = await addPayment(newTransaction);
     
     // Print the receipt
-    printReceipt(newTransaction as any, saleData.format, 'nota-venta');
+    printReceipt(added as any, saleData.format, 'nota-venta');
 
     setIsSaleModalOpen(false);
     setSaleData({
@@ -124,101 +128,97 @@ export const CashRegister = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">Cuadre de Caja</h2>
-          <p className="text-gray-500 mt-1">Registra e inspecciona los ingresos del día.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-surface-900">Cuadre de Caja</h2>
+          <p className="text-surface-500 mt-1">Registra e inspecciona los ingresos del día.</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
-          <button 
-            onClick={() => setIsSaleModalOpen(true)}
-            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            + Nueva Nota de Venta
-          </button>
-          <button 
+          <Button onClick={() => setIsSaleModalOpen(true)} variant="primary">
+            <Plus className="w-5 h-5 mr-2" />
+            Venta Repuestos
+          </Button>
+          <Button 
             onClick={() => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
               setIsModalOpen(true);
-            }}
-            className="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
+            }} 
+            variant="success"
           >
-            <DollarSign className="w-5 h-5" />
-            + Registrar Ingreso
-          </button>
-          <button 
+            <DollarSign className="w-5 h-5 mr-2" />
+            + Ingreso
+          </Button>
+          <Button 
             onClick={() => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
               setIsModalOpen(true);
-            }}
-            className="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
+            }} 
+            variant="danger"
           >
-            <Wallet className="w-5 h-5" />
-            - Registrar Egreso
-          </button>
+            <Wallet className="w-5 h-5 mr-2" />
+            - Egreso
+          </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <Card className="p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="flex gap-2 items-center flex-1 w-full relative">
-          <input 
+          <Input 
             type="date"
             value={dateFilter}
             onChange={e => setDateFilter(e.target.value)}
             title="Filtrar por fecha"
-            aria-label="Filtrar por fecha"
-            className="pl-3 pr-4 py-2 w-full sm:w-auto border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium transition-shadow items-center justify-center text-gray-700"
+            className="w-full sm:w-auto text-surface-700"
           />
         </div>
         
-        <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto shrink-0 shadow-inner">
+        <div className="flex bg-surface-100 p-1 rounded-xl w-full sm:w-auto shrink-0 shadow-inner">
           <button 
             onClick={() => setMethodFilter('all')}
-            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'all' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'all' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
           >
             Todos
           </button>
           <button 
             onClick={() => setMethodFilter('efectivo')}
-            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'efectivo' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'efectivo' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
           >
             Efectivo
           </button>
           <button 
             onClick={() => setMethodFilter('transferencia')}
-            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'transferencia' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'transferencia' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
           >
             Transferencia
           </button>
         </div>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Efectivo en Caja', value: totals.efectivo, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Transferencias', value: totals.transferencia, icon: ArrowDownRight, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Total Reparaciones', value: totals.reparaciones, icon: Wrench, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-          { label: 'Total Repuestos', value: totals.repuestos, icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50' }
+          { label: 'Efectivo en Caja', value: totals.efectivo, icon: Wallet, color: 'text-success-600', bg: 'bg-success-50' },
+          { label: 'Transferencias', value: totals.transferencia, icon: ArrowDownRight, color: 'text-primary-600', bg: 'bg-primary-50' },
+          { label: 'Total Reparaciones', value: totals.reparaciones, icon: Wrench, color: 'text-secondary-600', bg: 'bg-secondary-50' },
+          { label: 'Total Repuestos', value: totals.repuestos, icon: ShoppingBag, color: 'text-warning-600', bg: 'bg-warning-50' }
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+          <Card key={i} className="p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${stat.bg}`}>
                <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
-              <h3 className="text-3xl font-bold text-gray-900">${stat.value.toFixed(2)}</h3>
+              <p className="text-sm font-medium text-surface-500 mb-1">{stat.label}</p>
+              <h3 className="text-3xl font-bold text-surface-900">${stat.value.toFixed(2)}</h3>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 border border-gray-700">
+      <div className="bg-gradient-to-br from-surface-900 to-surface-800 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 border border-surface-700">
         <div className="absolute -right-10 -bottom-10 opacity-10">
            <TrendingUp className="w-56 h-56" strokeWidth={1} />
         </div>
         <div className="relative z-10 flex flex-col items-center sm:items-start">
-           <h3 className="text-gray-400 font-semibold mb-2 flex items-center gap-2"><Calculator className="w-5 h-5"/> BALANCE NETO DEL DÍA</h3>
-           <p className={`text-5xl font-extrabold tracking-tight ${totals.total >= 0 ? 'text-white' : 'text-red-400'}`}>
+           <h3 className="text-surface-400 font-semibold mb-2 flex items-center gap-2"><Calculator className="w-5 h-5"/> BALANCE NETO DEL DÍA</h3>
+           <p className={`text-5xl font-extrabold tracking-tight ${totals.total >= 0 ? 'text-white' : 'text-danger-400'}`}>
               ${totals.total.toFixed(2)}
            </p>
         </div>
@@ -229,20 +229,20 @@ export const CashRegister = () => {
            </div>
            <div className="flex justify-between gap-4 border-b border-white/10 pb-2">
              <span className="text-white/90">Ingresos Totales</span>
-             <span className="font-semibold text-emerald-400">+{totals.ingresosTotal.toFixed(2)}$</span>
+             <span className="font-semibold text-success-400">+{totals.ingresosTotal.toFixed(2)}$</span>
            </div>
            <div className="flex justify-between gap-4">
              <span className="text-white/90">Egresos (Gastos)</span>
-             <span className="font-semibold text-red-400">-{totals.egresosTotal.toFixed(2)}$</span>
+             <span className="font-semibold text-danger-400">-{totals.egresosTotal.toFixed(2)}$</span>
            </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
+              <tr className="bg-surface-50 text-surface-500 text-xs uppercase tracking-wider border-b border-surface-100">
                 <th className="px-6 py-4 font-semibold">Hora</th>
                 <th className="px-6 py-4 font-semibold">Descripción</th>
                 <th className="px-6 py-4 font-semibold">Tipo</th>
@@ -250,39 +250,48 @@ export const CashRegister = () => {
                 <th className="px-6 py-4 font-semibold text-right">Monto</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-surface-100">
               {filteredPayments.map(payment => (
-                <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                <tr key={payment.id} className="hover:bg-surface-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-500 font-medium">
                     {new Date(payment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-gray-900">{payment.description || 'Sin descripción'}</span>
-                    {payment.orderId && <div className="text-xs text-indigo-600 font-medium">Orden: {payment.orderId}</div>}
+                    <span className="text-sm font-semibold text-surface-900">{payment.description || 'Sin descripción'}</span>
+                    {payment.orderId && <div className="text-xs text-primary-600 font-medium mt-1">Orden: {payment.orderId}</div>}
                   </td>
                   <td className="px-6 py-4">
                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider ${
-                        payment.type === 'reparacion' ? 'bg-indigo-50 text-indigo-700' : 'bg-purple-50 text-purple-700'
+                        payment.type === 'reparacion' ? 'bg-primary-50 text-primary-700' : 'bg-secondary-50 text-secondary-700'
                      }`}>
                         {payment.type}
                      </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      {payment.method === 'efectivo' ? <Wallet className="w-4 h-4 text-emerald-600" /> : <ArrowDownRight className="w-4 h-4 text-blue-600" />}
-                      <span className="text-sm font-medium text-gray-700 capitalize">{payment.method}</span>
+                      {payment.method === 'efectivo' ? <Wallet className="w-4 h-4 text-success-600" /> : <ArrowDownRight className="w-4 h-4 text-primary-600" />}
+                      <span className="text-sm font-medium text-surface-700 capitalize">{payment.method}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <span className={`font-bold text-lg ${payment.transactionType === 'egreso' ? 'text-red-500' : 'text-emerald-600'}`}>
-                      {payment.transactionType === 'egreso' ? '-' : '+'}${payment.amount.toFixed(2)}
-                    </span>
+                    <div className="flex items-center justify-end gap-3">
+                      <span className={`font-bold text-lg ${payment.transactionType === 'egreso' ? 'text-danger-500' : 'text-success-600'}`}>
+                        {payment.transactionType === 'egreso' ? '-' : '+'}${payment.amount.toFixed(2)}
+                      </span>
+                      <button 
+                        onClick={() => printReceipt(payment as any, '58mm', 'nota-venta')}
+                        title="Imprimir comprobante"
+                        className="text-surface-400 hover:text-primary-600 transition-colors bg-white hover:bg-primary-50 p-1.5 rounded-lg border border-transparent hover:border-primary-100 shadow-sm"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {filteredPayments.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-10 text-center text-surface-500">
                     No se encontraron transacciones en esta fecha.
                   </td>
                 </tr>
@@ -290,67 +299,64 @@ export const CashRegister = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
+
       {/* Basic Transaction Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 overflow-y-auto w-full transition-opacity">
+        <div className="fixed inset-0 bg-surface-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 overflow-y-auto w-full transition-opacity">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 m-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
-            <h3 className={`text-xl font-bold tracking-tight mb-6 flex items-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'text-green-700' : 'text-red-600'}`}>
-              <Wallet className={`h-6 w-6 ${newPayment.transactionType === 'ingreso' ? 'text-green-600' : 'text-red-500'}`}/> 
+            <h3 className={`text-xl font-bold tracking-tight mb-6 flex items-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'text-success-700' : 'text-danger-600'}`}>
+              <Wallet className={`h-6 w-6 ${newPayment.transactionType === 'ingreso' ? 'text-success-600' : 'text-danger-500'}`}/> 
               {newPayment.transactionType === 'ingreso' ? 'Nuevo Ingreso' : 'Nuevo Egreso'}
             </h3>
             
             <form onSubmit={handleCreatePayment} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monto ($)</label>
+                <label className="block text-sm font-medium text-surface-700 mb-1">Monto ($)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-gray-500">$</span>
-                  <input 
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-surface-500">$</span>
+                  <Input 
                     type="number" 
                     step="0.01" 
                     required
                     value={newPayment.amount}
                     onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})}
-                    className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-gray-50/50 font-bold text-lg text-gray-900"
+                    className="pl-8 text-lg font-bold"
                     placeholder="0.00"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                <input 
+                <label className="block text-sm font-medium text-surface-700 mb-1">Descripción</label>
+                <Input 
                   type="text" 
                   required
                   value={newPayment.description}
                   onChange={(e) => setNewPayment({...newPayment, description: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm uppercase"
+                  className="uppercase"
                   placeholder={newPayment.transactionType === 'ingreso' ? "Ej. Cambio de batería iPhone 11" : "Ej. Pago de Internet"}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Método</label>
+                  <label className="block text-sm font-medium text-surface-700 mb-1">Método</label>
                   <select 
                     value={newPayment.method}
                     onChange={(e) => setNewPayment({...newPayment, method: e.target.value as PaymentMethod})}
-                    title="Método de pago"
-                    aria-label="Método de pago"
-                    className="w-full px-3 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm font-medium bg-white"
+                    className="w-full px-3 py-3 rounded-xl border border-surface-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow text-surface-900 text-sm font-medium bg-white"
                   >
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                  <label className="block text-sm font-medium text-surface-700 mb-1">Categoría</label>
                   <select 
                     value={newPayment.type}
                     onChange={(e) => setNewPayment({...newPayment, type: e.target.value as PaymentType})}
-                    title="Categoría de transacción"
-                    aria-label="Categoría de transacción"
-                    className="w-full px-3 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-900 text-sm font-medium bg-white"
+                    className="w-full px-3 py-3 rounded-xl border border-surface-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow text-surface-900 text-sm font-medium bg-white"
                   >
                     {newPayment.transactionType === 'ingreso' ? (
                       <>
@@ -370,20 +376,22 @@ export const CashRegister = () => {
                 </div>
               </div>
               
-              <div className="flex gap-3 pt-4 border-t mt-6">
-                 <button 
+              <div className="flex gap-3 pt-4 border-t border-surface-100 mt-6">
+                 <Button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-white border border-gray-300 px-4 py-3 rounded-xl font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 transition-all active:scale-95"
+                  variant="outline"
+                  className="flex-1"
                  >
                    Cancelar
-                 </button>
-                 <button 
+                 </Button>
+                 <Button 
                   type="submit" 
-                  className={`flex-1 text-white px-4 py-3 rounded-xl font-bold shadow-sm border border-transparent focus:ring-2 focus:ring-offset-2 transition-all active:scale-95 flex items-center justify-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'}`}
+                  variant={newPayment.transactionType === 'ingreso' ? 'success' : 'danger'}
+                  className="flex-1"
                  >
                    Guardar
-                 </button>
+                 </Button>
               </div>
             </form>
           </div>
@@ -392,14 +400,14 @@ export const CashRegister = () => {
 
       {/* Manual Sale Modal */}
       {isSaleModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
+        <div className="fixed inset-0 bg-surface-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-blue-600 flex items-center gap-2">
+            <div className="p-6 border-b border-surface-100 flex justify-between items-center bg-surface-50 rounded-t-3xl">
+              <h3 className="text-xl font-bold text-primary-600 flex items-center gap-2">
                 <FileText className="w-6 h-6" />
                 Nueva Nota de Venta (Venta Directa)
               </h3>
-              <button onClick={() => setIsSaleModalOpen(false)} title="Cerrar modal de venta" aria-label="Cerrar modal de venta" className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setIsSaleModalOpen(false)} className="text-surface-400 hover:text-surface-600 transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -407,27 +415,24 @@ export const CashRegister = () => {
             <form onSubmit={handleCreateSale} className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Customer Info */}
               <div className="space-y-4">
-                <h4 className="font-bold text-gray-900 flex items-center gap-2 border-b pb-2">
-                  <User className="w-4 h-4 text-blue-500" />
+                <h4 className="font-bold text-surface-900 flex items-center gap-2 border-b border-surface-100 pb-2">
+                  <User className="w-4 h-4 text-primary-500" />
                   Información del Cliente
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre / Razón Social</label>
-                    <input 
+                    <label className="block text-xs font-semibold text-surface-500 uppercase mb-1">Nombre / Razón Social</label>
+                    <Input 
                       type="text" 
-                      title="Nombre o razón social"
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="uppercase"
                       value={saleData.customer.fullName}
                       onChange={e => setSaleData({...saleData, customer: {...saleData.customer, fullName: e.target.value.toUpperCase()}})}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">RUC / Cédula</label>
-                    <input 
+                    <label className="block text-xs font-semibold text-surface-500 uppercase mb-1">RUC / Cédula</label>
+                    <Input 
                       type="text" 
-                      title="RUC o cédula"
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                       value={saleData.customer.documentId}
                       onChange={e => setSaleData({...saleData, customer: {...saleData.customer, documentId: e.target.value}})}
                     />
@@ -437,7 +442,7 @@ export const CashRegister = () => {
                    <button 
                     type="button"
                     onClick={() => setSaleData({...saleData, customer: { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', email: '', address: '' }})}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs font-bold text-primary-600 hover:text-primary-700 bg-primary-50 px-3 py-1.5 rounded-lg transition-colors border border-primary-100"
                    >
                      Usar Consumidor Final
                    </button>
@@ -446,15 +451,15 @@ export const CashRegister = () => {
 
               {/* Items Table */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-blue-500" />
+                <div className="flex justify-between items-center border-b border-surface-100 pb-2">
+                  <h4 className="font-bold text-surface-900 flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-primary-500" />
                     Detalle de Venta
                   </h4>
                   <button 
                     type="button" 
                     onClick={addSaleItem}
-                    className="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-bold text-success-600 bg-success-50 px-3 py-1.5 rounded-lg hover:bg-success-100 transition-colors border border-success-100"
                   >
                     <Plus className="w-3 h-3" /> Añadir Ítem
                   </button>
@@ -462,46 +467,42 @@ export const CashRegister = () => {
 
                 <div className="space-y-3">
                   {saleData.items.map((item) => (
-                    <div key={item.id} className="grid grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border border-gray-100">
-                      <div className="col-span-1">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Cant</label>
-                        <input 
+                    <div key={item.id} className="grid grid-cols-12 gap-3 items-end bg-surface-50 p-3 rounded-xl border border-surface-200">
+                      <div className="col-span-2">
+                        <label className="block text-[10px] font-bold text-surface-500 uppercase mb-1">Cant</label>
+                        <Input 
                           type="number" 
                           min="1"
-                          title="Cantidad"
-                          className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="text-center px-1"
                           value={item.quantity}
                           onChange={e => updateSaleItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
                         />
                       </div>
-                      <div className="col-span-6">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Descripción</label>
-                        <input 
+                      <div className="col-span-5">
+                        <label className="block text-[10px] font-bold text-surface-500 uppercase mb-1">Descripción</label>
+                        <Input 
                           type="text" 
-                          placeholder="Ej. Mica de Privacidad iPhone 13"
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none uppercase"
+                          placeholder="Mica 9D"
+                          className="uppercase px-2"
                           value={item.description}
                           onChange={e => updateSaleItem(item.id, { description: e.target.value.toUpperCase() })}
                         />
                       </div>
                       <div className="col-span-3">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">P. Unit ($)</label>
-                        <input 
+                        <label className="block text-[10px] font-bold text-surface-500 uppercase mb-1">P. Unit ($)</label>
+                        <Input 
                           type="number" 
                           step="0.01"
-                          title="Precio unitario"
-                          className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                          className="font-bold text-center px-1"
                           value={item.price}
                           onChange={e => updateSaleItem(item.id, { price: parseFloat(e.target.value) || 0 })}
                         />
                       </div>
-                      <div className="col-span-1">
+                      <div className="col-span-2">
                          <button 
                           type="button"
                           onClick={() => removeSaleItem(item.id)}
-                          title="Eliminar ítem"
-                          aria-label="Eliminar ítem"
-                          className="w-full aspect-square flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="w-full aspect-square flex items-center justify-center text-danger-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors border border-transparent hover:border-danger-100"
                          >
                            <Trash2 className="w-5 h-5" />
                          </button>
@@ -512,17 +513,17 @@ export const CashRegister = () => {
               </div>
 
               {/* Print Config & Totals */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-surface-100">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Formato de Impresión</label>
+                    <label className="block text-sm font-bold text-surface-700 mb-2">Formato de Impresión</label>
                     <div className="flex gap-2">
                        {['58mm', '80mm', 'A4'].map(f => (
                          <button
                            key={f}
                            type="button"
                            onClick={() => setSaleData({...saleData, format: f})}
-                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${saleData.format === f ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'}`}
+                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${saleData.format === f ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-500 hover:border-surface-300'}`}
                          >
                            {f}
                          </button>
@@ -530,14 +531,14 @@ export const CashRegister = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Método de Pago</label>
+                    <label className="block text-sm font-bold text-surface-700 mb-2">Método de Pago</label>
                     <div className="flex gap-2">
                        {['efectivo', 'transferencia'].map(m => (
                          <button
                            key={m}
                            type="button"
                            onClick={() => setSaleData({...saleData, method: m as PaymentMethod})}
-                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all capitalize ${saleData.method === m ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'}`}
+                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all capitalize ${saleData.method === m ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-500 hover:border-surface-300'}`}
                          >
                            {m}
                          </button>
@@ -546,8 +547,8 @@ export const CashRegister = () => {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-3xl p-6 text-white flex flex-col justify-center items-center">
-                  <p className="text-gray-400 text-sm font-semibold mb-1">TOTAL A PAGAR</p>
+                <div className="bg-surface-900 rounded-2xl p-6 text-white flex flex-col justify-center items-center shadow-inner">
+                  <p className="text-surface-400 text-sm font-semibold mb-1">TOTAL A PAGAR</p>
                   <h3 className="text-4xl font-black text-white">$
                     {saleData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0).toFixed(2)}
                   </h3>
@@ -555,21 +556,23 @@ export const CashRegister = () => {
               </div>
             </form>
 
-            <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3 sticky bottom-0">
-               <button 
+            <div className="p-6 bg-surface-50 border-t border-surface-100 flex gap-3 sticky bottom-0 rounded-b-3xl">
+               <Button 
                 type="button"
                 onClick={() => setIsSaleModalOpen(false)}
-                className="flex-1 bg-white border border-gray-300 py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-100 transition-colors"
+                variant="outline"
+                className="flex-1"
                >
                  Cancelar
-               </button>
-               <button 
+               </Button>
+               <Button 
                 type="button"
                 onClick={handleCreateSale}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition-colors shadow-lg active:scale-95"
+                variant="primary"
+                className="flex-1"
                >
                  Procesar & Imprimir
-               </button>
+               </Button>
             </div>
           </div>
         </div>
@@ -577,4 +580,3 @@ export const CashRegister = () => {
     </div>
   );
 };
-

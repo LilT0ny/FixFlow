@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ServiceOrder, PaymentTransaction, DeviceCheckInForm, OrderStatus } from '../types';
+import { useOrders } from '../hooks/useOrders';
+import { usePayments } from '../hooks/usePayments';
 
 interface AppContextType {
   orders: ServiceOrder[];
   payments: PaymentTransaction[];
-  addOrder: (data: DeviceCheckInForm) => ServiceOrder;
+  addOrder: (data: DeviceCheckInForm) => Promise<ServiceOrder>;
   updateOrderStatus: (id: string, status: OrderStatus) => void;
   updateOrder: (id: string, updates: Partial<ServiceOrder>) => void;
   deleteOrder: (id: string) => void;
@@ -17,91 +19,42 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Initial mock data
-const MOCK_ORDERS: ServiceOrder[] = [
-  {
-    id: 'ord-1234',
-    orderNumber: 'REP-123456',
-    customer: { fullName: 'Juan Pérez', documentId: '1712345678', phone: '0987654321' },
-    device: { brand: 'Samsung', model: 'Galaxy A54', serialNumber: 'IMEI123456789', deviceType: 'celular', physicalCondition: 'Pantalla rota, rayones en bordes' },
-    repair: { reportedIssue: 'Cambio de pantalla', evidencePhotos: [] },
-    status: 'diagnostico',
-    createdAt: new Date().toISOString()
-  }
-];
-
-const MOCK_PAYMENTS: PaymentTransaction[] = [
-  {
-    id: 'pay-1',
-    date: new Date().toISOString(),
-    amount: 45.0,
-    method: 'efectivo',
-    type: 'reparacion',
-    transactionType: 'ingreso',
-    description: 'Abono reparación REP-123456',
-    orderId: 'ord-1234'
-  },
-  {
-    id: 'pay-2',
-    date: new Date().toISOString(),
-    amount: 15.0,
-    method: 'transferencia',
-    type: 'repuestos',
-    transactionType: 'ingreso',
-    description: 'Venta de mica de vidrio libre'
-  }
-];
-
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [orders, setOrders] = useState<ServiceOrder[]>(MOCK_ORDERS);
-  const [payments, setPayments] = useState<PaymentTransaction[]>(MOCK_PAYMENTS);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('repair_auth') === 'true';
   });
 
-  const addOrder = (data: DeviceCheckInForm) => {
-    const newOrder: ServiceOrder = {
-      id: `ord-${crypto.randomUUID().split('-')[0]}`,
-      orderNumber: `REP-${Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / 4294967295 * 900000) + 100000}`,
-      ...data,
-      status: 'recibido',
-      createdAt: new Date().toISOString()
-    };
-    setOrders(prev => [newOrder, ...prev]);
+  // Utilize our newly separated Controller Hooks.
+  const { 
+    orders, 
+    addOrder: baseAddOrder, 
+    updateOrderStatus, 
+    updateOrder, 
+    deleteOrder 
+  } = useOrders();
+  
+  const { 
+    payments, 
+    addPayment: baseAddPayment 
+  } = usePayments();
 
+  // Combine actions when adding an order requires a payment deposit
+  const handleAddOrder = async (data: DeviceCheckInForm) => {
+    const newOrder = await baseAddOrder(data);
+    
+    // Automatically add payment log if deposit is given
     if (data.repair.initialDeposit && data.repair.initialDeposit > 0) {
-      addPayment({
+      await baseAddPayment({
         amount: data.repair.initialDeposit,
-        method: 'efectivo', // defaulting to cash for initial deposit in physical store
+        method: 'efectivo',
         type: 'reparacion',
         transactionType: 'ingreso',
         description: `Abono inicial de reparación orden ${newOrder.orderNumber}`,
         orderId: newOrder.id
       });
     }
-
+    
     return newOrder;
-  };
-
-  const updateOrderStatus = (id: string, status: OrderStatus) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
-
-  const updateOrder = (id: string, updates: Partial<ServiceOrder>) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
-  };
-
-  const deleteOrder = (id: string) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, deleted: true } : o));
-  };
-
-  const addPayment = (paymentData: Omit<PaymentTransaction, 'id' | 'date'>) => {
-    const newPayment: PaymentTransaction = {
-      id: `pay-${crypto.randomUUID().split('-')[0]}`,
-      date: new Date().toISOString(),
-      ...paymentData
-    };
-    setPayments(prev => [newPayment, ...prev]);
   };
 
   const login = () => {
@@ -115,7 +68,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ orders: orders.filter(o => !o.deleted), payments, addOrder, updateOrderStatus, updateOrder, deleteOrder, addPayment, isAuthenticated, login, logout }}>
+    <AppContext.Provider value={{ 
+      orders, 
+      payments, 
+      addOrder: handleAddOrder, 
+      updateOrderStatus, 
+      updateOrder, 
+      deleteOrder, 
+      addPayment: baseAddPayment, 
+      isAuthenticated, 
+      login, 
+      logout 
+    }}>
       {children}
     </AppContext.Provider>
   );

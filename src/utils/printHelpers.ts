@@ -16,6 +16,12 @@ type PrintableOrderData = {
   device?: ServiceOrder['device'];
   repair?: ServiceOrder['repair'];
 };
+export const STORE_INFO = {
+  nombreLocal: "MECANICA CELULAR", // Reemplaza con el nombre de tu local
+  direccion: "JOSE GUERRERO Y LIZARDO RUIZ, QUITO", // Reemplaza con tu dirección
+  RUC: "0402083232001", // Reemplaza con tu RUC
+  Telefono: "0998075071" // Reemplaza con tu teléfono
+};
 
 export const printReceipt = (
   order: OrderForNotaVenta | OrderForTicket,
@@ -32,7 +38,7 @@ export const printReceipt = (
   const orderData: PrintableOrderData = order;
   const date = new Date(orderData.createdAt || orderData.date || new Date()).toLocaleDateString();
   const time = new Date(orderData.createdAt || orderData.date || new Date()).toLocaleTimeString([], { hour12: false });
-  const logoPath = '/Logo.svg';
+  const logoPath = './Logo.svg';
 
   if (docType === 'nota-venta') {
     const totalAmount = orderData.amount || orderData.total || (typeof orderData.repair?.repairTotalCost === 'number' ? orderData.repair.repairTotalCost : 0);
@@ -102,8 +108,10 @@ export const printReceipt = (
         <body>
           <div class="header">
             <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'"/>
-            <h1>NOTA DE VENTA</h1>
-            <p>N° ${numDoc}</p>
+            <h1>${STORE_INFO.nombreLocal}</h1>
+            <p>${STORE_INFO.direccion}</p>
+            <p>RUC: ${STORE_INFO.RUC} | Telf: ${STORE_INFO.Telefono}</p>
+            <h2 style="margin: 10px 0; font-size: ${isThermal ? '12pt' : '14pt'}; border-top: 1px dashed #000; padding-top: 5px;">NOTA DE VENTA N° ${numDoc}</h2>
           </div>
 
           <div class="doc-info">
@@ -202,8 +210,10 @@ export const printReceipt = (
             <div class="header-container">
               <div class="header-left">
                 <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'"/>
-                <p>Dirección: JOSE GUERRERO Y LIZARDO RUIZ, QUITO</p>
-                <p>Telf: 0998075071</p>
+                <p><strong>${STORE_INFO.nombreLocal}</strong></p>
+                <p>Dirección: ${STORE_INFO.direccion}</p>
+                <p>RUC: ${STORE_INFO.RUC}</p>
+                <p>Telf: ${STORE_INFO.Telefono}</p>
               </div>
               <div class="header-right">
                 <h1>TICKET DE INGRESO</h1>
@@ -295,8 +305,9 @@ export const printReceipt = (
         <body>
           <div class="header">
             <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'"/>
-            <p>DIR: JOSE GUERRERO Y LIZARDO RUIZ, QUITO</p>
-            <p>TELF: 0998075071</p>
+            <p class="strong">${STORE_INFO.nombreLocal}</p>
+            <p>DIR: ${STORE_INFO.direccion}</p>
+            <p>RUC: ${STORE_INFO.RUC}</p>
           </div>
 
           <div class="section">
@@ -338,7 +349,8 @@ export const printReceipt = (
           </div>
 
           <div class="footer">
-            <p>WhatsApp: 0998075071</p>
+            <p>${STORE_INFO.nombreLocal}</p>
+            <p>WhatsApp: ${STORE_INFO.Telefono}</p>
           </div>
         </body>
       </html>

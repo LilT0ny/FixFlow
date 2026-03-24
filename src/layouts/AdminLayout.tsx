@@ -13,7 +13,7 @@ export const AdminLayout = () => {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-10 transition-transform">
         <div className="p-6 flex items-center gap-3">
           <div className="w-8 h-8 flex items-center justify-center">
-            <img src="/Logo.svg" alt="Logo Mecánica Celular" className="w-full h-full object-contain" />
+            <img src="./Logo.svg" alt="Logo Mecánica Celular" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900">Mecánica Celular</h1>
         </div>
@@ -68,7 +68,7 @@ export const AdminLayout = () => {
         <aside className={`fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-40 transform transition-transform duration-300 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
            <div className="p-6 flex items-center gap-3 border-b">
             <div className="w-8 h-8 flex items-center justify-center">
-              <img src="/Logo.svg" alt="Logo Mecánica Celular" className="w-full h-full object-contain" />
+              <img src="./Logo.svg" alt="Logo Mecánica Celular" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-gray-900">Mecánica Celular</h1>
           </div>

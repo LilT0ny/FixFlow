@@ -44,12 +44,12 @@ export const CheckInForm: React.FC = () => {
     setConfirmSubmitModal(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setConfirmSubmitModal(false);
     
-    // Simulate API call to Supabase
-    setTimeout(() => {
-      const newOrder = addOrder(formData);
+    // API call to PHP
+    try {
+      const newOrder = await addOrder(formData);
       setCreatedOrderNumber(newOrder.orderNumber);
       setIsSubmitted(true);
 
@@ -61,8 +61,10 @@ export const CheckInForm: React.FC = () => {
       const message = `Hola ${formData.customer.fullName}, te informamos que tu ${formData.device.brand} ${formData.device.model} ha sido recibido en nuestro taller con la orden #${newOrder.orderNumber}.`;
       const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
-
-    }, 500);
+    } catch (error) {
+      console.error('Error in submission:', error);
+      alert('Hubo un error al guardar la orden.');
+    }
   };
 
   const steps = [
