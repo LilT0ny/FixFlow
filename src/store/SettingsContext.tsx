@@ -4,13 +4,13 @@ import type { BusinessSettings } from '../types';
 import { SettingsContext } from './SettingsContextType';
 
 const DEFAULT_SETTINGS: BusinessSettings = {
-  companyName: 'CELL REPAIR CENTER',
+  companyName: '',
   logo: '',
   whatsappTemplate: 'Hola {{customer}}, te informamos que tu {{device}} ({{model}}) se encuentra en estado: {{status}}. Total: ${{total}}. Saldo pendiente: ${{saldo}}.',
   printerType: '80mm',
-  phone: '0000000000',
-  address: 'Main Street 123',
-  ruc: '9999999999999'
+  phone: '',
+  address: '',
+  ruc: ''
 };
 
 // SettingsProvider component

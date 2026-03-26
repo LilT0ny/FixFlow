@@ -6,6 +6,7 @@ import { FiltroTabs } from './components/molecules/FiltroTabs';
 import { CardOrden } from './components/organisms/CardOrden';
 import { PrintManager } from '../../components/organisms/PrintManager';
 import { EditOrderModal } from './components/organisms/EditOrderModal';
+import { EvidencePhotosModal } from './components/organisms/EvidencePhotosModal';
 
 /** Layout Feature para la lista de dispositivos registrados */
 export const DeviceListFeature: React.FC = () => {
@@ -303,6 +304,23 @@ export const DeviceListFeature: React.FC = () => {
         onClose={() => ctrl.setEditModal(null)}
         onSave={ctrl.confirmEditSave}
       />
+
+      {/* ─── Modal: Fotos de Evidencia ─── */}
+      {ctrl.photosModal?.isOpen && ctrl.photosModal.orderToEdit && (
+        <EvidencePhotosModal
+          isOpen={ctrl.photosModal.isOpen}
+          orderNumber={ctrl.photosModal.orderToEdit.orderNumber}
+          photos={ctrl.photosModal.orderToEdit.repair.evidencePhotos || []}
+          onClose={() => ctrl.setPhotosModal(null)}
+          onUpload={(stage, file) => ctrl.processFileUpload(ctrl.photosModal!.orderToEdit!, stage, file)}
+          onDelete={(photoIndex) => {
+            const order = ctrl.photosModal!.orderToEdit!;
+            const newPhotos = order.repair.evidencePhotos.filter((_, i) => i !== photoIndex);
+            ctrl.updateOrder(order.id, { repair: { ...order.repair, evidencePhotos: newPhotos } });
+            ctrl.setPhotosModal({ isOpen: true, orderToEdit: { ...order, repair: { ...order.repair, evidencePhotos: newPhotos } } });
+          }}
+        />
+      )}
 
       {/* ─── Modal: Eliminar Orden/Nota ─── */}
       {ctrl.deleteConfirmModal?.isOpen && (

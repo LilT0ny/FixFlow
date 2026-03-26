@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { ServiceOrder, PaymentTransaction, DeviceCheckInForm, OrderStatus } from '../types';
 import { useOrders } from '../hooks/useOrders';
 import { usePayments } from '../hooks/usePayments';
+import { AuthService } from '../services/AuthService';
 
 interface AppContextType {
   orders: ServiceOrder[];
@@ -13,7 +14,7 @@ interface AppContextType {
   deleteOrder: (id: string) => void;
   addPayment: (payment: Omit<PaymentTransaction, 'id' | 'date'>) => void;
   isAuthenticated: boolean;
-  login: () => void;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -21,7 +22,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('repair_auth') === 'true';
+    return AuthService.getSession() !== null;
   });
 
   // Utilize our newly separated Controller Hooks.
@@ -57,13 +58,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return newOrder;
   };
 
-  const login = () => {
-    localStorage.setItem('repair_auth', 'true');
-    setIsAuthenticated(true);
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const user = await AuthService.login(username, password);
+      if (user) {
+        AuthService.saveSession(user);
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[login] Error:', err);
+      throw err;
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('repair_auth');
+    AuthService.clearSession();
     setIsAuthenticated(false);
   };
 
