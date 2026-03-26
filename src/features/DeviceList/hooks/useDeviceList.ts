@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useOrders } from '../../../hooks/useOrders';
 import { useSettings } from '../../../hooks/useSettings';
 import { PaymentService } from '../../../services/PaymentService';
-import type { OrderStatus, ServiceOrder, CustomerData } from '../../../types';
+import type { OrderStatus, ServiceOrder, CustomerData, DeviceCheckInForm } from '../../../types';
 
 export const useDeviceList = () => {
   const { orders, updateOrderStatus, updateOrder, deleteOrder } = useOrders();
@@ -167,7 +167,7 @@ export const useDeviceList = () => {
         if (saldo > 0 && !generateSalesNote) {
           await PaymentService.savePayment({
             amount: saldo,
-            method: paymentMethod as any,
+            method: paymentMethod as 'efectivo' | 'transferencia',
             type: 'reparacion',
             transactionType: 'ingreso',
             description: `COBRO FINAL - ORDEN #${currentOrder.orderNumber}`,
@@ -188,8 +188,8 @@ export const useDeviceList = () => {
               evidencePhotos: []
             },
             paymentMethod: paymentMethod,
-            skipIncomeRecord: false // Queremos que este sea el ingreso principal ("el del ticket")
-          } as any, 'NT');
+            skipIncomeRecord: false // Queremos que este sea el único ingreso registrado (el del ticket)
+          } as DeviceCheckInForm & { paymentMethod: string; skipIncomeRecord: boolean }, 'NT');
         }
       }
 

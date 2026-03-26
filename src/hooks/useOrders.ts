@@ -57,7 +57,7 @@ export function useOrders() {
     
     // Unimos los datos recibidos (que pueden traer flags extra como skipIncomeRecord) 
     // con los campos requeridos para la orden.
-    const orderToSave: any = {
+    const orderToSave: Omit<ServiceOrder, 'id' | 'createdAt'> & { paymentMethod?: string; skipIncomeRecord?: boolean } = {
       ...data,
       orderNumber,
       status:   'recibido' as OrderStatus

@@ -1,6 +1,6 @@
 // src/services/OrderService.ts
 import { supabase } from '../lib/supabase';
-import type { ServiceOrder, EvidencePhoto, OrderStatus } from '../types';
+import type { ServiceOrder, EvidencePhoto, OrderStatus, DeviceCheckInForm } from '../types';
 
 /** Tipos de respuesta para mantener compatibilidad */
 interface SaveOrderResponse {
@@ -15,6 +15,12 @@ interface StatusResponse {
   status: string;
   message?: string;
   order?: ServiceOrder;
+}
+
+/** Interface for order creation payload with optional flags */
+export interface OrderCreationPayload extends DeviceCheckInForm {
+  paymentMethod?: string;
+  skipIncomeRecord?: boolean;
 }
 
 export const OrderService = {
@@ -177,7 +183,7 @@ export const OrderService = {
       let resultId = '';
 
       if (isNT) {
-        const method = (orderData as any).paymentMethod || 'efectivo';
+        const method = (orderData as OrderCreationPayload).paymentMethod || 'efectivo';
         // FLUJO NV: Tabla notas_venta
         const { data: nt, error: ntErr } = await supabase
           .from('notas_venta')
@@ -193,7 +199,7 @@ export const OrderService = {
         resultId = nt.id;
         
         // Registrar el ingreso financiero si no se indica saltar
-        if (!(orderData as any).skipIncomeRecord) {
+        if (!(orderData as OrderCreationPayload).skipIncomeRecord) {
           await supabase.from('ingresos').insert({
             monto: Number(orderData.repair.repairTotalCost),
             metodo: method,
@@ -248,6 +254,8 @@ export const OrderService = {
             id_orden: order.id,
             id_cliente: client.id
           });
+          // Marcamos que ya se registró el ingreso para evitar duplicidad en el hook del contexto
+          (orderData as OrderCreationPayload).skipIncomeRecord = true;
         }
 
         // Fotos
@@ -357,8 +365,8 @@ export const OrderService = {
     return { status: 'success' };
   },
 
-  // Helpers internos para normalizar datos
-  _mapOrder(order: any): ServiceOrder {
+  // Helpers internos para normalizar datos (reemplazar 'any' por una interfaz genérica de Supabase)
+  _mapOrder(order: Record<string, any>): ServiceOrder {
     return {
       id: order.id.toString(),
       orderNumber: order.numero_orden,
@@ -389,8 +397,8 @@ export const OrderService = {
         reportedIssue: order.falla_reportada,
         repairTotalCost: Number(order.costo_total_reparacion),
         initialDeposit: Number(order.abono_inicial),
-        evidencePhotos: order.fotos ? (order.fotos as any[]).map((f) => ({
-          stage: f.etapa,
+        evidencePhotos: order.fotos ? (order.fotos as { etapa: string; url_foto: string }[]).map((f) => ({
+          stage: f.etapa as any,
           url: f.url_foto
         })) : []
       }

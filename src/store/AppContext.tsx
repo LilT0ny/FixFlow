@@ -40,11 +40,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   } = usePayments();
 
   // Combine actions when adding an order requires a payment deposit
-  const handleAddOrder = async (data: DeviceCheckInForm) => {
+  const handleAddOrder = async (data: DeviceCheckInForm & { skipIncomeRecord?: boolean }) => {
+    // We pass 'REP' by default, if it's 'NT' it's handled differently
     const newOrder = await baseAddOrder(data);
     
-    // Automatically add payment log if deposit is given
-    if (data.repair.initialDeposit && data.repair.initialDeposit > 0) {
+    // Automatically add payment log if deposit is given AND it's a repair order (REP)
+    // AND it's NOT explicitly marked to skip income (which happens for NT flows)
+    if (newOrder.orderNumber.startsWith('REP') && data.repair.initialDeposit && data.repair.initialDeposit > 0 && !data.skipIncomeRecord) {
       await baseAddPayment({
         amount: data.repair.initialDeposit,
         method: 'efectivo',

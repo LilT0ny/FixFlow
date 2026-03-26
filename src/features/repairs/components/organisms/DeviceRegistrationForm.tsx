@@ -3,11 +3,9 @@ import { useDeviceValidation } from '../../hooks/useDeviceValidation';
 import { Input } from '../../../../components/atoms/Input';
 import { TextArea } from '../../../../components/atoms/TextArea';
 import { Select } from '../../../../components/atoms/Select';
-import { Button } from '../../../../components/atoms/Button';
 import { FormField } from '../../../../components/molecules/FormField';
-import { Card } from '../../../../components/atoms/Card';
 import { OrderService } from '../../../../services/OrderService';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Users, MonitorSmartphone, FileText } from 'lucide-react';
 
 import type { DeviceCheckInForm, ServiceOrder } from '../../../../types';
 
@@ -65,7 +63,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
       };
       checkClient();
     }
-  }, [data.cedula, setData]); // Agregué setData a dependencias
+  }, [data.cedula, setData]);
 
   const handleNext = () => {
     let fieldsToValidate: (keyof typeof data)[] = [];
@@ -112,8 +110,6 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
         
         setShowSuccessToast(true);
         setTimeout(() => setShowSuccessToast(false), 4000);
-      } else {
-        alert('Registro guardado exitosamente: \n' + JSON.stringify(data, null, 2));
       }
     }
   };
@@ -140,149 +136,335 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
   const isSaveDisabled = step === 3 && !isStep3Valid;
 
   return (
-    <Card className="w-full max-w-2xl mx-auto p-6 bg-white shadow-xl rounded-2xl relative">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-surface-900">Registro de Dispositivo</h2>
-        <div className="flex gap-2 mt-4">
-          <div className={`h-2 flex-1 rounded-full ${step >= 1 ? 'bg-primary-500' : 'bg-surface-200'}`} />
-          <div className={`h-2 flex-1 rounded-full ${step >= 2 ? 'bg-primary-500' : 'bg-surface-200'}`} />
-          <div className={`h-2 flex-1 rounded-full ${step >= 3 ? 'bg-primary-500' : 'bg-surface-200'}`} />
+    <div className="w-full max-w-2xl mx-auto bg-white shadow-2xl shadow-surface-200/50 rounded-[40px] border border-surface-100/50 p-8 md:p-12 relative overflow-hidden animate-zoom-in">
+      {/* Background Decoration */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50/50 rounded-full -mr-32 -mt-32 blur-3xl -z-10"></div>
+      
+      <div className="mb-12">
+        <div className="flex justify-between items-end mb-6">
+          <div>
+            <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.3em] mb-2 block">Cuestionario</span>
+            <h2 className="text-3xl font-black text-surface-900 tracking-tight">Registro de Ingreso</h2>
+          </div>
+          <div className="text-right">
+             <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest block mb-1">Progreso</span>
+             <span className="text-lg font-black text-surface-900 tracking-tighter">Paso {step} <span className="text-surface-300 font-bold mx-0.5">/</span> 3</span>
+          </div>
         </div>
-        <p className="text-sm text-surface-500 mt-2">Paso {step} de 3</p>
+
+        <div className="flex gap-3 mt-4">
+          <div className={`h-2.5 flex-1 rounded-full transition-all duration-500 shadow-sm ${step >= 1 ? 'bg-primary-600' : 'bg-surface-100'}`} />
+          <div className={`h-2.5 flex-1 rounded-full transition-all duration-500 shadow-sm ${step >= 2 ? 'bg-primary-600' : 'bg-surface-100'}`} />
+          <div className={`h-2.5 flex-1 rounded-full transition-all duration-500 shadow-sm ${step >= 3 ? 'bg-primary-600' : 'bg-surface-100'}`} />
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {step === 1 && (
-          <div className="space-y-4 animate-fade-in">
-            <h3 className="text-lg font-semibold text-surface-800 border-b pb-2">Informacion del Cliente</h3>
-            <FormField label="Cedula / RUC" required error={touched.cedula ? errors.cedula : undefined} charCount={data.cedula.length} maxChars={13}>
-              <div className="relative">
-                <Input placeholder="10 digitos (Cedula) o 13 (RUC)" value={data.cedula} onChange={e => handleChange('cedula', e.target.value)} onBlur={() => handleBlur('cedula')} error={touched.cedula && !!errors.cedula} maxLength={13} disabled={isValidatingCedula} />
-                {isValidatingCedula && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-600"><Loader2 className="w-5 h-5 animate-spin" /></div>}
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+            <h3 className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-50 pb-3 flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary-500" />
+              Datos del Propietario
+            </h3>
+            
+            <FormField label="Número de Identificación (Cédula/RUC)" required error={touched.cedula ? errors.cedula : undefined}>
+              <div className="relative group">
+                <Input 
+                  placeholder="Escribe la identificación..." 
+                  value={data.cedula} 
+                  onChange={e => handleChange('cedula', e.target.value)} 
+                  onBlur={() => handleBlur('cedula')} 
+                  error={touched.cedula && !!errors.cedula} 
+                  maxLength={13} 
+                  className="pl-4 pr-12 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                  disabled={isValidatingCedula} 
+                />
+                {isValidatingCedula && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-600">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  </div>
+                )}
+                {!isValidatingCedula && data.cedula.length >= 10 && !errors.cedula && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 animate-in zoom-in duration-300">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                )}
               </div>
             </FormField>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Nombres" required error={touched.nombres ? errors.nombres : undefined}>
-                <Input placeholder="EJ: JUAN" value={data.nombres} onChange={e => handleChange('nombres', e.target.value)} onBlur={() => handleBlur('nombres')} error={touched.nombres && !!errors.nombres} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Nombres Completos" required error={touched.nombres ? errors.nombres : undefined}>
+                <Input 
+                  placeholder="Ej: Juan Antonio" 
+                  value={data.nombres} 
+                  onChange={e => handleChange('nombres', e.target.value)} 
+                  onBlur={() => handleBlur('nombres')} 
+                  error={touched.nombres && !!errors.nombres}
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                />
               </FormField>
-              <FormField label="Apellidos" required error={touched.apellidos ? errors.apellidos : undefined}>
-                <Input placeholder="EJ: PEREZ" value={data.apellidos} onChange={e => handleChange('apellidos', e.target.value)} onBlur={() => handleBlur('apellidos')} error={touched.apellidos && !!errors.apellidos} />
+              <FormField label="Apellidos Completos" required error={touched.apellidos ? errors.apellidos : undefined}>
+                <Input 
+                  placeholder="Ej: Pérez García" 
+                  value={data.apellidos} 
+                  onChange={e => handleChange('apellidos', e.target.value)} 
+                  onBlur={() => handleBlur('apellidos')} 
+                  error={touched.apellidos && !!errors.apellidos} 
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                />
               </FormField>
             </div>
-            <FormField label="Telefono" required error={touched.telefono ? errors.telefono : undefined}>
-              <div className="flex flex-col gap-1">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Teléfono / WhatsApp" required error={touched.telefono ? errors.telefono : undefined}>
+                <div className="relative">
+                  <Input 
+                    placeholder="0987-654-321" 
+                    value={data.telefono} 
+                    onChange={e => handleChange('telefono', e.target.value)} 
+                    onBlur={() => handleBlur('telefono')} 
+                    error={touched.telefono && !!errors.telefono} 
+                    maxLength={10} 
+                    className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest pr-12"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${data.telefono.length === 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
+                      {data.telefono.length}/10
+                    </span>
+                  </div>
+                </div>
+              </FormField>
+              <FormField label="Correo de Contacto" error={touched.email ? errors.email : undefined}>
                 <Input 
-                  placeholder="Ej. 0987654321" 
-                  value={data.telefono} 
-                  onChange={e => handleChange('telefono', e.target.value)} 
-                  onBlur={() => handleBlur('telefono')} 
-                  error={touched.telefono && !!errors.telefono} 
-                  maxLength={10} 
-                  className="font-mono tracking-wider"
+                  type="email" 
+                  placeholder="usuario@ejemplo.com" 
+                  value={data.email} 
+                  onChange={e => handleChange('email', e.target.value)} 
+                  onBlur={() => handleBlur('email')} 
+                  error={touched.email && !!errors.email} 
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
                 />
-                <span className={`text-xs font-bold self-end ${data.telefono.length === 10 ? 'text-success-600' : 'text-warning-600'}`}>
-                  {data.telefono.length < 10 ? `${10 - data.telefono.length} faltantes` : 'Completo ✓'}
-                </span>
-              </div>
-            </FormField>
-            <FormField label="Correo Electronico" error={touched.email ? errors.email : undefined}>
-              <Input type="email" placeholder="Ej: usuario@edu.ec" value={data.email} onChange={e => handleChange('email', e.target.value)} onBlur={() => handleBlur('email')} error={touched.email && !!errors.email} />
-            </FormField>
+              </FormField>
+            </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-4 animate-fade-in">
-            <h3 className="text-lg font-semibold text-surface-800 border-b pb-2">Informacion del Dispositivo</h3>
-            <FormField label="Tipo de Equipo" required error={touched.deviceType ? errors.deviceType : undefined}>
-              <Select value={data.deviceType} onChange={e => handleChange('deviceType', e.target.value)} onBlur={() => handleBlur('deviceType')} error={touched.deviceType && !!errors.deviceType}>
-                <option value="" disabled>Seleccione un tipo...</option>
-                <option value="celular">Celular</option>
-                <option value="laptop">Laptop</option>
-                <option value="tablet">Tablet</option>
-                <option value="impresora">Impresora</option>
-                <option value="otro">Otro</option>
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+            <h3 className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-50 pb-3 flex items-center gap-2">
+              <MonitorSmartphone className="w-4 h-4 text-primary-500" />
+              Especificaciones de Hardware
+            </h3>
+            
+            <FormField label="Categoría de Dispositivo" required error={touched.deviceType ? errors.deviceType : undefined}>
+              <Select 
+                value={data.deviceType} 
+                onChange={e => handleChange('deviceType', e.target.value)} 
+                onBlur={() => handleBlur('deviceType')} 
+                error={touched.deviceType && !!errors.deviceType}
+                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold appearance-none"
+              >
+                <option value="" disabled>Selecciona una categoría...</option>
+                <option value="celular">Celular / Smartphone</option>
+                <option value="laptop">Computadora Portátil / Laptop</option>
+                <option value="tablet">Tablet / iPad</option>
+                <option value="impresora">Impresora / Multifunción</option>
+                <option value="otro">Otro Periférico</option>
               </Select>
             </FormField>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Marca" required error={touched.marca ? errors.marca : undefined}>
-                <Input placeholder="EJ: SAMSUNG" value={data.marca} onChange={e => handleChange('marca', e.target.value)} onBlur={() => handleBlur('marca')} error={touched.marca && !!errors.marca} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Marca del Fabricante" required error={touched.marca ? errors.marca : undefined}>
+                <Input 
+                  placeholder="Ej: Apple, Samsung, Dell..." 
+                  value={data.marca} 
+                  onChange={e => handleChange('marca', e.target.value)} 
+                  onBlur={() => handleBlur('marca')} 
+                  error={touched.marca && !!errors.marca}
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                />
               </FormField>
-              <FormField label="Modelo" required error={touched.modelo ? errors.modelo : undefined}>
-                <Input placeholder="EJ: GALAXY S23" value={data.modelo} onChange={e => handleChange('modelo', e.target.value)} onBlur={() => handleBlur('modelo')} error={touched.modelo && !!errors.modelo} />
+              <FormField label="Modelo Específico" required error={touched.modelo ? errors.modelo : undefined}>
+                <Input 
+                  placeholder="Ej: Galaxy S24 Ultra, MacBook Pro..." 
+                  value={data.modelo} 
+                  onChange={e => handleChange('modelo', e.target.value)} 
+                  onBlur={() => handleBlur('modelo')} 
+                  error={touched.modelo && !!errors.modelo}
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                />
               </FormField>
             </div>
-            <FormField label="IMEI/Serial (Opcional)" error={touched.imei ? errors.imei : undefined} charCount={data.imei.length} maxChars={15}>
-              <Input placeholder="15 digitos exactos" value={data.imei} onChange={e => handleChange('imei', e.target.value)} onBlur={() => handleBlur('imei')} error={touched.imei && !!errors.imei} maxLength={15} />
+
+            <FormField label="Número de Serie / IMEI" error={touched.imei ? errors.imei : undefined}>
+              <Input 
+                placeholder="Ingresa el identificador único del equipo..." 
+                value={data.imei} 
+                onChange={e => handleChange('imei', e.target.value)} 
+                onBlur={() => handleBlur('imei')} 
+                error={touched.imei && !!errors.imei} 
+                maxLength={30} 
+                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest"
+              />
             </FormField>
-            <FormField label="Estado Fisico del Dispositivo" error={touched.estadoFisico ? errors.estadoFisico : undefined} charCount={data.estadoFisico.length} maxChars={200}>
-              <TextArea placeholder="EJ: PANTALLA ROTA, SIN BOTONES LATERALES..." value={data.estadoFisico} onChange={e => handleChange('estadoFisico', e.target.value)} onBlur={() => handleBlur('estadoFisico')} error={touched.estadoFisico && !!errors.estadoFisico} rows={3} maxLength={200} />
+
+            <FormField label="Evaluación de Estado Físico" error={touched.estadoFisico ? errors.estadoFisico : undefined}>
+              <TextArea 
+                placeholder="Describe detalles, rayones, partes faltantes o daños visibles..." 
+                value={data.estadoFisico} 
+                onChange={e => handleChange('estadoFisico', e.target.value)} 
+                onBlur={() => handleBlur('estadoFisico')} 
+                error={touched.estadoFisico && !!errors.estadoFisico} 
+                rows={4} 
+                maxLength={300} 
+                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-medium leading-relaxed"
+              />
             </FormField>
           </div>
         )}
 
         {step === 3 && (
-          <div className="space-y-4 animate-fade-in">
-            <h3 className="text-lg font-semibold text-surface-800 border-b pb-2">Economico y Trabajo</h3>
-            <FormField label="Trabajo a Realizar" required error={touched.trabajoRealizar ? errors.trabajoRealizar : undefined} charCount={data.trabajoRealizar.length} maxChars={300}>
-              <TextArea placeholder="EJ: CAMBIO DE PANTALLA Y BATERIA..." value={data.trabajoRealizar} onChange={e => handleChange('trabajoRealizar', e.target.value)} onBlur={() => handleBlur('trabajoRealizar')} error={touched.trabajoRealizar && !!errors.trabajoRealizar} rows={4} maxLength={300} />
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+            <h3 className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-50 pb-3 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary-500" />
+              Detalles de Orden y Presupuesto
+            </h3>
+            
+            <FormField label="Servicio Requerido / Trabajo a Realizar" required error={touched.trabajoRealizar ? errors.trabajoRealizar : undefined}>
+              <TextArea 
+                placeholder="Explica detalladamente la falla reportada por el cliente y el trabajo técnico a ejecutar..." 
+                value={data.trabajoRealizar} 
+                onChange={e => handleChange('trabajoRealizar', e.target.value)} 
+                onBlur={() => handleBlur('trabajoRealizar')} 
+                error={touched.trabajoRealizar && !!errors.trabajoRealizar} 
+                rows={5} 
+                maxLength={500}
+                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-medium leading-relaxed"
+              />
             </FormField>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Costo Estimado ($)" error={touched.costoEstimado ? errors.costoEstimado : undefined}>
-                <Input type="number" min="0" step="0.01" placeholder="0.00" value={data.costoEstimado} onChange={e => handleChange('costoEstimado', e.target.value)} onBlur={() => handleBlur('costoEstimado')} error={touched.costoEstimado && !!errors.costoEstimado} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Costo Total Estimado ($)" error={touched.costoEstimado ? errors.costoEstimado : undefined}>
+                <div className="relative">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold">$</div>
+                   <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.01" 
+                    placeholder="0.00" 
+                    value={data.costoEstimado} 
+                    onChange={e => handleChange('costoEstimado', e.target.value)} 
+                    onBlur={() => handleBlur('costoEstimado')} 
+                    error={touched.costoEstimado && !!errors.costoEstimado}
+                    className="pl-8 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-lg font-black tracking-tight"
+                  />
+                </div>
               </FormField>
-              <FormField label="Abono Inicial ($)" error={touched.abonoInicial ? errors.abonoInicial : undefined}>
-                <Input type="number" min="0" step="0.01" placeholder="0.00" value={data.abonoInicial} onChange={e => handleChange('abonoInicial', e.target.value)} onBlur={() => handleBlur('abonoInicial')} error={touched.abonoInicial && !!errors.abonoInicial} />
+              <FormField label="Depósito Inicial / Abono ($)" error={touched.abonoInicial ? errors.abonoInicial : undefined}>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold">$</div>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.01" 
+                    placeholder="0.00" 
+                    value={data.abonoInicial} 
+                    onChange={e => handleChange('abonoInicial', e.target.value)} 
+                    onBlur={() => handleBlur('abonoInicial')} 
+                    error={touched.abonoInicial && !!errors.abonoInicial} 
+                    className="pl-8 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-lg font-black tracking-tight"
+                  />
+                </div>
               </FormField>
             </div>
-            <div className="bg-primary-50 p-4 rounded-xl mt-6 border border-primary-100">
-              <p className="text-sm text-primary-900">
-                <strong>Resumen:</strong> El equipo {data.marca} {data.modelo} sera registrado a nombre de {data.nombres} {data.apellidos}.
-                Revisa los datos antes de guardar.
-              </p>
+
+            <div className="bg-surface-900 text-white p-6 rounded-[32px] mt-8 shadow-2xl relative overflow-hidden group">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+               <div className="relative flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Confirmación de Datos</h4>
+                    <p className="text-xs font-medium text-white/90 leading-relaxed">
+                      Se registrará un <span className="font-black text-white">{data.deviceType} {data.marca}</span> a nombre de 
+                      <span className="font-black text-white ml-1">{data.nombres} {data.apellidos}</span>. 
+                      Verifica que los datos sean correctos antes de finalizar el proceso.
+                    </p>
+                  </div>
+               </div>
             </div>
           </div>
         )}
 
-        <div className="flex justify-between pt-6 border-t mt-8">
+        <div className="flex justify-between items-center pt-10 border-t border-surface-50 gap-4 mt-12">
           {step > 1 ? (
-            <Button type="button" variant="outline" onClick={handlePrev}>Anterior</Button>
+             <button
+              type="button"
+              onClick={handlePrev}
+              className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-surface-400 hover:bg-surface-50 transition-all active:scale-95 flex items-center gap-2"
+            >
+              Regresar
+            </button>
           ) : (
-            <div></div>
+            <div />
           )}
-          {step < 3 ? (
-            <Button type="button" onClick={handleNext} disabled={isNextDisabled} className={isNextDisabled ? 'opacity-50 cursor-not-allowed' : ''}>Siguiente</Button>
-          ) : (
-            <Button type="submit" disabled={isSaveDisabled || isSubmitting} className={isSaveDisabled || isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}>
-              {isSubmitting ? 'Saving...' : 'Save Registration'}
-            </Button>
-          )}
+          
+          <button
+            type={step === 3 ? "submit" : "button"}
+            onClick={step < 3 ? handleNext : undefined}
+            disabled={(step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting))}
+            className={`px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 ${
+              ((step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting)))
+              ? 'bg-surface-100 text-surface-300 cursor-not-allowed border-none shadow-none'
+              : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
+            }`}
+          >
+            {step === 3 ? (
+              isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-5 h-5" />
+                  Finalizar Registro
+                </>
+              )
+            ) : (
+              'Siguiente Paso'
+            )}
+          </button>
         </div>
       </form>
 
-
+      {/* SUCCESS TOAST */}
       {showSuccessToast && (
-        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-surface-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
-            <div className="bg-emerald-500 p-2 rounded-full">
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-10 z-[100] animate-in fade-in slide-in-from-bottom-12 duration-500">
+          <div className="bg-surface-950 text-white px-8 py-5 rounded-[28px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex items-center gap-5 border border-surface-800 backdrop-blur-xl">
+            <div className="bg-emerald-500 p-2.5 rounded-full shadow-lg shadow-emerald-500/20">
               <CheckCircle2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm">Registro Exitoso</p>
-              <p className="text-xs text-surface-400">El dispositivo y la orden han sido guardados.</p>
+              <p className="font-black text-sm tracking-tight">Registro Completado</p>
+              <p className="text-[11px] text-surface-400 font-bold uppercase tracking-widest mt-1">Orden de servicio generada con éxito</p>
             </div>
           </div>
         </div>
       )}
 
+      {/* AUTOFILL NOTIFICATION */}
       {showAutofillToast && foundClient && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-10 duration-500">
-          <div className="bg-primary-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-primary-400">
-            <CheckCircle2 className="w-4 h-4" />
-            <p className="text-sm font-medium">Cliente encontrado: {foundClient.fullName}</p>
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-12 duration-700">
+          <div className="bg-primary-600/90 text-white backdrop-blur-md px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-primary-400/50">
+            <div className="bg-white/20 p-1.5 rounded-full">
+              <Users className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-xs font-black uppercase tracking-widest">Cliente frecuente: {foundClient.fullName}</p>
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
