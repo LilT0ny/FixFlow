@@ -20,8 +20,8 @@ export const DashboardFeature: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-surface-900">Bienvenido de vuelta</h2>
-          <p className="text-surface-500 mt-2 font-medium">Resumen del taller al día de hoy.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-surface-900">Inicio</h2>
+          <p className="text-gray-500">Resumen del taller al día de hoy.</p>
         </div>
       </div>
 

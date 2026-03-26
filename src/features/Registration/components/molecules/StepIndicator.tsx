@@ -6,7 +6,7 @@ interface IndicadorPasosProps {
   totalPasos: number;
 }
 
-export const IndicadorPasos: React.FC<IndicadorPasosProps> = ({ pasoActual, totalPasos }) => {
+export const IndicadorPasos: React.FC<IndicadorPasosProps> = ({ pasoActual }) => {
   const pasos = [
     { num: 1, title: 'Cliente', icon: ClipboardList },
     { num: 2, title: 'Equipo', icon: Smartphone },
@@ -18,8 +18,7 @@ export const IndicadorPasos: React.FC<IndicadorPasosProps> = ({ pasoActual, tota
       <div className="mb-8 relative">
         <div className="absolute top-1/2 left-0 w-full h-1 bg-surface-100 rounded-full -translate-y-1/2"></div>
         <div 
-          className="absolute top-1/2 left-0 h-1 bg-primary-600 rounded-full -translate-y-1/2 transition-all duration-500 ease-in-out"
-          style={{ width: `${((pasoActual - 1) / (totalPasos - 1)) * 100}%` }}
+          className={`absolute top-1/2 left-0 h-1 bg-primary-600 rounded-full -translate-y-1/2 transition-all duration-500 ease-in-out w-step-${pasoActual}`}
         ></div>
         
         <div className="relative flex justify-between">

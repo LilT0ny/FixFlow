@@ -46,7 +46,7 @@ export interface ServiceOrder {
   deleted?: boolean;
 }
 
-export type PaymentMethod = 'efectivo' | 'transferencia';
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta';
 export type PaymentType = 'reparacion' | 'repuestos' | 'arriendo' | 'servicios' | 'insumos' | 'otro';
 export type TransactionType = 'ingreso' | 'egreso';
 
@@ -71,3 +71,16 @@ export interface PaymentTransaction {
   items?: SaleItem[]; // For manual sales with multiple items
   saleNumber?: string;
 }
+
+export type PrinterType = '58mm' | '80mm' | 'A4';
+
+export interface BusinessSettings {
+  companyName: string;
+  logo: string;
+  whatsappTemplate: string;
+  printerType: PrinterType;
+  phone: string;
+  address: string;
+  ruc: string;
+}
+

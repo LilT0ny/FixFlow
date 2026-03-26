@@ -6,10 +6,10 @@ export interface DeviceFormData {
   nombres: string;
   apellidos: string;
   telefono: string;
-  countryCode: string;
   email: string;
   
   // Device Info
+  deviceType: string;
   marca: string;
   modelo: string;
   imei: string;
@@ -27,9 +27,9 @@ export const initialFormData: DeviceFormData = {
   cedula: '',
   nombres: '',
   apellidos: '',
-  telefono: '',
-  countryCode: '+593',
+  telefono: '09',
   email: '',
+  deviceType: '',
   marca: '',
   modelo: '',
   imei: '',
@@ -129,6 +129,7 @@ export const useDeviceValidation = () => {
         break;
       case 'nombres':
       case 'apellidos':
+      case 'deviceType':
       case 'marca':
       case 'modelo':
       case 'trabajoRealizar':
@@ -136,7 +137,7 @@ export const useDeviceValidation = () => {
         break;
       case 'telefono':
         if (!value) return 'Requerido';
-        if (!/^\d{9}$/.test(String(value))) return 'El número debe contener 9 dígitos';
+        if (!/^\d{10}$/.test(String(value))) return 'El número debe contener 10 dígitos (Ecuador)';
         break;
       case 'email':
         if (value && !validateEmail(String(value))) return 'Correo electrónico inválido';
@@ -153,8 +154,27 @@ export const useDeviceValidation = () => {
   }, []);
 
   const handleChange = useCallback((field: keyof DeviceFormData, value: string | number) => {
-    setData(prev => ({ ...prev, [field]: value }));
-    const error = validateField(field, value);
+    let normalizedValue = value;
+    if (typeof value === 'string') {
+      if (['nombres', 'apellidos', 'marca', 'modelo', 'estadoFisico', 'trabajoRealizar'].includes(field)) {
+        normalizedValue = value.toUpperCase();
+      } else if (field === 'email') {
+        normalizedValue = value.toLowerCase();
+      }
+    }
+
+    if (field === 'telefono') {
+      let val = String(value).replace(/\D/g, '');
+      if (val.length > 0 && !val.startsWith('09')) {
+        if (val.startsWith('9')) val = '0' + val;
+        else val = '09' + val;
+      }
+      if (val.length > 10) val = val.substring(0, 10);
+      normalizedValue = val;
+    }
+
+    setData(prev => ({ ...prev, [field]: normalizedValue }));
+    const error = validateField(field, normalizedValue);
     setErrors(prev => ({
       ...prev,
       [field]: error,

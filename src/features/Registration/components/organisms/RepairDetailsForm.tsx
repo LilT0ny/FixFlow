@@ -137,6 +137,7 @@ export const FormularioDetalles: React.FC<FormularioDetallesProps> = ({ detalles
                 <span className="absolute bottom-1 left-1 bg-surface-900/80 text-white text-[10px] px-2 py-0.5 rounded-md uppercase font-bold">{foto.stage}</span>
                 <button
                   type="button"
+                  title="Remove photo"
                   onClick={() => eliminarFoto(index)}
                   className="absolute -top-2 -right-2 bg-danger-500 text-white rounded-full p-1 shadow-md hover:bg-danger-600 transition-colors"
                 >

@@ -1,75 +1,107 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useOrders } from '../../../hooks/useOrders';
 import { usePayments } from '../../../hooks/usePayments';
+import { useSettings } from '../../../store/SettingsContext';
 import type { OrderStatus, ServiceOrder, CustomerData } from '../../../types';
-
-export type FilterTab = 'all' | 'pendientes' | 'reparados' | 'entregados';
 
 export const useDeviceList = () => {
   const { orders, updateOrderStatus, updateOrder, deleteOrder } = useOrders();
-  const { payments, addPayment } = usePayments();
+  const { addPayment } = usePayments();
+  const { settings } = useSettings();
 
-  const [filter, setFilter] = useState<FilterTab>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeStatuses: OrderStatus[] = useMemo(() => {
+    const statusParam = searchParams.get('status');
+    if (!statusParam) return [];
+    return statusParam.split(',') as OrderStatus[];
+  }, [searchParams]);
+
+  const toggleStatus = (status: OrderStatus) => {
+    const newStatuses = activeStatuses.includes(status)
+      ? activeStatuses.filter(s => s !== status)
+      : [...activeStatuses, status];
+    const newParams = new URLSearchParams(searchParams);
+    if (newStatuses.length === 0) {
+      newParams.delete('status');
+    } else {
+      newParams.set('status', newStatuses.join(','));
+    }
+    setSearchParams(newParams);
+  };
+
+  const clearStatuses = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('status');
+    setSearchParams(newParams);
+  };
+
   const [search, setSearch] = useState('');
 
-  // Modals state
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [orderToPrint, setOrderToPrint] = useState<ServiceOrder | null>(null);
-  
-  const [statusConfirmModal, setStatusConfirmModal] = useState<{ isOpen: boolean, orderId: string, newStatus: OrderStatus } | null>(null);
-  
-  const [finalAmount, setFinalAmount] = useState<number | ''>('');
-  const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia'>('efectivo');
-  const [billingCustomer, setBillingCustomer] = useState<CustomerData | null>(null);
+  // ── Modal state ──────────────────────────────────────────────────────────────
+  const [isPrintModalOpen, setIsPrintModalOpen]     = useState(false);
+  const [orderToPrint,     setOrderToPrint]         = useState<ServiceOrder | null>(null);
 
-  const [notaVentaConfirmModal, setNotaVentaConfirmModal] = useState<{ isOpen: boolean, order: ServiceOrder } | null>(null);
-  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean, orderId: string } | null>(null);
-  const [photosModal, setPhotosModal] = useState<{ isOpen: boolean, orderToEdit: ServiceOrder | null } | null>(null);
-  const [editModal, setEditModal] = useState<{ isOpen: boolean, order: ServiceOrder } | null>(null);
+  const [statusConfirmModal, setStatusConfirmModal] = useState<{
+    isOpen: boolean; orderId: string; newStatus: OrderStatus;
+  } | null>(null);
+
+  /** Método de pago capturado al entregar */
+  const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia'>('efectivo');
+  /** Datos de facturación opcionales para nota de venta */
+  const [billingCustomer, setBillingCustomer] = useState<CustomerData | null>(null);
+  /** Flag para mostrar spinner mientras se guarda el state change */
+  const [isConfirming, setIsConfirming] = useState(false);
+  /** Mensaje de éxito tras operación exitosa en BD — se auto-limpia en 3s */
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const deleteConfirmModal_state = useState<{ isOpen: boolean; orderId: string } | null>(null);
+  const [deleteConfirmModal, setDeleteConfirmModal] = deleteConfirmModal_state;
+  const [photosModal,        setPhotosModal]        = useState<{ isOpen: boolean; orderToEdit: ServiceOrder | null } | null>(null);
+  const [editModal,          setEditModal]          = useState<{ isOpen: boolean; order: ServiceOrder } | null>(null);
+
+  /** Muestra un mensaje de éxito por 3 segundos y luego lo limpia */
+  const showSuccess = useCallback((msg: string) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(null), 3500);
+  }, []);
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
-      if (filter === 'pendientes' && !['recibido', 'diagnostico', 'esperando_repuestos'].includes(o.status)) return false;
-      if (filter === 'reparados' && o.status !== 'listo') return false;
-      if (filter === 'entregados' && o.status !== 'entregado') return false;
-
+      if (activeStatuses.length > 0 && !activeStatuses.includes(o.status)) return false;
       if (search) {
         const q = search.toLowerCase();
-        if (!o.customer.fullName.toLowerCase().includes(q) && 
-            !o.customer.documentId.toLowerCase().includes(q) &&
-            !(o.device.serialNumber || '').toLowerCase().includes(q) &&
-            !o.orderNumber.toLowerCase().includes(q)) {
-          return false;
-        }
+        if (
+          !o.customer.fullName.toLowerCase().includes(q) &&
+          !o.customer.documentId.toLowerCase().includes(q) &&
+          !(o.device.serialNumber || '').toLowerCase().includes(q) &&
+          !o.orderNumber.toLowerCase().includes(q)
+        ) return false;
       }
       return true;
     });
-  }, [orders, filter, search]);
+  }, [orders, activeStatuses, search]);
 
   const getStatusLabel = (status: OrderStatus) => {
     switch (status) {
-      case 'recibido': return 'Recibido';
-      case 'diagnostico': return 'En Diagnóstico';
+      case 'recibido':            return 'Recibido';
+      case 'diagnostico':         return 'En Diagnóstico';
       case 'esperando_repuestos': return 'Esperando Repuestos';
-      case 'listo': return 'Listo para Entrega';
-      case 'entregado': return 'Entregado';
-      default: return status;
+      case 'listo':               return 'Listo para Entrega';
+      case 'entregado':           return 'Entregado';
+      default:                    return status;
     }
   };
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case 'recibido': return 'bg-primary-100 text-primary-800 border-primary-200';
-      case 'diagnostico': return 'bg-warning-100 text-warning-800 border-warning-200';
+      case 'recibido':            return 'bg-primary-100 text-primary-800 border-primary-200';
+      case 'diagnostico':         return 'bg-warning-100 text-warning-800 border-warning-200';
       case 'esperando_repuestos': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'listo': return 'bg-success-100 text-success-800 border-success-200';
-      case 'entregado': return 'bg-surface-100 text-surface-800 border-surface-200';
-      default: return 'bg-surface-100 text-surface-800';
+      case 'listo':               return 'bg-success-100 text-success-800 border-success-200';
+      case 'entregado':           return 'bg-surface-100 text-surface-800 border-surface-200';
+      default:                    return 'bg-surface-100 text-surface-800';
     }
-  };
-
-  const getPagado = (orderId: string) => {
-    return payments.filter(p => p.orderId === orderId && p.transactionType === 'ingreso').reduce((sum, p) => sum + p.amount, 0);
   };
 
   const notifyWhatsApp = (order: ServiceOrder, statusText: string) => {
@@ -77,62 +109,82 @@ export const useDeviceList = () => {
     if (phoneNumber.startsWith('0')) {
       phoneNumber = '593' + phoneNumber.substring(1);
     }
-    const message = `Hola ${order.customer.fullName}, te informamos que tu ${order.device.brand} ${order.device.model} se encuentra en estado: ${statusText}.`;
-    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+
+    const total = Number(order.repair.repairTotalCost) || 0;
+    const abono = Number(order.repair.initialDeposit) || 0;
+    const saldo = total - abono;
+
+    const msg = settings.whatsappTemplate
+      .replace(/{{customer}}/g, order.customer.fullName)
+      .replace(/{{device}}/g, order.device.brand)
+      .replace(/{{model}}/g, order.device.model)
+      .replace(/{{status}}/g, statusText)
+      .replace(/{{orderNumber}}/g, order.orderNumber)
+      .replace(/{{total}}/g, total.toFixed(2))
+      .replace(/{{abono}}/g, abono.toFixed(2))
+      .replace(/{{saldo}}/g, saldo.toFixed(2));
+
+    window.open(`https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  const confirmStatusChange = () => {
+  /**
+   * Confirma el cambio de estado.
+   * - Para "entregado": lee costos directamente del objeto de la orden (sin input manual).
+   * - Llama a la BD antes de resetear el modal → si falla, el modal permanece abierto.
+   * - Dispara WhatsApp solo para estados distintos de "entregado".
+   */
+  const confirmStatusChange = async () => {
     if (!statusConfirmModal) return;
     const { orderId, newStatus } = statusConfirmModal;
-    
-    updateOrderStatus(orderId, newStatus);
-    
-    if (billingCustomer) {
-      updateOrder(orderId, { billingCustomer });
-      const orderToUpdate = orders.find(o => o.id === orderId);
-      if (orderToUpdate && billingCustomer.documentId !== '9999999999999') {
-        const hasNewAddress = billingCustomer.address && billingCustomer.address !== orderToUpdate.customer.address;
-        const hasNewEmail = billingCustomer.email && billingCustomer.email !== orderToUpdate.customer.email;
-        if (hasNewAddress || hasNewEmail) {
-          if (window.confirm("¿Deseas guardar permanentemente esta información adicional en la ficha del cliente original?")) {
-            updateOrder(orderId, { 
-              customer: { 
-                ...orderToUpdate.customer, 
-                address: billingCustomer.address || orderToUpdate.customer.address, 
-                email: billingCustomer.email || orderToUpdate.customer.email 
-              } 
-            });
-          }
+    const currentOrder = orders.find(o => o.id === orderId);
+    if (!currentOrder) return;
+
+    setIsConfirming(true);
+    try {
+      await updateOrderStatus(orderId, newStatus);
+
+      // Guardar billingCustomer si aplica
+      if (billingCustomer && newStatus === 'entregado') {
+        await updateOrder(orderId, { billingCustomer });
+      }
+
+      // Registrar cobro final si hay saldo pendiente
+      if (newStatus === 'entregado') {
+        const total  = Number(currentOrder.repair.repairTotalCost) || 0;
+        const abono  = Number(currentOrder.repair.initialDeposit)  || 0;
+        const saldo  = total - abono;
+        if (saldo > 0) {
+          await addPayment({
+            amount: saldo,
+            method: paymentMethod,
+            type: 'reparacion',
+            transactionType: 'ingreso',
+            description: `Cobro final reparación orden ${currentOrder.orderNumber}`,
+            orderId,
+          });
         }
       }
-    }
 
-    if (newStatus === 'entregado' && typeof finalAmount === 'number') {
-      const pagado = getPagado(orderId);
-      const saldo = finalAmount - pagado;
-      if (saldo > 0) {
-        addPayment({
-          amount: saldo,
-          method: paymentMethod,
-          type: 'reparacion',
-          transactionType: 'ingreso',
-          description: `Cobro final de reparación de orden ${orders.find(o => o.id === orderId)?.orderNumber || ''}`,
-          orderId
-        });
+      // Notificar WhatsApp solo si no es entregado (para evitar doble apertura con impresión)
+      if (newStatus !== 'entregado') {
+        notifyWhatsApp(currentOrder, getStatusLabel(newStatus));
       }
+
+      // Solo cerramos el modal si la operación fue exitosa
+      setStatusConfirmModal(null);
+      setPaymentMethod('efectivo');
+      setBillingCustomer(null);
+      showSuccess(`✓ Estado actualizado a "${getStatusLabel(newStatus)}" en la base de datos.`);
+    } catch {
+      // Error ya manejado en useOrders (alert). El modal permanece abierto.
+    } finally {
+      setIsConfirming(false);
     }
-    
-    const orderToNotify = orders.find(o => o.id === orderId);
-    if (orderToNotify) {
-      notifyWhatsApp(orderToNotify, getStatusLabel(newStatus));
-    }
-    
-    setStatusConfirmModal(null);
-    setFinalAmount('');
-    setBillingCustomer(null);
   };
 
+  /**
+   * Procesa la subida de fotos de evidencia, redimensiona a máx. 800px y actualiza la orden.
+   */
   const processFileUpload = (order: ServiceOrder, stage: 'antes' | 'durante' | 'despues', file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -141,21 +193,17 @@ export const useDeviceList = () => {
       img.src = base64String;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800;
-        let width = img.width;
-        let height = img.height;
+        const MAX = 800;
+        let { width, height } = img;
         if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+          if (width > MAX) { height *= MAX / width; width = MAX; }
         } else {
-          if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; }
+          if (height > MAX) { width *= MAX / height; height = MAX; }
         }
         canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-        const currentPhotos = order.repair.evidencePhotos || [];
-        const newPhotos = [...currentPhotos, { stage, url: resizedBase64 }];
+        canvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
+        const resized = canvas.toDataURL('image/jpeg', 0.7);
+        const newPhotos = [...(order.repair.evidencePhotos || []), { stage, url: resized }];
         updateOrder(order.id, { repair: { ...order.repair, evidencePhotos: newPhotos } });
         setPhotosModal({ isOpen: true, orderToEdit: { ...order, repair: { ...order.repair, evidencePhotos: newPhotos } } });
       };
@@ -164,20 +212,34 @@ export const useDeviceList = () => {
   };
 
   return {
-    orders, filteredOrders, filter, setFilter, search, setSearch,
+    orders, filteredOrders, activeStatuses, toggleStatus, clearStatuses, search, setSearch,
     isPrintModalOpen, setIsPrintModalOpen, orderToPrint, setOrderToPrint,
     statusConfirmModal, setStatusConfirmModal,
-    finalAmount, setFinalAmount, paymentMethod, setPaymentMethod, billingCustomer, setBillingCustomer,
-    notaVentaConfirmModal, setNotaVentaConfirmModal,
+    paymentMethod, setPaymentMethod,
+    billingCustomer, setBillingCustomer,
+    isConfirming,
+    successMessage,
     deleteConfirmModal, setDeleteConfirmModal,
     photosModal, setPhotosModal,
     editModal, setEditModal,
-    getStatusLabel, getStatusColor, notifyWhatsApp, confirmStatusChange, getPagado, processFileUpload,
-    updateOrder, deleteOrder, confirmDelete: () => {
+    getStatusLabel, getStatusColor,
+    notifyWhatsApp, confirmStatusChange,
+    processFileUpload,
+    updateOrder, deleteOrder,
+    confirmDelete: async () => {
       if (deleteConfirmModal) {
-        deleteOrder(deleteConfirmModal.orderId);
+        await deleteOrder(deleteConfirmModal.orderId);
         setDeleteConfirmModal(null);
+        showSuccess('✓ Orden eliminada de la base de datos.');
       }
-    }
+    },
+    confirmEditSave: async (updatedOrder: ServiceOrder) => {
+      await updateOrder(updatedOrder.id, {
+        customer: updatedOrder.customer,
+        device:   updatedOrder.device,
+        repair:   updatedOrder.repair,
+      });
+      showSuccess('✓ Cambios guardados en la base de datos.');
+    },
   };
 };

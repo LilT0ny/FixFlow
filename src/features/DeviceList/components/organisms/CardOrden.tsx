@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Edit2, FileText, MessageCircle, Printer, Trash2, Wrench } from 'lucide-react';
+import { Camera, Edit2, MessageCircle, Printer, Trash2, Wrench } from 'lucide-react';
 import type { OrderStatus, ServiceOrder } from '../../../../types';
 
 interface CardOrdenProps {
@@ -16,7 +16,7 @@ interface CardOrdenProps {
 }
 
 export const CardOrden: React.FC<CardOrdenProps> = ({ 
-  order, getStatusLabel, getStatusColor, onEdit, onDelete, onPhotos, onStatusChange, onPrint, onNotaVenta, onNotify 
+  order, getStatusLabel, getStatusColor, onEdit, onDelete, onPhotos, onStatusChange, onPrint, onNotify 
 }) => {
   const statusList: OrderStatus[] = ['recibido', 'diagnostico', 'esperando_repuestos', 'listo', 'entregado'];
 
@@ -66,9 +66,12 @@ export const CardOrden: React.FC<CardOrdenProps> = ({
 
            <div>
               <h4 className="text-sm font-semibold text-surface-900">Cliente</h4>
-              <p className="text-sm text-surface-600">{order.customer.fullName} • C.I: {order.customer.documentId}</p>
+              <p className="text-sm text-surface-600">
+                {order.customer.fullName || '—'}
+                {order.customer.documentId ? ` • C.I: ${order.customer.documentId}` : ''}
+              </p>
            </div>
-           
+
            <div className="pt-2">
              <button
                onClick={onPhotos}
@@ -111,16 +114,6 @@ export const CardOrden: React.FC<CardOrdenProps> = ({
             <Printer className="w-4 h-4" /> 
             <span className="hidden sm:inline">Imprimir</span>
           </button>
-          {order.status === 'entregado' && (
-            <button 
-              onClick={onNotaVenta}
-              className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white px-3 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm"
-              title="Generar Nota de Venta"
-            >
-              <FileText className="w-4 h-4" /> 
-              <span className="hidden sm:inline">Nota Venta</span>
-            </button>
-          )}
           <button 
             onClick={onNotify}
             className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white px-3 py-2 rounded-xl text-sm font-semibold hover:bg-[#20BE5C] transition-colors shadow-sm"

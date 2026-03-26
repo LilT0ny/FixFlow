@@ -48,3 +48,43 @@
   --color-surface-800: #1e293b;
   --color-surface-900: #0f172a;
 }
+
+@layer utilities {
+  .text-uppercase {
+    text-transform: uppercase;
+  }
+  .text-lowercase {
+    text-transform: lowercase;
+  }
+}
+
+/* Printing Utilities */
+.printable-receipt {
+  font-family: Helvetica, Arial, sans-serif;
+  color: #000;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.border-box { border: 2px solid #000; padding: 15px; border-radius: 8px; }
+.bg-gray { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.border-b-2-black { border-bottom: 2px solid #000; }
+.border-t-2-black { border-top: 2px solid #000; }
+.p-5-neg { padding: 5px; margin: -15px -15px 15px -15px; }
+.hp-2-black { border-bottom: 2px solid #000; padding-bottom: 20px; }
+.mt-60 { margin-top: 60px; }
+.w-80-auto { width: 80%; margin: 0 auto; }
+.p-left-10 { padding-left: 10px; }
+
+/* Business styles */
+.business-logo {
+  max-width: 120px;
+  max-height: 60px;
+  margin-bottom: 8px;
+}
+
+/* Dynamic widths for step indicators */
+.w-step-1 { width: 0%; }
+.w-step-2 { width: 50%; }
+.w-step-3 { width: 100%; }

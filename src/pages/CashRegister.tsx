@@ -1,8 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePayments } from '../hooks/usePayments'; // MVC Controller
-import { DollarSign, Wallet, ArrowDownRight, TrendingUp, Calculator, Wrench, ShoppingBag, Plus, Trash2, User, FileText, X, Printer } from 'lucide-react';
-import type { PaymentMethod, PaymentType, TransactionType, SaleItem, CustomerData } from '../types';
+import { 
+  Wallet, 
+  ArrowDownRight, 
+  TrendingUp, 
+  Calculator, 
+  Wrench, 
+  ShoppingBag, 
+  Plus, 
+  Trash2, 
+  User, 
+  X, 
+  Printer, 
+  ReceiptText, 
+  Minus,
+  CalendarDays,
+  Coins,
+  ArrowRightLeft,
+  CheckCircle2,
+  Loader2
+} from 'lucide-react';
+import type { PaymentMethod, PaymentType, TransactionType, SaleItem, CustomerData, PaymentTransaction } from '../types';
 import { printReceipt } from '../utils/printHelpers';
+import { useSettings } from '../store/SettingsContext';
 
 import { Button } from '../components/atoms/Button';
 import { Input } from '../components/atoms/Input';
@@ -11,20 +31,21 @@ import { Card } from '../components/atoms/Card';
 export const CashRegister = () => {
   // Using MVC Controller Hooks
   const { payments, addPayment } = usePayments();
+  const { settings } = useSettings();
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'all'>('all');
   
   // Basic date filter to today
   const today = new Date().toISOString().split('T')[0];
   const [dateFilter, setDateFilter] = useState(today);
 
-  const filteredPayments = payments.filter(p => {
+  const filteredPayments = Array.isArray(payments) ? payments.filter(p => {
     if (methodFilter !== 'all' && p.method !== methodFilter) return false;
     if (p.date.startsWith(dateFilter)) return true;
     return false;
-  });
+  }) : [];
 
-  const ingresos = filteredPayments.filter(p => p.transactionType === 'ingreso');
-  const egresos = filteredPayments.filter(p => p.transactionType === 'egreso');
+  const ingresos = Array.isArray(payments) ? filteredPayments.filter(p => p.transactionType === 'ingreso') : [];
+  const egresos = Array.isArray(payments) ? filteredPayments.filter(p => p.transactionType === 'egreso') : [];
 
   const totals = {
     efectivo: ingresos.filter(p => p.method === 'efectivo').reduce((acc, p) => acc + p.amount, 0) - egresos.filter(p => p.method === 'efectivo').reduce((acc, p) => acc + p.amount, 0),
@@ -53,9 +74,21 @@ export const CashRegister = () => {
     format: '58mm'
   });
 
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  useEffect(() => {
+    if (showSuccessToast) {
+      const timer = setTimeout(() => setShowSuccessToast(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessToast]);
+
   const handleCreatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPayment.amount || isNaN(Number(newPayment.amount))) return;
+    
+    setSaveStatus('saving');
     
     await addPayment({
       amount: Number(newPayment.amount),
@@ -65,14 +98,22 @@ export const CashRegister = () => {
       description: newPayment.description
     });
     
-    setIsModalOpen(false);
-    setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
+    setSaveStatus('success');
+    setShowSuccessToast(true);
+    
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setSaveStatus('idle');
+      setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
+    }, 1500);
   };
 
   const handleCreateSale = async (e: React.FormEvent) => {
     e.preventDefault();
     const total = saleData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     if (total <= 0) return;
+
+    setSaveStatus('saving');
 
     const saleNumber = `VNT-${Math.floor(100000 + Math.random() * 900000)}`;
     const description = saleData.items.map(i => `${i.quantity}x ${i.description}`).join(', ');
@@ -91,15 +132,23 @@ export const CashRegister = () => {
     const added = await addPayment(newTransaction);
     
     // Print the receipt
-    printReceipt(added as any, saleData.format, 'nota-venta');
+    if (added) {
+      printReceipt(added as unknown as PaymentTransaction, saleData.format, 'nota-venta', true, settings);
+    }
 
-    setIsSaleModalOpen(false);
-    setSaleData({
-      customer: { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', email: '', address: '' },
-      items: [{ id: '1', description: '', quantity: 1, price: 0 }],
-      method: 'efectivo',
-      format: '58mm'
-    });
+    setSaveStatus('success');
+    setShowSuccessToast(true);
+
+    setTimeout(() => {
+      setIsSaleModalOpen(false);
+      setSaveStatus('idle');
+      setSaleData({
+        customer: { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', email: '', address: '' },
+        items: [{ id: '1', description: '', quantity: 1, price: 0 }],
+        method: 'efectivo',
+        format: '58mm'
+      });
+    }, 1500);
   };
 
   const addSaleItem = () => {
@@ -128,65 +177,75 @@ export const CashRegister = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-surface-900">Cuadre de Caja</h2>
-          <p className="text-surface-500 mt-1">Registra e inspecciona los ingresos del día.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-surface-900">Transacciones</h2>
+          <p className="text-gray-500 mt-1">Administra el flujo de dinero, ingresos y egresos diarios.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={() => setIsSaleModalOpen(true)} variant="primary">
-            <Plus className="w-5 h-5 mr-2" />
-            Venta Repuestos
-          </Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <Button 
-            onClick={() => {
-              setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
-              setIsModalOpen(true);
-            }} 
-            variant="success"
+            onClick={() => setIsSaleModalOpen(true)} 
+            className="bg-primary-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-primary-700 transition-all active:scale-95"
           >
-            <DollarSign className="w-5 h-5 mr-2" />
-            + Ingreso
+            <ReceiptText className="w-5 h-5" />
+            Venta
           </Button>
-          <Button 
-            onClick={() => {
-              setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
-              setIsModalOpen(true);
-            }} 
-            variant="danger"
-          >
-            <Wallet className="w-5 h-5 mr-2" />
-            - Egreso
-          </Button>
+
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
+                setIsModalOpen(true);
+              }} 
+              className="flex-1 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-95"
+            >
+              <Plus className="w-5 h-5" />
+              Ingreso
+            </Button>
+            <Button 
+              onClick={() => {
+                setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
+                setIsModalOpen(true);
+              }} 
+              className="flex-1 bg-rose-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-rose-700 transition-all active:scale-95"
+            >
+              <Minus className="w-5 h-5" />
+              Egreso
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Card className="p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="flex gap-2 items-center flex-1 w-full relative">
-          <Input 
+      {/* Controls */}
+      <Card className="p-4 flex flex-col sm:flex-row gap-4 justify-between items-center bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center relative w-full sm:w-auto">
+          {/* Icono posicionado absolutamente */}
+          <CalendarDays className="w-5 h-5 text-gray-400 absolute left-3 z-10 pointer-events-none" />
+          
+          <input 
             type="date"
             value={dateFilter}
             onChange={e => setDateFilter(e.target.value)}
             title="Filtrar por fecha"
-            className="w-full sm:w-auto text-surface-700"
+            className="bg-transparent border-none outline-none ring-0 focus:ring-0 pl-10 pr-2 py-1 text-sm font-medium text-surface-700 cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           />
         </div>
         
         <div className="flex bg-surface-100 p-1 rounded-xl w-full sm:w-auto shrink-0 shadow-inner">
           <button 
             onClick={() => setMethodFilter('all')}
-            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'all' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
+            className={`flex flex-1 sm:flex-none items-center justify-center px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'all' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
           >
             Todos
           </button>
           <button 
             onClick={() => setMethodFilter('efectivo')}
-            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'efectivo' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
+            className={`flex flex-1 sm:flex-none items-center justify-center px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'efectivo' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
           >
             Efectivo
           </button>
           <button 
             onClick={() => setMethodFilter('transferencia')}
-            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'transferencia' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
+            className={`flex-1 sm:flex-none items-center justify-center px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${methodFilter === 'transferencia' ? 'bg-white shadow-sm text-surface-900 border border-surface-200' : 'text-surface-500 hover:text-surface-700'}`}
           >
             Transferencia
           </button>
@@ -195,8 +254,8 @@ export const CashRegister = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Efectivo en Caja', value: totals.efectivo, icon: Wallet, color: 'text-success-600', bg: 'bg-success-50' },
-          { label: 'Transferencias', value: totals.transferencia, icon: ArrowDownRight, color: 'text-primary-600', bg: 'bg-primary-50' },
+          { label: 'Efectivo en Caja', value: totals.efectivo, icon: Coins, color: 'text-success-600', bg: 'bg-success-50' },
+          { label: 'Transferencias', value: totals.transferencia, icon: ArrowRightLeft, color: 'text-primary-600', bg: 'bg-primary-50' },
           { label: 'Total Reparaciones', value: totals.reparaciones, icon: Wrench, color: 'text-secondary-600', bg: 'bg-secondary-50' },
           { label: 'Total Repuestos', value: totals.repuestos, icon: ShoppingBag, color: 'text-warning-600', bg: 'bg-warning-50' }
         ].map((stat, i) => (
@@ -240,13 +299,13 @@ export const CashRegister = () => {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[700px] md:min-w-0">
             <thead>
               <tr className="bg-surface-50 text-surface-500 text-xs uppercase tracking-wider border-b border-surface-100">
-                <th className="px-6 py-4 font-semibold">Hora</th>
+                <th className="px-6 py-4 font-semibold shrink-0">Hora</th>
                 <th className="px-6 py-4 font-semibold">Descripción</th>
-                <th className="px-6 py-4 font-semibold">Tipo</th>
-                <th className="px-6 py-4 font-semibold">Método</th>
+                <th className="px-4 py-4 font-semibold hidden md:table-cell">Tipo</th>
+                <th className="px-4 py-4 font-semibold hidden sm:table-cell">Método</th>
                 <th className="px-6 py-4 font-semibold text-right">Monto</th>
               </tr>
             </thead>
@@ -257,33 +316,35 @@ export const CashRegister = () => {
                     {new Date(payment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-surface-900">{payment.description || 'Sin descripción'}</span>
-                    {payment.orderId && <div className="text-xs text-primary-600 font-medium mt-1">Orden: {payment.orderId}</div>}
+                    <div className="text-sm font-semibold text-surface-900 truncate max-w-[150px] md:max-w-none">
+                      {payment.description || 'Sin descripción'}
+                    </div>
+                    {payment.orderId && <div className="text-[10px] sm:text-xs text-primary-600 font-medium mt-1">Orden: {payment.orderId}</div>}
                   </td>
-                  <td className="px-6 py-4">
-                     <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider ${
+                  <td className="px-4 py-4 hidden md:table-cell">
+                     <span className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wider ${
                         payment.type === 'reparacion' ? 'bg-primary-50 text-primary-700' : 'bg-secondary-50 text-secondary-700'
                      }`}>
                         {payment.type}
                      </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                     <div className="flex items-center gap-1.5">
                       {payment.method === 'efectivo' ? <Wallet className="w-4 h-4 text-success-600" /> : <ArrowDownRight className="w-4 h-4 text-primary-600" />}
                       <span className="text-sm font-medium text-surface-700 capitalize">{payment.method}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <span className={`font-bold text-lg ${payment.transactionType === 'egreso' ? 'text-danger-500' : 'text-success-600'}`}>
+                    <div className="flex items-center justify-end gap-2 sm:gap-3">
+                      <span className={`font-bold text-base sm:text-lg ${payment.transactionType === 'egreso' ? 'text-danger-500' : 'text-success-600'}`}>
                         {payment.transactionType === 'egreso' ? '-' : '+'}${payment.amount.toFixed(2)}
                       </span>
                       <button 
-                        onClick={() => printReceipt(payment as any, '58mm', 'nota-venta')}
+                        onClick={() => printReceipt(payment as unknown as PaymentTransaction, '58mm', 'nota-venta', false, settings)}
                         title="Imprimir comprobante"
                         className="text-surface-400 hover:text-primary-600 transition-colors bg-white hover:bg-primary-50 p-1.5 rounded-lg border border-transparent hover:border-primary-100 shadow-sm"
                       >
-                        <Printer className="w-4 h-4" />
+                        <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </td>
@@ -344,6 +405,7 @@ export const CashRegister = () => {
                   <label className="block text-sm font-medium text-surface-700 mb-1">Método</label>
                   <select 
                     value={newPayment.method}
+                    title="Seleccionar método de pago"
                     onChange={(e) => setNewPayment({...newPayment, method: e.target.value as PaymentMethod})}
                     className="w-full px-3 py-3 rounded-xl border border-surface-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow text-surface-900 text-sm font-medium bg-white"
                   >
@@ -355,6 +417,7 @@ export const CashRegister = () => {
                   <label className="block text-sm font-medium text-surface-700 mb-1">Categoría</label>
                   <select 
                     value={newPayment.type}
+                    title="Seleccionar categoría de transacción"
                     onChange={(e) => setNewPayment({...newPayment, type: e.target.value as PaymentType})}
                     className="w-full px-3 py-3 rounded-xl border border-surface-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow text-surface-900 text-sm font-medium bg-white"
                   >
@@ -389,8 +452,19 @@ export const CashRegister = () => {
                   type="submit" 
                   variant={newPayment.transactionType === 'ingreso' ? 'success' : 'danger'}
                   className="flex-1"
+                  disabled={saveStatus !== 'idle'}
                  >
-                   Guardar
+                   {saveStatus === 'saving' ? (
+                     <>
+                       <Loader2 className="w-4 h-4 animate-spin" />
+                       Guardando...
+                     </>
+                   ) : saveStatus === 'success' ? (
+                     <>
+                       <CheckCircle2 className="w-4 h-4" />
+                       Guardado
+                     </>
+                   ) : 'Guardar'}
                  </Button>
               </div>
             </form>
@@ -404,10 +478,14 @@ export const CashRegister = () => {
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-surface-100 flex justify-between items-center bg-surface-50 rounded-t-3xl">
               <h3 className="text-xl font-bold text-primary-600 flex items-center gap-2">
-                <FileText className="w-6 h-6" />
-                Nueva Nota de Venta (Venta Directa)
+                <ReceiptText className="w-6 h-6" />
+                Nueva Nota de Venta
               </h3>
-              <button onClick={() => setIsSaleModalOpen(false)} className="text-surface-400 hover:text-surface-600 transition-colors">
+              <button 
+                onClick={() => setIsSaleModalOpen(false)} 
+                title="Cerrar modal"
+                className="text-surface-400 hover:text-surface-600 transition-colors"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -501,6 +579,7 @@ export const CashRegister = () => {
                       <div className="col-span-2">
                          <button 
                           type="button"
+                          title="Eliminar ítem"
                           onClick={() => removeSaleItem(item.id)}
                           className="w-full aspect-square flex items-center justify-center text-danger-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors border border-transparent hover:border-danger-100"
                          >
@@ -516,27 +595,13 @@ export const CashRegister = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-surface-100">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-surface-700 mb-2">Formato de Impresión</label>
-                    <div className="flex gap-2">
-                       {['58mm', '80mm', 'A4'].map(f => (
-                         <button
-                           key={f}
-                           type="button"
-                           onClick={() => setSaleData({...saleData, format: f})}
-                           className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${saleData.format === f ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-500 hover:border-surface-300'}`}
-                         >
-                           {f}
-                         </button>
-                       ))}
-                    </div>
-                  </div>
-                  <div>
                     <label className="block text-sm font-bold text-surface-700 mb-2">Método de Pago</label>
                     <div className="flex gap-2">
                        {['efectivo', 'transferencia'].map(m => (
                          <button
                            key={m}
                            type="button"
+                           title={`Seleccionar pago con ${m}`}
                            onClick={() => setSaleData({...saleData, method: m as PaymentMethod})}
                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-all capitalize ${saleData.method === m ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-500 hover:border-surface-300'}`}
                          >
@@ -570,9 +635,37 @@ export const CashRegister = () => {
                 onClick={handleCreateSale}
                 variant="primary"
                 className="flex-1"
+                disabled={saveStatus !== 'idle'}
                >
-                 Procesar & Imprimir
+                 {saveStatus === 'saving' ? (
+                   <>
+                     <Loader2 className="w-4 h-4 animate-spin" />
+                     Procesando...
+                   </>
+                 ) : saveStatus === 'success' ? (
+                   <>
+                     <CheckCircle2 className="w-4 h-4" />
+                     ¡Éxito!
+                   </>
+                 ) : 'Procesar & Imprimir'}
                </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-surface-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md font-sans">
+            <div className="bg-emerald-500 p-2 rounded-full">
+              <CheckCircle2 className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">Transacción Guardada</p>
+              <p className="text-xs text-surface-400">
+                El registro se ha actualizado correctamente.
+              </p>
             </div>
           </div>
         </div>

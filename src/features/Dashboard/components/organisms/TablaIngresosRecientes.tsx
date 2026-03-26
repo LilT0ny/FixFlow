@@ -25,21 +25,22 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+
   return (
     <Card className="overflow-hidden p-0 border-0 shadow-sm mt-6">
       <div className="px-6 py-5 border-b border-surface-100 flex justify-between items-center bg-white rounded-t-2xl">
         <h3 className="font-semibold text-surface-900">Ingresos Recientes</h3>
-        <button onClick={() => navigate('/devices')} className="text-sm text-primary-600 font-bold hover:text-primary-700">Modificar y ver todos</button>
+        <button onClick={() => navigate('/devices')} className="text-sm text-primary-600 font-bold hover:text-primary-700">Ver todos</button>
       </div>
       <div className="overflow-x-auto bg-white rounded-b-2xl">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[600px] md:min-w-0">
           <thead>
             <tr className="bg-surface-50 text-surface-500 text-xs uppercase tracking-wider">
               <th className="px-6 py-4 font-bold border-b border-surface-100">Orden</th>
               <th className="px-6 py-4 font-bold border-b border-surface-100">Cliente</th>
-              <th className="px-6 py-4 font-bold border-b border-surface-100">Equipo</th>
+              <th className="px-4 py-4 font-bold border-b border-surface-100 hidden sm:table-cell">Equipo</th>
               <th className="px-6 py-4 font-bold border-b border-surface-100">Estado</th>
-              <th className="px-6 py-4 font-bold border-b border-surface-100 text-right">Acción</th>
+              <th className="px-6 py-4 font-bold border-b border-surface-100 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100">
@@ -48,15 +49,26 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="font-bold text-surface-900 bg-surface-100 px-2 py-1 rounded-md text-xs">{orden.orderNumber}</span>
                 </td>
-                <td className="px-6 py-4 text-sm font-medium text-surface-700">{orden.customer.fullName}</td>
-                <td className="px-6 py-4 text-sm font-medium text-surface-700">{orden.device.brand} {orden.device.model}</td>
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-surface-700 truncate max-w-[120px] md:max-w-none">
+                    {orden.customer.fullName}
+                  </div>
+                </td>
+                <td className="px-4 py-4 text-sm font-medium text-surface-700 hidden sm:table-cell">
+                  {orden.device.brand} {orden.device.model}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(orden.status)}`}>
+                  <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${getStatusColor(orden.status)}`}>
                     {getStatusLabel(orden.status)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <button onClick={() => navigate('/devices')} className="text-primary-600 hover:text-primary-800 text-sm font-bold bg-primary-50 px-3 py-1.5 rounded-lg transition-colors">Detalles</button>
+                <td className="px-6 py-4广告 text-right flex items-center justify-end gap-2">
+                  <button 
+                    onClick={() => navigate('/devices')} 
+                    className="text-primary-600 hover:text-primary-800 text-xs sm:text-sm font-bold bg-primary-50 px-2 sm:px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Detalles
+                  </button>
                 </td>
               </tr>
             ))}
