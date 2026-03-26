@@ -14,7 +14,7 @@ interface AppContextType {
   deleteOrder: (id: string) => void;
   addPayment: (payment: Omit<PaymentTransaction, 'id' | 'date'>) => void;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -58,11 +58,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return newOrder;
   };
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
     try {
       const user = await AuthService.login(username, password);
       if (user) {
-        AuthService.saveSession(user);
+        AuthService.saveSession(user, rememberMe);
         setIsAuthenticated(true);
         return true;
       }

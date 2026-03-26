@@ -161,7 +161,10 @@ export const useDeviceList = () => {
       const saldo = total - abono;
 
       if (newStatus === 'entregado') {
-        if (saldo > 0) {
+        // Solo guardamos el pago manual del saldo si NO vamos a generar una Nota de Venta.
+        // Si generamos Nota de Venta, la propia creación de la Nota (NT) registrará el ingreso 
+        // con la numeración de nota correspondiente, evitando el duplicado.
+        if (saldo > 0 && !generateSalesNote) {
           await PaymentService.savePayment({
             amount: saldo,
             method: paymentMethod as any,
@@ -185,7 +188,7 @@ export const useDeviceList = () => {
               evidencePhotos: []
             },
             paymentMethod: paymentMethod,
-            skipIncomeRecord: true // Evitamos duplicar ingreso ya registrado en la REP
+            skipIncomeRecord: false // Queremos que este sea el ingreso principal ("el del ticket")
           } as any, 'NT');
         }
       }

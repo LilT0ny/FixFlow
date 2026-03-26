@@ -35,17 +35,24 @@ export const AuthService = {
   },
 
   /**
-   * Guarda el usuario autenticado en sessionStorage (no localStorage para más seguridad).
+   * Guarda el usuario autenticado.
+   * Si rememberMe es true, usa localStorage para persistencia.
+   * De lo contrario, usa sessionStorage.
    */
-  saveSession(user: AuthUser): void {
-    sessionStorage.setItem('auth_user', JSON.stringify(user));
+  saveSession(user: AuthUser, rememberMe: boolean = false): void {
+    const raw = JSON.stringify(user);
+    if (rememberMe) {
+      localStorage.setItem('auth_user', raw);
+    } else {
+      sessionStorage.setItem('auth_user', raw);
+    }
   },
 
   /**
-   * Obtiene la sesión del usuario actual.
+   * Obtiene la sesión del usuario actual buscando en sessionStorage y luego en localStorage.
    */
   getSession(): AuthUser | null {
-    const raw = sessionStorage.getItem('auth_user');
+    const raw = sessionStorage.getItem('auth_user') || localStorage.getItem('auth_user');
     if (!raw) return null;
     try {
       return JSON.parse(raw) as AuthUser;
@@ -55,9 +62,10 @@ export const AuthService = {
   },
 
   /**
-   * Cierra la sesión del usuario.
+   * Cierra la sesión del usuario limpiando ambos almacenamientos.
    */
   clearSession(): void {
     sessionStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_user');
   },
 };

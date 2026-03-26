@@ -9,11 +9,14 @@ import { useOrders } from '../../hooks/useOrders';
 export const DashboardFeature: React.FC = () => {
   const { orders } = useOrders();
 
+  // Filtrar solo reparaciones para las estadísticas y el listado de dispositivos
+  const repairOrders = orders.filter(o => o.orderNumber.startsWith('REP'));
+
   const stats = [
-    { label: 'Total Equipos', value: orders.length, icon: Wrench, color: 'text-primary-600', bg: 'bg-primary-50' },
-    { label: 'Listos para Entrega', value: orders.filter(o => o.status === 'listo').length, icon: CheckCircle, color: 'text-success-600', bg: 'bg-success-50' },
-    { label: 'En Diagnóstico', value: orders.filter(o => o.status === 'diagnostico').length, icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
-    { label: 'Esperando Repuestos', value: orders.filter(o => o.status === 'esperando_repuestos').length, icon: AlertCircle, color: 'text-danger-600', bg: 'bg-danger-50' }
+    { label: 'Equipos en Taller', value: repairOrders.length, icon: Wrench, color: 'text-primary-600', bg: 'bg-primary-50' },
+    { label: 'Listos para Entrega', value: repairOrders.filter(o => o.status === 'listo').length, icon: CheckCircle, color: 'text-success-600', bg: 'bg-success-50' },
+    { label: 'En Diagnóstico', value: repairOrders.filter(o => o.status === 'diagnostico').length, icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
+    { label: 'Esperando Repuestos', value: repairOrders.filter(o => o.status === 'esperando_repuestos').length, icon: AlertCircle, color: 'text-danger-600', bg: 'bg-danger-50' }
   ];
 
   return (
@@ -38,7 +41,7 @@ export const DashboardFeature: React.FC = () => {
         ))}
       </div>
 
-      <TablaIngresosRecientes ordenes={orders} />
+      <TablaIngresosRecientes ordenes={repairOrders} />
     </div>
   );
 };

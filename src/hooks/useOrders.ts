@@ -51,15 +51,15 @@ export function useOrders() {
   /**
    * Registra un nuevo ingreso de equipo en la BD.
    * Devuelve la orden creada con el ID asignado por MariaDB.
-   * @param {DeviceCheckInForm} data - Datos del formulario de ingreso.
    */
   const addOrder = useCallback(async (data: DeviceCheckInForm, prefix: string = 'REP'): Promise<ServiceOrder> => {
     const orderNumber = `${prefix}-${Math.floor(Math.random() * 900000) + 100000}`;
-    const orderToSave: Omit<ServiceOrder, 'id' | 'createdAt'> = {
+    
+    // Unimos los datos recibidos (que pueden traer flags extra como skipIncomeRecord) 
+    // con los campos requeridos para la orden.
+    const orderToSave: any = {
+      ...data,
       orderNumber,
-      customer: data.customer,
-      device:   data.device,
-      repair:   data.repair,
       status:   'recibido' as OrderStatus
     };
 
