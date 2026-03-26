@@ -228,7 +228,9 @@ export const CashRegister: React.FC = () => {
                   <td className={`px-8 py-6 text-right ${
                     p.transactionType === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
-                    <span className="text-2xl font-black tracking-tighter">${p.amount.toFixed(2)}</span>
+                    <span className="text-2xl font-black tracking-tighter">
+                      {p.transactionType === 'ingreso' ? '+' : '-'}${Math.abs(p.amount).toFixed(2)}
+                    </span>
                   </td>
                 </tr>
               ))}
