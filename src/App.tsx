@@ -23,7 +23,7 @@ function App() {
   return (
     <AppProvider>
       <SettingsProvider>
-        <BrowserRouter basename="/sistema-reparacion">
+        <BrowserRouter>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
