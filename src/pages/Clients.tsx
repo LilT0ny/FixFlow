@@ -89,12 +89,14 @@ export const ClientManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-surface-900 flex items-center gap-2">
-            Lista de Clientes
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+        <div className="space-y-1">
+          <h2 className="text-4xl font-black tracking-tight text-surface-900">
+            Base de Clientes
           </h2>
-          <p className="text-surface-500 mt-1">Gestiona la información de contacto y documentos de tus clientes.</p>
+          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+            Gestión Integral de Contactos y Expedientes de Servicio
+          </p>
         </div>
         <button 
           onClick={() => { setEditingClient(null); setFormData({ fullName: '', documentId: '', phone: '', email: '', address: '' }); setIsModalOpen(true); }} 
@@ -106,13 +108,13 @@ export const ClientManagement: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-[32px] border border-surface-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="p-6 border-b border-surface-50 bg-surface-50/30 backdrop-blur-md">
+          <div className="relative w-full md:w-[500px] group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
             <input 
               type="text" 
               placeholder="Buscar por nombre o cédula..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-12 pr-6 py-3.5 bg-white border border-surface-100 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-bold text-sm shadow-sm"
               value={searchTerm}
               onChange={handleSearch}
             />
@@ -122,58 +124,59 @@ export const ClientManagement: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-surface-50/50 text-[11px] font-black text-surface-400 uppercase tracking-widest border-b border-surface-100">
-                <th className="px-6 py-4">Nombre Completo</th>
-                <th className="px-6 py-4">Documento / Cédula</th>
-                <th className="px-6 py-4">Contacto</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Dirección</th>
-                <th className="px-6 py-4 text-right">Acciones</th>
+              <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
+                <th className="px-8 py-5">Nombre Completo</th>
+                <th className="px-8 py-5">Documento / Cédula</th>
+                <th className="px-8 py-5">Contacto</th>
+                <th className="px-8 py-5">Email</th>
+                <th className="px-8 py-5">Dirección</th>
+                <th className="px-8 py-5 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100">
               {filteredClients.map(client => (
-                <tr key={client.id} className="hover:bg-surface-50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-surface-900 group-hover:text-primary-600 transition-colors">{client.fullName}</div>
+                <tr key={client.id} className="hover:bg-surface-50/70 transition-colors group">
+                  <td className="px-8 py-5">
+                    <div className="font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{client.fullName}</div>
+
                   </td>
-                  <td className="px-6 py-4 text-surface-700 font-mono">
-                    <div className="flex items-center gap-1.5 text-xs bg-surface-100/50 px-2 py-0.5 rounded-md w-fit">
-                      <CreditCard className="w-3.5 h-3.5 text-surface-400" /> 
-                      {client.documentId || 'N/A'}
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
+                      <CreditCard className="w-3.5 h-3.5 text-primary-400" /> 
+                      {client.documentId || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-surface-700">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Phone className="w-3.5 h-3.5 text-surface-400" /> 
-                      {client.phone || 'N/A'}
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
+                      <Phone className="w-3.5 h-3.5 text-primary-400" /> 
+                      {client.phone || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-surface-600 text-sm">
-                    <div className="flex items-center gap-1.5 underline decoration-surface-200 underline-offset-4">
-                      <Mail className="w-3.5 h-3.5 text-surface-400" /> 
-                      {client.email || 'N/A'}
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
+                      <Mail className="w-3.5 h-3.5 text-primary-400" /> 
+                      {client.email || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-surface-500 text-sm">
-                    <div className="flex items-start gap-1.5 max-w-xs transition-all italic">
-                      <MapPin className="w-3.5 h-3.5 text-surface-400 shrink-0 mt-0.5" />
-                      {client.address || 'N/A'}
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
+                      <MapPin className="w-3.5 h-3.5 text-primary-400" /> 
+                      {client.address || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-1">
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex justify-end gap-2">
                       <button 
                         onClick={() => handleEdit(client)} 
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-all hover:scale-110 active:scale-90"
-                        title="Edit Client"
+                        className="p-2.5 text-primary-600 hover:bg-primary-50 rounded-xl transition-all hover:scale-110 active:scale-90 border border-transparent hover:border-primary-100"
+                        title="Editar Cliente"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(client.id)} 
-                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all hover:scale-110 active:scale-90"
-                        title="Delete Client"
+                        className="p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-all hover:scale-110 active:scale-90 border border-transparent hover:border-rose-100"
+                        title="Eliminar Cliente"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

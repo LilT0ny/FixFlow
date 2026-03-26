@@ -7,6 +7,7 @@ export interface DeviceFormData {
   apellidos: string;
   telefono: string;
   email: string;
+  direccion: string;
   
   // Device Info
   deviceType: string;
@@ -29,6 +30,7 @@ export const initialFormData: DeviceFormData = {
   apellidos: '',
   telefono: '09',
   email: '',
+  direccion: '',
   deviceType: '',
   marca: '',
   modelo: '',
@@ -156,10 +158,12 @@ export const useDeviceValidation = () => {
   const handleChange = useCallback((field: keyof DeviceFormData, value: string | number) => {
     let normalizedValue = value;
     if (typeof value === 'string') {
-      if (['nombres', 'apellidos', 'marca', 'modelo', 'estadoFisico', 'trabajoRealizar'].includes(field)) {
+      if (['nombres', 'apellidos', 'marca', 'modelo', 'estadoFisico', 'trabajoRealizar', 'direccion'].includes(field)) {
         normalizedValue = value.toUpperCase();
       } else if (field === 'email') {
         normalizedValue = value.toLowerCase();
+      } else if (field === 'cedula' || field === 'imei') {
+        normalizedValue = value.replace(/\D/g, '');
       }
     }
 

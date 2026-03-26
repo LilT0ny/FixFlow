@@ -15,6 +15,7 @@ import {
   Phone
 } from 'lucide-react';
 import { usePayments } from '../hooks/usePayments';
+import { StatCard } from '../components/molecules/StatCard';
 import type { TransactionType, PaymentMethod, PaymentType } from '../types';
 
 export const CashRegister: React.FC = () => {
@@ -351,14 +352,14 @@ export const CashRegister: React.FC = () => {
       )}
 
       {showSuccessToast && (
-        <div className="fixed bottom-10 right-10 z-[200] animate-in fade-in slide-in-from-right-10 duration-500">
-           <div className="bg-surface-950 text-white px-8 py-5 rounded-[28px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex items-center gap-5 border border-surface-800 backdrop-blur-xl">
-            <div className="bg-emerald-500 p-2.5 rounded-full shadow-lg shadow-emerald-500/20">
+        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
+            <div className="bg-emerald-500 p-2 rounded-full">
               <CheckCircle2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-black text-sm tracking-tight leading-none">Sincronización Exitosa</p>
-              <p className="text-[11px] text-surface-400 font-bold uppercase tracking-widest mt-2">Transacción registrada en el libro diario</p>
+              <p className="font-bold text-sm leading-none">Movimiento Registrado</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">La transacción se ha sincronizado correctamente</p>
             </div>
           </div>
         </div>
@@ -367,25 +368,4 @@ export const CashRegister: React.FC = () => {
   );
 };
 
-interface StatCardProps {
-  title: string;
-  amount: number;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-  delay?: string;
-}
-
-const StatCard = ({ title, amount, icon: Icon, color, bgColor, delay }: StatCardProps) => (
-  <div style={{ animationDelay: delay }} className="bg-white rounded-[40px] border border-surface-100/50 p-8 flex items-center gap-6 shadow-xl shadow-surface-200/20 hover:shadow-primary-100/30 hover:scale-[1.02] transition-all cursor-default group border-b-8 border-b-transparent hover:border-b-primary-500 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
-    <div className={`${bgColor} ${color} w-20 h-20 rounded-[32px] flex items-center justify-center transition-all group-hover:rotate-12 shadow-sm border border-surface-50 shrink-0`}>
-      <Icon className="w-8 h-8" />
-    </div>
-    <div className="overflow-hidden space-y-2">
-      <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] leading-none mb-1 opacity-70">{title}</p>
-      <h3 className="text-3xl font-black text-surface-900 tracking-tighter truncate group-hover:text-primary-600 transition-colors">
-        ${amount.toFixed(2)}
-      </h3>
-    </div>
-  </div>
-);
+export default CashRegister;

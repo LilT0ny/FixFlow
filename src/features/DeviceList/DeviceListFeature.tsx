@@ -26,7 +26,7 @@ export const DeviceListFeature: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden mb-8 transition-all hover:shadow-primary-100/20">
-        <div className="p-6 border-b border-surface-50">
+        <div className="p-6 border-b border-surface-50 bg-surface-50/30 backdrop-blur-md">
           <BuscadorListado valor={ctrl.search} alCambiar={ctrl.setSearch} placeholder="Buscar por Nombre, Cédula o Identificador de Equipo..." />
         </div>
         <div className="p-5 bg-surface-50/30 backdrop-blur-sm">
@@ -262,14 +262,14 @@ export const DeviceListFeature: React.FC = () => {
 
       {/* ─── TOAST DE ÉXITO PREMIUM ─── */}
       {ctrl.successMessage && (
-        <div className="fixed bottom-10 right-10 z-[200] animate-in fade-in slide-in-from-right-10 duration-500">
-           <div className="bg-surface-950 text-white px-8 py-5 rounded-[28px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex items-center gap-5 border border-surface-800 backdrop-blur-xl">
-            <div className="bg-emerald-500 p-2.5 rounded-full shadow-lg shadow-emerald-500/20">
+        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
+            <div className="bg-emerald-500 p-2 rounded-full">
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-black text-sm tracking-tight leading-none">Operación Exitosa</p>
-              <p className="text-[11px] text-surface-400 font-bold uppercase tracking-widest mt-2">{ctrl.successMessage}</p>
+              <p className="font-bold text-sm leading-none">Operación Exitosa</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">{ctrl.successMessage}</p>
             </div>
           </div>
         </div>

@@ -12,10 +12,7 @@ import {
   User,
   ShoppingBag,
   Info,
-  CreditCard,
-  Phone,
-  MapPin
-} from 'lucide-react';
+  CreditCard} from 'lucide-react';
 import { PrintManager } from '../../components/organisms/PrintManager';
 import type { ServiceOrder } from '../../types';
 import type { OrderCreationPayload } from '../../services/OrderService';
@@ -173,7 +170,6 @@ export const SalesNotesFeature: React.FC = () => {
                 <th className="px-8 py-5">N° Folio</th>
                 <th className="px-8 py-5">Emisión</th>
                 <th className="px-8 py-5">Identidad Cliente</th>
-                <th className="px-8 py-5">Canales de Contacto</th>
                 <th className="px-8 py-5">Detalle de Operación</th>
                 <th className="px-8 py-5 text-right">Valor Neto</th>
                 <th className="px-8 py-5 text-center">Gestión</th>
@@ -199,20 +195,7 @@ export const SalesNotesFeature: React.FC = () => {
                       {note.customer.documentId || 'N/A'}
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-[11px] text-surface-600 font-bold">
-                        <Phone className="w-3.5 h-3.5 text-primary-400" /> 
-                        {note.customer.phone || '—'}
-                      </div>
-                      {note.customer.address && (
-                        <div className="flex items-start gap-2 text-[10px] text-surface-400 font-bold uppercase tracking-tight max-w-[200px] line-clamp-1 italic" title={note.customer.address}>
-                          <MapPin className="w-3.5 h-3.5 text-primary-400 shrink-0" />
-                          {note.customer.address}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+
                   <td className="px-8 py-6">
                     <div className="text-[11px] text-surface-500 font-black uppercase tracking-tight line-clamp-2 leading-relaxed max-w-xs">{note.repair.reportedIssue}</div>
                   </td>
@@ -491,14 +474,14 @@ export const SalesNotesFeature: React.FC = () => {
 
       {/* ─── Toast de Éxito ─── */}
       {successMessage && (
-        <div className="fixed bottom-10 right-10 z-[200] animate-in fade-in slide-in-from-right-10 duration-500">
-           <div className="bg-surface-950 text-white px-8 py-5 rounded-[28px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex items-center gap-5 border border-surface-800 backdrop-blur-xl">
-            <div className="bg-primary-500 p-2.5 rounded-full shadow-lg shadow-primary-500/20">
+        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
+            <div className="bg-emerald-500 p-2 rounded-full">
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-black text-sm tracking-tight leading-none">Notificación de Sistema</p>
-              <p className="text-[11px] text-surface-400 font-bold uppercase tracking-widest mt-2">{successMessage}</p>
+              <p className="font-bold text-sm leading-none">Operación Exitosa</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">{successMessage}</p>
             </div>
           </div>
         </div>

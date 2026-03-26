@@ -44,27 +44,27 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
-            <tr className="bg-surface-50/50">
-              <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100">
+            <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
+              <th className="px-8 py-5">
                 <div className="flex items-center gap-2">
                   <Hash className="w-3.5 h-3.5" />
                   Orden
                 </div>
               </th>
-              <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100">
+              <th className="px-8 py-5">
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5" />
                   Cliente
                 </div>
               </th>
-              <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100">
+              <th className="px-8 py-5">
                 <div className="flex items-center gap-2">
                   <Smartphone className="w-3.5 h-3.5" />
                   Equipo
                 </div>
               </th>
-              <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100">Estado</th>
-              <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100 text-right">Acciones</th>
+              <th className="px-8 py-5">Estado</th>
+              <th className="px-8 py-5 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100">

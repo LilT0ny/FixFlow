@@ -48,7 +48,8 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
               nombres: nombres.toUpperCase(),
               apellidos: apellidos.toUpperCase(),
               telefono: phone,
-              email: res.client?.email ? res.client.email.toLowerCase() : prev.email
+              email: res.client?.email ? res.client.email.toLowerCase() : prev.email,
+              direccion: res.client?.address ? res.client.address.toUpperCase() : prev.direccion
             }));
             
             setFoundClient(res.client);
@@ -91,7 +92,8 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             fullName: `${data.nombres} ${data.apellidos}`.trim(),
             documentId: data.cedula,
             phone: data.telefono,
-            email: data.email
+            email: data.email,
+            address: data.direccion
           },
           device: {
             brand: data.marca,
@@ -136,9 +138,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
   const isSaveDisabled = step === 3 && !isStep3Valid;
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white shadow-2xl shadow-surface-200/50 rounded-[40px] border border-surface-100/50 p-8 md:p-12 relative overflow-hidden animate-zoom-in">
-      {/* Background Decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50/50 rounded-full -mr-32 -mt-32 blur-3xl -z-10"></div>
+    <div className="relative animate-zoom-in">
       
       <div className="mb-12">
         <div className="flex justify-between items-end mb-6">
@@ -167,30 +167,56 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
               Datos del Propietario
             </h3>
             
-            <FormField label="Número de Identificación (Cédula/RUC)" required error={touched.cedula ? errors.cedula : undefined}>
-              <div className="relative group">
-                <Input 
-                  placeholder="Escribe la identificación..." 
-                  value={data.cedula} 
-                  onChange={e => handleChange('cedula', e.target.value)} 
-                  onBlur={() => handleBlur('cedula')} 
-                  error={touched.cedula && !!errors.cedula} 
-                  maxLength={13} 
-                  className="pl-4 pr-12 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                  disabled={isValidatingCedula} 
-                />
-                {isValidatingCedula && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-600">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Identificación (Cédula/RUC)" required error={touched.cedula ? errors.cedula : undefined}>
+                <div className="relative group">
+                  <Input 
+                    placeholder="Escribe la identificación..." 
+                    value={data.cedula} 
+                    onChange={e => handleChange('cedula', e.target.value)} 
+                    onBlur={() => handleBlur('cedula')} 
+                    error={touched.cedula && !!errors.cedula} 
+                    maxLength={13} 
+                    className="pl-4 pr-16 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                    disabled={isValidatingCedula} 
+                  />
+                  <div className="absolute right-12 top-1/2 -translate-y-1/2">
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${(data.cedula.length === 10 || data.cedula.length === 13) ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
+                      {data.cedula.length}
+                    </span>
                   </div>
-                )}
-                {!isValidatingCedula && data.cedula.length >= 10 && !errors.cedula && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 animate-in zoom-in duration-300">
-                    <CheckCircle2 className="w-5 h-5" />
+                  {isValidatingCedula && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-600">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    </div>
+                  )}
+                  {!isValidatingCedula && (data.cedula.length === 10 || data.cedula.length === 13) && !errors.cedula && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 animate-in zoom-in duration-300">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+              </FormField>
+
+              <FormField label="Teléfono / WhatsApp" required error={touched.telefono ? errors.telefono : undefined}>
+                <div className="relative">
+                  <Input 
+                    placeholder="09..." 
+                    value={data.telefono} 
+                    onChange={e => handleChange('telefono', e.target.value)} 
+                    onBlur={() => handleBlur('telefono')} 
+                    error={touched.telefono && !!errors.telefono} 
+                    maxLength={10} 
+                    className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest pr-12"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${data.telefono.length === 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
+                      {data.telefono.length}/10
+                    </span>
                   </div>
-                )}
-              </div>
-            </FormField>
+                </div>
+              </FormField>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField label="Nombres Completos" required error={touched.nombres ? errors.nombres : undefined}>
@@ -216,24 +242,6 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField label="Teléfono / WhatsApp" required error={touched.telefono ? errors.telefono : undefined}>
-                <div className="relative">
-                  <Input 
-                    placeholder="0987-654-321" 
-                    value={data.telefono} 
-                    onChange={e => handleChange('telefono', e.target.value)} 
-                    onBlur={() => handleBlur('telefono')} 
-                    error={touched.telefono && !!errors.telefono} 
-                    maxLength={10} 
-                    className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest pr-12"
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${data.telefono.length === 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
-                      {data.telefono.length}/10
-                    </span>
-                  </div>
-                </div>
-              </FormField>
               <FormField label="Correo de Contacto" error={touched.email ? errors.email : undefined}>
                 <Input 
                   type="email" 
@@ -242,6 +250,17 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   onChange={e => handleChange('email', e.target.value)} 
                   onBlur={() => handleBlur('email')} 
                   error={touched.email && !!errors.email} 
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                />
+              </FormField>
+              
+              <FormField label="Domicilio / Referencia" error={touched.direccion ? errors.direccion : undefined}>
+                <Input 
+                  placeholder="Sector / Calle..." 
+                  value={data.direccion} 
+                  onChange={e => handleChange('direccion', e.target.value)} 
+                  onBlur={() => handleBlur('direccion')} 
+                  error={touched.direccion && !!errors.direccion} 
                   className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
                 />
               </FormField>
@@ -297,15 +316,26 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             </div>
 
             <FormField label="Número de Serie / IMEI" error={touched.imei ? errors.imei : undefined}>
-              <Input 
-                placeholder="Ingresa el identificador único del equipo..." 
-                value={data.imei} 
-                onChange={e => handleChange('imei', e.target.value)} 
-                onBlur={() => handleBlur('imei')} 
-                error={touched.imei && !!errors.imei} 
-                maxLength={30} 
-                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest"
-              />
+              <div className="relative">
+                <Input 
+                  placeholder="Ingresa el identificador único del equipo..." 
+                  value={data.imei} 
+                  onChange={e => handleChange('imei', e.target.value)} 
+                  onBlur={() => handleBlur('imei')} 
+                  error={touched.imei && !!errors.imei} 
+                  maxLength={data.deviceType === 'celular' ? 15 : 30} 
+                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest pr-12"
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                    data.deviceType === 'celular' 
+                      ? (data.imei.length === 15 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400')
+                      : (data.imei.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400')
+                  }`}>
+                    {data.imei.length}/{data.deviceType === 'celular' ? 15 : 30}
+                  </span>
+                </div>
+              </div>
             </FormField>
 
             <FormField label="Evaluación de Estado Físico" error={touched.estadoFisico ? errors.estadoFisico : undefined}>
@@ -439,16 +469,15 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
         </div>
       </form>
 
-      {/* SUCCESS TOAST */}
       {showSuccessToast && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-10 z-[100] animate-in fade-in slide-in-from-bottom-12 duration-500">
-          <div className="bg-surface-950 text-white px-8 py-5 rounded-[28px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex items-center gap-5 border border-surface-800 backdrop-blur-xl">
-            <div className="bg-emerald-500 p-2.5 rounded-full shadow-lg shadow-emerald-500/20">
+        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
+            <div className="bg-emerald-500 p-2 rounded-full">
               <CheckCircle2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-black text-sm tracking-tight">Registro Completado</p>
-              <p className="text-[11px] text-surface-400 font-bold uppercase tracking-widest mt-1">Orden de servicio generada con éxito</p>
+              <p className="font-bold text-sm leading-none">Registro Completado</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">La orden de servicio se ha generado con éxito</p>
             </div>
           </div>
         </div>

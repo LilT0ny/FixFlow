@@ -40,12 +40,14 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-surface-900">
+      <div className="flex flex-col sm:flex-row justify-between items-end gap-6 pb-2">
+        <div className="space-y-1">
+          <h2 className="text-4xl font-black tracking-tight text-surface-900">
             Ajustes del Sistema
           </h2>
-          <p className="text-surface-500 mt-1">Configura los detalles de tu negocio y parámetros del sistema.</p>
+          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+            Parametrización de Negocio y Preferencias de Aplicación
+          </p>
         </div>
         <button 
           onClick={handleSave} 

@@ -16,7 +16,11 @@ import {
   CalendarDays,
   Loader2,
   CheckCircle2,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
 } from "lucide-react";
+import { StatCard } from "../components/molecules/StatCard";
 import * as XLSX from "xlsx";
 
 export const Reports = () => {
@@ -29,10 +33,9 @@ export const Reports = () => {
   >("idle");
 
   // Date selection states
-  const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().split("T")[0],
+    new Date().toISOString().split("T")[0],
   );
 
   // Derived data based on current view
@@ -113,13 +116,13 @@ export const Reports = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-black tracking-tight text-surface-900">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+        <div className="space-y-1">
+          <h2 className="text-4xl font-black tracking-tight text-surface-900">
             Reportes & Análisis
           </h2>
-          <p className="text-surface-500 mt-1 uppercase text-[10px] font-black tracking-[0.2em]">
-            Visión Estratégica del Negocio
+          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+            Visión Estratégica y Rendimiento del Negocio
           </p>
         </div>
 
@@ -166,69 +169,87 @@ export const Reports = () => {
       )}
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom-6 duration-700">
-        <div className="bg-white p-8 rounded-[32px] border border-surface-200 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform duration-500 group">
-          <div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 transition-transform group-hover:rotate-12">
-               <Download className="w-5 h-5 rotate-180" />
-            </div>
-            <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] mb-1">
-              Flujo de Ingresos
-            </p>
-          </div>
-          <h3 className="text-4xl font-black text-surface-900 tracking-tighter">
-            <span className="text-xl mr-1 text-emerald-500 font-bold">$</span>{totalIncome.toFixed(2)}
-          </h3>
-        </div>
-        
-        <div className="bg-white p-8 rounded-[32px] border border-surface-200 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform duration-500 group">
-          <div>
-             <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mb-4 transition-transform group-hover:rotate-12">
-               <Download className="w-5 h-5" />
-            </div>
-            <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] mb-1">
-              Flujo de Egresos
-            </p>
-          </div>
-          <h3 className="text-4xl font-black text-surface-900 tracking-tighter">
-            <span className="text-xl mr-1 text-red-500 font-bold">$</span>{totalExpense.toFixed(2)}
-          </h3>
-        </div>
-
-        <div className={`p-8 rounded-[32px] shadow-2xl flex flex-col justify-between hover:scale-[1.05] transition-all duration-500 group relative overflow-hidden ${netBalance >= 0 ? "bg-surface-900 text-white shadow-surface-200" : "bg-red-600 text-white shadow-red-200"}`}>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          
-          <div>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:rotate-12 ${netBalance >= 0 ? "bg-white/10" : "bg-white/20"}`}>
-               <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">
-              Utilidad Neta
-            </p>
-          </div>
-          <h3 className="text-4xl font-black tracking-tighter">
-            <span className="text-xl mr-1 opacity-70 font-bold">$</span>{netBalance.toFixed(2)}
-          </h3>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-6 duration-700">
+        <StatCard 
+          title="Flujo de Ingresos" 
+          amount={totalIncome} 
+          icon={ArrowUpRight} 
+          color="text-emerald-600" 
+          bgColor="bg-emerald-50" 
+          delay="0ms" 
+        />
+        <StatCard 
+          title="Flujo de Egresos" 
+          amount={totalExpense} 
+          icon={TrendingDown} 
+          color="text-rose-600" 
+          bgColor="bg-rose-50" 
+          delay="100ms" 
+        />
+        <StatCard 
+          title="Utilidad Neta" 
+          amount={netBalance} 
+          icon={TrendingUp} 
+          color={netBalance >= 0 ? "text-primary-600" : "text-rose-600"} 
+          bgColor={netBalance >= 0 ? "bg-primary-50" : "bg-rose-50"} 
+          delay="200ms" 
+        />
       </div>
 
       {/* Content Area */}
       {viewMode === "monthly" ? (
         <div className="bg-white p-8 rounded-[32px] border border-surface-200 shadow-sm animate-in zoom-in-95 duration-700 delay-200">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">            <div>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
+            <div>
               <h3 className="text-xl font-black text-surface-900 tracking-tight">
                 Análisis de Movimientos
               </h3>
               <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest mt-1">Tendencia de Ingresos vs Egresos</p>
             </div>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
-                <span className="text-[10px] font-black text-surface-500 uppercase tracking-wider">Ingresos</span>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+              {/* Filter Toggles */}
+              <div className="flex items-center bg-surface-50 p-1.5 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100">
+                <button
+                  onClick={() => setViewMode("monthly")}
+                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all bg-white shadow-sm text-surface-900 border border-surface-200"
+                >
+                  Vista Mensual
+                </button>
+                <button
+                  onClick={() => setViewMode("daily")}
+                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all text-surface-400 hover:text-surface-600"
+                >
+                  Vista Diaria
+                </button>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm shadow-red-200"></div>
-                <span className="text-[10px] font-black text-surface-500 uppercase tracking-wider">Egresos</span>
+
+              {/* Date Custom Picker */}
+              <div className="flex items-center relative w-full sm:w-auto justify-center bg-surface-50 border border-surface-200 rounded-2xl px-5 py-2.5 hover:bg-white hover:shadow-sm transition-all group">
+                <CalendarDays className="w-4.5 h-4.5 text-surface-400 group-hover:text-primary-600 transition-colors" />
+                
+                <div className="ml-3 relative min-w-[140px] text-center">
+                  <span className="text-xs font-black text-surface-900 uppercase tracking-tight">
+                    {format(parseISO(`${selectedMonth}-01`), "MMMM yyyy", { locale: es })}
+                  </span>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 ml-4 hidden md:flex shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
+                  <span className="text-[10px] font-black text-surface-500 uppercase tracking-wider">Ingresos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm shadow-red-200"></div>
+                  <span className="text-[10px] font-black text-surface-500 uppercase tracking-wider">Egresos</span>
+                </div>
               </div>
             </div>
           </div>
@@ -306,21 +327,54 @@ export const Reports = () => {
         </div>
       ) : (
         <div className="bg-white rounded-[32px] border border-surface-200 shadow-sm overflow-hidden animate-in fade-in duration-700">
-          <div className="px-8 py-6 border-b border-surface-100 flex justify-between items-center bg-white">
+          <div className="px-8 py-6 border-b border-surface-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-6">
             <div>
-              <h3 className="font-black text-surface-900 tracking-tight">Detalle de Transacciones</h3>
+              <h3 className="text-xl font-black text-surface-900 tracking-tight">Detalle de Transacciones</h3>
               <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest mt-0.5">Operaciones Registradas el {selectedDate}</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+              <div className="flex items-center bg-surface-50 p-1.5 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100">
+                <button
+                  onClick={() => setViewMode("monthly")}
+                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all text-surface-400 hover:text-surface-600"
+                >
+                  Vista Mensual
+                </button>
+                <button
+                  onClick={() => setViewMode("daily")}
+                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all bg-white shadow-sm text-surface-900 border border-surface-200"
+                >
+                  Vista Diaria
+                </button>
+              </div>
+
+              <div className="flex items-center relative w-full sm:w-auto justify-center bg-surface-50 border border-surface-200 rounded-2xl px-5 py-2.5 hover:bg-white hover:shadow-sm transition-all group">
+                <CalendarDays className="w-4.5 h-4.5 text-surface-400 group-hover:text-primary-600 transition-colors" />
+                
+                <div className="ml-3 relative min-w-[140px] text-center">
+                  <span className="text-xs font-black text-surface-900 uppercase tracking-tight">
+                    {format(parseISO(selectedDate), "dd 'de' MMMM, yyyy", { locale: es })}
+                  </span>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-surface-50/50">
-                  <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100">Hora</th>
-                  <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100">Concepto / Descripción</th>
-                  <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100 hidden md:table-cell">Categoría</th>
-                  <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100 hidden sm:table-cell">Método</th>
-                  <th className="px-8 py-4 text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-100 text-right">Monto Neto</th>
+                <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
+                  <th className="px-8 py-5">Hora</th>
+                  <th className="px-8 py-5">Concepto / Descripción</th>
+                  <th className="px-8 py-5 hidden md:table-cell">Categoría</th>
+                  <th className="px-8 py-5 hidden sm:table-cell">Método</th>
+                  <th className="px-8 py-5 text-right">Monto Neto</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-100">
