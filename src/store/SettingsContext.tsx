@@ -1,12 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SettingsService } from '../services/SettingsService';
 import type { BusinessSettings } from '../types';
-
-interface SettingsContextType {
-  settings: BusinessSettings;
-  updateSettings: (newSettings: Partial<BusinessSettings>) => void;
-  isSettingsLoading: boolean;
-}
+import { SettingsContext } from './SettingsContextType';
 
 const DEFAULT_SETTINGS: BusinessSettings = {
   companyName: 'CELL REPAIR CENTER',
@@ -18,8 +13,7 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   ruc: '9999999999999'
 };
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
-
+// SettingsProvider component
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<BusinessSettings>(DEFAULT_SETTINGS);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
@@ -28,7 +22,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const dbSettings = await SettingsService.getSettings();
       if (dbSettings) {
-        setSettings(prev => ({ ...prev, ...dbSettings }));
+        setSettings((prev: BusinessSettings) => ({ ...prev, ...dbSettings }));
       }
     } catch (error) {
       console.error('Error fetching settings from DB:', error);
@@ -66,10 +60,4 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {children}
     </SettingsContext.Provider>
   );
-};
-
-export const useSettings = () => {
-  const context = useContext(SettingsContext);
-  if (!context) throw new Error('useSettings must be used within a SettingsProvider');
-  return context;
 };

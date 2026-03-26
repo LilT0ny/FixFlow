@@ -10,6 +10,7 @@ import { Reports } from './pages/Reports';
 import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
 import { RegistrationFeature } from './features/Registration/RegistrationFeature';
+import { SalesNotesFeature } from './features/Sales/SalesNotesFeature';
 import { ClientManagement } from './pages/Clients';
 import { Settings } from './pages/Settings';
 
@@ -33,6 +34,7 @@ function App() {
               <Route index element={<DashboardFeature />} />
               <Route path="check-in" element={<RegistrationFeature />} />
               <Route path="devices" element={<DeviceListFeature />} />
+              <Route path="sales" element={<SalesNotesFeature />} />
               <Route path="clients" element={<ClientManagement />} />
               <Route path="cash" element={<CashRegister />} />
               <Route path="reports" element={<Reports />} />

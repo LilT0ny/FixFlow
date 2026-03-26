@@ -3,7 +3,7 @@ import { OrderService } from '../../../services/OrderService';
 import { useOrders } from '../../../hooks/useOrders';
 import type { DeviceCheckInForm, ServiceOrder, CustomerData } from '../../../types';
 import { sendWhatsappNotification } from '../utils/whatsappNotifier';
-import { useSettings } from '../../../store/SettingsContext';
+import { useSettings } from '../../../hooks/useSettings';
 
 /**
  * Custom hook that handles the state and network logic for repair registration.

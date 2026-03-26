@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Menu, Home, LogOut, Settings, Users, ChartNoAxesCombined, SquarePlus, MonitorSmartphone, CircleDollarSign } from 'lucide-react';
+import { Menu, Home, LogOut, Settings, Users, ChartNoAxesCombined, SquarePlus, MonitorSmartphone, CircleDollarSign, FileText } from 'lucide-react';
 import { useAppContext } from '../store/AppContext';
-import { useSettings } from '../store/SettingsContext';
+import { useSettings } from '../hooks/useSettings';
 
 export const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,6 +13,7 @@ export const AdminLayout = () => {
     { to: "/", icon: Home, label: "Inicio", end: true },
     { to: "/check-in", icon: SquarePlus, label: "Nuevo Ingreso" },
     { to: "/devices", icon: MonitorSmartphone, label: "Lista de Dispositivos" },
+    { to: "/sales", icon: FileText, label: "Notas de Venta" },
     { to: "/clients", icon: Users, label: "Lista de Clientes" },
     { to: "/cash", icon: CircleDollarSign, label: "Transacciones" },
     { to: "/reports", icon: ChartNoAxesCombined, label: "Reportes" },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, MessageCircle, Trash2, Loader2, Printer, CheckCircle } from 'lucide-react';
+import { Search, MessageCircle, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import { useDeviceList } from './hooks/useDeviceList';
 import { BuscadorListado } from './components/molecules/BuscadorListado';
 import { FiltroTabs } from './components/molecules/FiltroTabs';
@@ -15,8 +15,12 @@ export const DeviceListFeature: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-surface-900">Lista de Dispositivos</h2>
-          <p className="text-gray-500">Busca y administra todas las reparaciones.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-surface-900">
+            Lista de Reparaciones
+          </h2>
+          <p className="text-gray-500">
+            Gestiona el estado y entrega de dispositivos recibidos.
+          </p>
         </div>
       </div>
 
@@ -47,7 +51,6 @@ export const DeviceListFeature: React.FC = () => {
               ctrl.setOrderToPrint(order);
               ctrl.setIsPrintModalOpen(true);
             }}
-            onNotaVenta={() => {}}       // reservado para futura funcionalidad
             onNotify={() => ctrl.notifyWhatsApp(order, ctrl.getStatusLabel(order.status))}
           />
         ))}
@@ -133,105 +136,133 @@ export const DeviceListFeature: React.FC = () => {
 
                     {/* Resumen de costos desde BD */}
                     <div className="space-y-2">
+                       <div className="flex justify-between items-center text-xs text-surface-500 uppercase font-black">
+                        Detalle de Cobro
+                      </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-surface-600">Costo Total:</span>
                         <span className="font-semibold text-surface-900">${total.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-surface-600">Abono Inicial:</span>
-                        <span className="font-semibold text-surface-900">${abono.toFixed(2)}</span>
+                        <span className="font-semibold text-success-600">-${abono.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm border-t border-surface-200 pt-2">
-                        <span className="font-bold text-surface-900">Saldo a Pagar:</span>
-                        <span className={`font-bold text-lg ${saldo > 0 ? 'text-primary-600' : 'text-success-600'}`}>
+                        <span className="font-bold text-surface-900">Saldo Pendiente:</span>
+                        <span className={`font-black text-xl ${saldo > 0 ? 'text-primary-600' : 'text-success-600'}`}>
                           ${saldo.toFixed(2)}
                         </span>
                       </div>
-                      {saldo === 0 && (
-                        <div className="text-center text-success-600 font-bold text-sm">✓ Saldo completado</div>
-                      )}
                     </div>
+
+                    {/* Opción de Nota de Venta */}
+                    <div className="pt-2">
+                       <label className="flex items-center gap-3 p-3 bg-white border border-surface-200 rounded-2xl cursor-pointer hover:bg-surface-50 transition-colors">
+                          <input 
+                            type="checkbox"
+                            className="w-5 h-5 rounded-lg text-primary-600 focus:ring-primary-500 border-surface-300"
+                            checked={ctrl.generateSalesNote}
+                            onChange={e => {
+                                ctrl.setGenerateSalesNote(e.target.checked);
+                                if (e.target.checked && !ctrl.billingCustomer) {
+                                  // Pre-cargar datos del cliente original si se activa
+                                  const ord = ctrl.orders.find(o => o.id === ctrl.statusConfirmModal?.orderId);
+                                  if (ord) ctrl.setBillingCustomer({ ...ord.customer, address: ord.customer.address || 'QUITO' });
+                                }
+                            }}
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-bold text-surface-900 block">Generar Nota de Venta</span>
+                            <span className="text-[10px] text-surface-500 uppercase font-bold tracking-tight">Incluir datos del cliente para factura</span>
+                          </div>
+                       </label>
+                    </div>
+
+                    {/* Datos de Facturación (Solo si se activó la nota) */}
+                    {ctrl.generateSalesNote && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest">
+                            Datos para la Facturación
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => ctrl.setBillingCustomer({
+                              fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999',
+                              phone: '9999999999', address: 'QUITO',
+                              email: ''
+                            })}
+                            className="text-[10px] bg-primary-50 hover:bg-primary-100 text-primary-700 px-2 py-0.5 rounded-lg font-bold transition-colors"
+                          >
+                           + Consumidor Final
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-surface-200 rounded-xl text-xs bg-white uppercase font-black focus:ring-2 focus:ring-primary-500"
+                            placeholder="Nombres / Razón Social"
+                            value={ctrl.billingCustomer?.fullName || ''}
+                            onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, fullName: e.target.value.toUpperCase() })}
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              className="w-full px-3 py-2 border border-surface-200 rounded-xl text-xs bg-white font-bold"
+                              placeholder="Cédula / RUC"
+                              value={ctrl.billingCustomer?.documentId || ''}
+                              onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, documentId: e.target.value })}
+                            />
+                            <input
+                              type="text"
+                              className="w-full px-3 py-2 border border-surface-200 rounded-xl text-xs bg-white uppercase font-bold"
+                              placeholder="Ciudad"
+                              value={ctrl.billingCustomer?.address || ''}
+                              onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, address: e.target.value.toUpperCase() })}
+                            />
+                             <input
+                              type="text"
+                              className="w-full px-3 py-2 border border-surface-200 rounded-xl text-xs bg-white font-bold"
+                              placeholder="Teléfono"
+                              value={ctrl.billingCustomer?.phone || ''}
+                              onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, phone: e.target.value })}
+                            />
+                             <input
+                              type="email"
+                              className="w-full px-3 py-2 border border-surface-200 rounded-xl text-xs bg-white font-bold"
+                              placeholder="Email"
+                              value={ctrl.billingCustomer?.email || ''}
+                              onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, email: e.target.value.toLowerCase() })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Método de pago (solo si hay saldo) */}
                     {saldo > 0 && (
-                      <div>
-                        <label className="block text-sm font-semibold text-surface-700 mb-2">
-                          Método de pago para el saldo
+                      <div className="pt-2">
+                        <label className="block text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">
+                          Método de pago del saldo
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           {(['efectivo', 'transferencia'] as const).map(m => (
                             <button
                               key={m}
                               onClick={() => ctrl.setPaymentMethod(m)}
-                              className={`py-2 px-3 text-sm font-semibold rounded-xl border transition-colors capitalize ${
+                              className={`py-2 px-3 text-[11px] font-bold rounded-xl border transition-all ${
                                 ctrl.paymentMethod === m
-                                  ? 'bg-primary-600 text-white border-primary-600'
-                                  : 'bg-white text-surface-700 hover:bg-surface-50'
+                                    ? 'bg-primary-600 text-white border-primary-600 shadow-md scale-[1.02]'
+                                    : 'bg-white text-surface-700 border-surface-200 hover:bg-surface-50'
                               }`}
                             >
-                              {m}
+                              {m.toUpperCase()}
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
-
-                    {/* Datos de Facturación */}
-                    {ctrl.billingCustomer && (
-                      <div className="pt-3 border-t border-surface-200 space-y-3">
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-sm font-bold text-surface-900">Datos de Facturación</h4>
-                          <button
-                            onClick={() => ctrl.setBillingCustomer({
-                              fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999',
-                              phone: '9999999999', address: 'QUITO',
-                              email: order?.customer?.email || ''
-                            })}
-                            className="text-xs bg-surface-200 hover:bg-surface-300 text-surface-800 px-2 py-1 rounded-md font-semibold"
-                          >
-                            Cons. Final
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white uppercase"
-                            placeholder="Razón Social / Nombres"
-                            value={ctrl.billingCustomer.fullName}
-                            onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, fullName: e.target.value.toUpperCase() })}
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white"
-                              placeholder="CI / RUC"
-                              value={ctrl.billingCustomer.documentId}
-                              onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, documentId: e.target.value })}
-                            />
-                            <input
-                              type="text"
-                              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white uppercase"
-                              placeholder="Dirección"
-                              value={ctrl.billingCustomer.address || ''}
-                              onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, address: e.target.value.toUpperCase() })}
-                            />
-                          </div>
-                          <input
-                            type="email"
-                            className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white"
-                            placeholder="Email"
-                            value={ctrl.billingCustomer.email || ''}
-                            onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, email: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Botón rápido para imprimir Nota de Venta después de confirmar */}
-                    <div className="flex items-center gap-2 text-xs text-surface-500 italic pt-1">
-                      <Printer className="w-3.5 h-3.5" />
-                      Tras confirmar, puedes imprimir la Nota de Venta desde la tarjeta.
-                    </div>
                   </div>
                 )}
               </div>
@@ -272,6 +303,35 @@ export const DeviceListFeature: React.FC = () => {
         onClose={() => ctrl.setEditModal(null)}
         onSave={ctrl.confirmEditSave}
       />
+
+      {/* ─── Modal: Eliminar Orden/Nota ─── */}
+      {ctrl.deleteConfirmModal?.isOpen && (
+        <div className="fixed inset-0 bg-surface-900/50 backdrop-blur-sm z-[100] flex justify-center items-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-danger-50 text-danger-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-center text-surface-900 mb-2">¿Eliminar Registro?</h3>
+            <p className="text-center text-surface-500 text-sm mb-6">
+              Esta acción marcará la orden o nota como eliminada y ya no aparecerá en el listado principal.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => ctrl.setDeleteConfirmModal({ isOpen: false, orderId: '' })}
+                className="flex-1 py-3 px-4 rounded-xl font-bold bg-surface-100 text-surface-700 hover:bg-surface-200"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => ctrl.confirmDelete()}
+                className="flex-1 py-3 px-4 rounded-xl font-bold bg-danger-600 text-white hover:bg-danger-700"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Modal: Configuración de Impresión Multiformato ─── */}
       <PrintManager

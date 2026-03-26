@@ -57,7 +57,7 @@ export const ClientStatus = () => {
           <div className="bg-blue-50/50 rounded-2xl p-5 sm:p-6 border border-blue-100/50 flex flex-col sm:flex-row justify-between gap-4">
              <div>
                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Equipo Reportado</h3>
-               <p className="font-semibold text-gray-900 text-lg">{order.device.brand} {order.device.model}</p>
+               <p className="font-semibold text-gray-900 text-lg">{order.device?.brand || 'GENERAL'} {order.device?.model || ''}</p>
                <p className="text-sm text-gray-600 mt-1">Falla: <span className="font-medium text-red-600">{order.repair.reportedIssue}</span></p>
              </div>
              

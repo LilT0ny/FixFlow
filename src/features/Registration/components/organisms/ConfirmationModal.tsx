@@ -41,11 +41,11 @@ export const ModalConfirmacion: React.FC<ModalConfirmacionProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-surface-500">Equipo:</span>
-            <span className="font-bold text-surface-900 text-right">{device.brand} {device.model}</span>
+            <span className="font-bold text-surface-900 text-right">{device?.brand || 'GENERAL'} {device?.model || ''}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-surface-500">IMEI/SN:</span>
-            <span className="font-bold text-surface-900 text-right">{device.serialNumber || 'N/A'}</span>
+            <span className="font-bold text-surface-900 text-right">{device?.serialNumber || 'N/A'}</span>
           </div>
           <div className="flex justify-between border-t border-surface-200 pt-2">
             <span className="text-surface-500">Total a Cobrar:</span>

@@ -1,5 +1,5 @@
 import type { ServiceOrder, DeviceCheckInForm, PaymentTransaction, SaleItem, CustomerData } from '../types';
-import type { BusinessSettings } from '../store/SettingsContext';
+import type { BusinessSettings } from '../types';
 
 type OrderForNotaVenta = ServiceOrder | (PaymentTransaction & { orderNumber?: string; total?: number; items?: SaleItem[]; description?: string; customer?: CustomerData; billingCustomer?: CustomerData; });
 type OrderForTicket = (DeviceCheckInForm & { orderNumber: string; createdAt: string; billingCustomer?: CustomerData }) | ServiceOrder;
@@ -60,12 +60,13 @@ export const printReceipt = (
   `;
 
   let contentHtml = '';
+  let contentHtml2 = ''; // Para la segunda copia del ticket de ingreso
 
-  const customerFullName = orderData.customer?.fullName || orderData.billingCustomer?.fullName || 'CONSUMIDOR FINAL';
-  const customerDocumentId = orderData.customer?.documentId || orderData.billingCustomer?.documentId || '9999999999999';
-  const customerPhone = orderData.customer?.phone || 'S/N';
-  const customerEmail = orderData.customer?.email || 'S/N';
-  const customerAddress = orderData.customer?.address || orderData.billingCustomer?.address || 'QUITO';
+  const customerFullName = orderData.billingCustomer?.fullName || orderData.customer?.fullName || 'CONSUMIDOR FINAL';
+  const customerDocumentId = orderData.billingCustomer?.documentId || orderData.customer?.documentId || '9999999999999';
+  const customerPhone = orderData.billingCustomer?.phone || orderData.customer?.phone || 'S/N';
+  const customerEmail = orderData.billingCustomer?.email || orderData.customer?.email || 'S/N';
+  const customerAddress = orderData.billingCustomer?.address || orderData.customer?.address || 'QUITO';
 
   if (docType === 'nota-venta') {
     const totalAmount = orderData.amount || orderData.total || (typeof orderData.repair?.repairTotalCost === 'number' ? orderData.repair.repairTotalCost : 0);
@@ -125,7 +126,7 @@ export const printReceipt = (
         VALOR TOTAL: $${totalAmount.toFixed(2)}
       </div>
       <div style="margin-top: 20px; text-align: center; font-weight: bold;">¡GRACIAS POR SU CONFIANZA!</div>
-      <div style="margin-top: 20px; text-align: center; font-size: 2pt;">Este documento no tiene validez tributaria. Una vez salida la mercaderia no se aceptan cambios ni devoluciones</div>  
+      <div style="margin-top: 20px; text-align: center; font-size: 6pt;">Este documento no tiene validez tributaria. Una vez salida la mercaderia no se aceptan cambios ni devoluciones</div>  
     `;
   } else {
     // TICKET DE INGRESO
@@ -133,7 +134,7 @@ export const printReceipt = (
     const abono = Number(orderData.repair?.initialDeposit) || 0;
     const saldo = totalCost - abono;
 
-    contentHtml = `
+    const commonTicketHtml = `
       <div class="header" style="text-align: center; margin-bottom: 10px;">
         <img src="${store.logo}" style="max-width: 150px; margin-bottom: 5px;" onerror="this.style.display='none'"/>
         <h1 style="margin: 0; font-size: 8pt; text-transform: uppercase;">${store.name}</h1>
@@ -155,18 +156,29 @@ export const printReceipt = (
       <div style="border-top: 1px solid #000; margin: 10px 0;"></div>
       <div class="device-info" style="margin-bottom: 10px; text-transform: uppercase; font-size: ${isThermal ? '8pt' : '10pt'};">
         <p style="margin: 2px 0; font-weight: bold; border-bottom: 1px solid #000; margin-bottom: 4px;">DATOS DEL DISPOSITIVO</p>
-        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">EQUIPO:</span><span>${orderData.device?.brand} ${orderData.device?.model}</span></div>
+        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">EQUIPO:</span><span>${orderData.device?.brand || 'GENERAL'} ${orderData.device?.model || ''}</span></div>
         <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">IMEI:</span><span>${orderData.device?.serialNumber || 'N/A'}</span></div>
-        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">TIPO:</span><span>${orderData.device?.deviceType || 'CELULAR'}</span></div>
-        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">ESTADO:</span><span>${orderData.device?.physicalCondition}</span></div>
-        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">FALLA:</span><span>${orderData.repair?.reportedIssue}</span></div>
+        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">TIPO:</span><span>${orderData.device?.deviceType || 'N/A'}</span></div>
+        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">ESTADO:</span><span>${orderData.device?.physicalCondition || 'N/A'}</span></div>
+        <div style="display: flex; gap: 4px;"><span style="font-weight: bold; min-width: max-content;">FALLA:</span><span>${orderData.repair?.reportedIssue || 'N/A'}</span></div>
       </div>
       <div style="border-top: 1px solid #000; margin: 10px 0;"></div>
       <div class="financials" style="margin-bottom: 10px; font-weight: bold; text-align: center; font-size: 11pt;">
         TOTAL: $${totalCost.toFixed(2)} - ABONO: $${abono.toFixed(2)} = SALDO: $${saldo.toFixed(2)}
       </div>
       <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
+    `;
+
+    // Primera copia: Todo menos las firmas (con términos)
+    contentHtml = `
+      ${commonTicketHtml}
       ${termsHtml}
+      <div style="margin-top: 20px; text-align: center; font-weight: bold;">¡GRACIAS POR SU CONFIANZA!</div>
+    `;
+
+    // Segunda copia: Todo menos los términos (con firmas)
+    contentHtml2 = `
+      ${commonTicketHtml}
       ${signaturesHtml}
       <div style="margin-top: 20px; text-align: center; font-weight: bold;">¡GRACIAS POR SU CONFIANZA!</div>
     `;
@@ -189,7 +201,7 @@ export const printReceipt = (
             line-height: 1.2; 
           }
           .copy-container { margin-bottom: 30px; }
-          .page-break { page-break-after: always; border-top: 2px dashed #000; margin: 20px 0; padding-top: 20px; }
+          .page-break { page-break-before: always; border-top: 1px dashed #000; margin: 20px 0; padding-top: 20px; }
           img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
           p { margin: 4px 0; }
           * { box-sizing: border-box; }
@@ -197,14 +209,12 @@ export const printReceipt = (
       </head>
       <body>
         <div class="copy-container">
-          <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 10px; border-bottom: 1px solid #000;">*** COPIA LOCAL ***</div>
           ${contentHtml}
         </div>
         
-        ${isDoubleCopy ? `
+        ${(docType === 'ticket' || isDoubleCopy) && contentHtml2 ? `
           <div class="page-break">
-            <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 10px; border-bottom: 1px solid #000;">*** COPIA CLIENTE ***</div>
-            ${contentHtml}
+            ${contentHtml2}
           </div>
         ` : ''}
       </body>
@@ -239,5 +249,6 @@ export const printReceiptDoubleCopy = (
   docType: 'ticket' | 'nota-venta' = 'ticket',
   settings?: BusinessSettings
 ) => {
-  printReceipt(order, format, docType, true, settings);
+  // Ahora solo imprime una copia por requerimiento del usuario
+  printReceipt(order, format, docType, false, settings);
 };

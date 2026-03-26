@@ -99,7 +99,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             brand: data.marca,
             model: data.modelo,
             serialNumber: data.imei,
-            deviceType: data.deviceType as DeviceCheckInForm['device']['deviceType'],
+            deviceType: data.deviceType as NonNullable<DeviceCheckInForm['device']>['deviceType'],
             physicalCondition: data.estadoFisico
           },
           repair: {

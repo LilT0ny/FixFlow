@@ -28,7 +28,7 @@ export interface RepairDetails {
 
 export interface DeviceCheckInForm {
   customer: CustomerData;
-  device: DeviceData;
+  device?: DeviceData;
   repair: RepairDetails;
 }
 
@@ -39,7 +39,7 @@ export interface ServiceOrder {
   orderNumber: string;
   customer: CustomerData;
   billingCustomer?: CustomerData;
-  device: DeviceData;
+  device?: DeviceData;
   repair: RepairDetails;
   status: OrderStatus;
   createdAt: string;

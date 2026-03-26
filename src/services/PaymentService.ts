@@ -1,46 +1,68 @@
 // src/services/PaymentService.ts
 import { supabase } from '../lib/supabase';
-import type { PaymentTransaction } from '../types';
+import type { PaymentTransaction, TransactionType } from '../types';
 
 export const PaymentService = {
   /**
-   * Obtiene todas las transacciones históricas.
+   * Obtiene todas las transacciones históricas desde ambas tablas.
    */
   async getPayments(): Promise<PaymentTransaction[]> {
-    const { data, error } = await supabase
-      .from('transacciones')
-      .select('*')
-      .order('fecha', { ascending: false });
+    const [ingRes, egrRes] = await Promise.all([
+      supabase.from('ingresos').select('*').order('fecha', { ascending: false }),
+      supabase.from('egresos').select('*').order('fecha', { ascending: false })
+    ]);
 
-    if (error) throw error;
+    if (ingRes.error) throw ingRes.error;
+    if (egrRes.error) throw egrRes.error;
 
-    return (data || []).map(t => ({
+    const ingresos = (ingRes.data || []).map(t => ({
       id: t.id.toString(),
       date: t.fecha,
       amount: Number(t.monto),
       method: t.metodo,
       type: t.tipo,
-      transactionType: t.tipo_transaccion,
+      transactionType: 'ingreso' as TransactionType,
       description: t.descripcion,
       orderId: t.id_orden?.toString()
-    })) as PaymentTransaction[];
+    }));
+
+    const egresos = (egrRes.data || []).map(t => ({
+      id: t.id.toString(),
+      date: t.fecha,
+      amount: Number(t.monto),
+      method: t.metodo,
+      type: t.tipo,
+      transactionType: 'egreso' as TransactionType,
+      description: t.descripcion
+    }));
+
+    return [...ingresos, ...egresos].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    ) as PaymentTransaction[];
   },
 
   /**
-   * Guarda una nueva transacción (Ingreso o Egreso).
+   * Guarda una nueva transacción en la tabla correspondiente (Ingresos o Egresos).
    */
   async savePayment(paymentData: Partial<PaymentTransaction>): Promise<{ status: string; id: string; message?: string }> {
     try {
+      const table = paymentData.transactionType === 'ingreso' ? 'ingresos' : 'egresos';
+      
+      const payload: any = {
+        monto: Number(paymentData.amount),
+        metodo: paymentData.method,
+        tipo: paymentData.type,
+        descripcion: paymentData.description,
+      };
+
+      // Campos específicos para ingresos
+      if (paymentData.transactionType === 'ingreso') {
+          payload.id_orden = paymentData.orderId;
+      }
+
       const { data, error } = await supabase
-        .from('transacciones')
-        .insert({
-          monto: Number(paymentData.amount),
-          metodo: paymentData.method,
-          tipo: paymentData.type,
-          tipo_transaccion: paymentData.transactionType,
-          descripcion: paymentData.description,
-          id_orden: paymentData.orderId ? Number(paymentData.orderId) : null
-        })
+        .from(table)
+        .insert(payload)
         .select()
         .single();
 

@@ -55,7 +55,7 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
                   </div>
                 </td>
                 <td className="px-4 py-4 text-sm font-medium text-surface-700 hidden sm:table-cell">
-                  {orden.device.brand} {orden.device.model}
+                  {orden.device ? `${orden.device.brand} ${orden.device.model}` : 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${getStatusColor(orden.status)}`}>

@@ -1,13 +1,12 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOrders } from '../../../hooks/useOrders';
-import { usePayments } from '../../../hooks/usePayments';
-import { useSettings } from '../../../store/SettingsContext';
+import { useSettings } from '../../../hooks/useSettings';
+import { PaymentService } from '../../../services/PaymentService';
 import type { OrderStatus, ServiceOrder, CustomerData } from '../../../types';
 
 export const useDeviceList = () => {
   const { orders, updateOrderStatus, updateOrder, deleteOrder } = useOrders();
-  const { addPayment } = usePayments();
   const { settings } = useSettings();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,6 +47,8 @@ export const useDeviceList = () => {
 
   /** Método de pago capturado al entregar */
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia'>('efectivo');
+  /** Flag para indicar si se desea generar Nota de Venta (NV) al entregar */
+  const [generateSalesNote, setGenerateSalesNote] = useState(false);
   /** Datos de facturación opcionales para nota de venta */
   const [billingCustomer, setBillingCustomer] = useState<CustomerData | null>(null);
   /** Flag para mostrar spinner mientras se guarda el state change */
@@ -66,15 +67,21 @@ export const useDeviceList = () => {
     setTimeout(() => setSuccessMessage(null), 3500);
   }, []);
 
+  const { addOrder } = useOrders();
+
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
+      // SOLO MOSTRAR REPARACIONES (REP)
+      const isRepair = o.orderNumber.startsWith('REP');
+      if (!isRepair) return false;
+
       if (activeStatuses.length > 0 && !activeStatuses.includes(o.status)) return false;
       if (search) {
         const q = search.toLowerCase();
         if (
           !o.customer.fullName.toLowerCase().includes(q) &&
           !o.customer.documentId.toLowerCase().includes(q) &&
-          !(o.device.serialNumber || '').toLowerCase().includes(q) &&
+          !(o.device?.serialNumber || '').toLowerCase().includes(q) &&
           !o.orderNumber.toLowerCase().includes(q)
         ) return false;
       }
@@ -116,8 +123,8 @@ export const useDeviceList = () => {
 
     const msg = settings.whatsappTemplate
       .replace(/{{customer}}/g, order.customer.fullName)
-      .replace(/{{device}}/g, order.device.brand)
-      .replace(/{{model}}/g, order.device.model)
+      .replace(/{{device}}/g, order.device?.brand || 'GENERAL')
+      .replace(/{{model}}/g, order.device?.model || 'N/A')
       .replace(/{{status}}/g, statusText)
       .replace(/{{orderNumber}}/g, order.orderNumber)
       .replace(/{{total}}/g, total.toFixed(2))
@@ -148,20 +155,38 @@ export const useDeviceList = () => {
         await updateOrder(orderId, { billingCustomer });
       }
 
-      // Registrar cobro final si hay saldo pendiente
+      // Registro financiero del cobro final
+      const total = Number(currentOrder.repair.repairTotalCost) || 0;
+      const abono = Number(currentOrder.repair.initialDeposit)  || 0;
+      const saldo = total - abono;
+
       if (newStatus === 'entregado') {
-        const total  = Number(currentOrder.repair.repairTotalCost) || 0;
-        const abono  = Number(currentOrder.repair.initialDeposit)  || 0;
-        const saldo  = total - abono;
         if (saldo > 0) {
-          await addPayment({
+          await PaymentService.savePayment({
             amount: saldo,
-            method: paymentMethod,
+            method: paymentMethod as any,
             type: 'reparacion',
             transactionType: 'ingreso',
-            description: `Cobro final reparación orden ${currentOrder.orderNumber}`,
-            orderId,
+            description: `COBRO FINAL - ORDEN #${currentOrder.orderNumber}`,
+            orderId: currentOrder.id,
+            customer: billingCustomer || currentOrder.customer
           });
+        }
+
+        // AUTO-GENERAR NOTA DE VENTA (NT) SI SE SOLICITÓ
+        if (generateSalesNote) {
+          const description = `REPARACIÓN: ${currentOrder.device?.brand} ${currentOrder.device?.model} - ${currentOrder.repair.reportedIssue}`;
+          await addOrder({
+            customer: billingCustomer || currentOrder.customer,
+            repair: {
+              reportedIssue: description,
+              initialDeposit: total,
+              repairTotalCost: total,
+              evidencePhotos: []
+            },
+            paymentMethod: paymentMethod,
+            skipIncomeRecord: true // Evitamos duplicar ingreso ya registrado en la REP
+          } as any, 'NT');
         }
       }
 
@@ -170,13 +195,21 @@ export const useDeviceList = () => {
         notifyWhatsApp(currentOrder, getStatusLabel(newStatus));
       }
 
-      // Solo cerramos el modal si la operación fue exitosa
+      // Si se solicitó nota de venta, abrir modal de impresión
+      if (generateSalesNote && newStatus === 'entregado') {
+        setOrderToPrint({ ...currentOrder, status: 'entregado', billingCustomer: billingCustomer || currentOrder.customer });
+        setIsPrintModalOpen(true);
+      }
+      
+      // Solo cerramos el modal y limpiamos si la operación fue exitosa
       setStatusConfirmModal(null);
       setPaymentMethod('efectivo');
       setBillingCustomer(null);
-      showSuccess(`✓ Estado actualizado a "${getStatusLabel(newStatus)}" en la base de datos.`);
-    } catch {
-      // Error ya manejado en useOrders (alert). El modal permanece abierto.
+      setGenerateSalesNote(false);
+      
+      showSuccess(`✓ Equipo entregado y estado actualizado en la base de datos.`);
+    } catch (err) {
+      console.error('Error en confirmStatusChange:', err);
     } finally {
       setIsConfirming(false);
     }
@@ -216,6 +249,7 @@ export const useDeviceList = () => {
     isPrintModalOpen, setIsPrintModalOpen, orderToPrint, setOrderToPrint,
     statusConfirmModal, setStatusConfirmModal,
     paymentMethod, setPaymentMethod,
+    generateSalesNote, setGenerateSalesNote,
     billingCustomer, setBillingCustomer,
     isConfirming,
     successMessage,

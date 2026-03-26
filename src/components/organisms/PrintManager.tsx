@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { ServiceOrder } from '../../types';
 import { Button } from '../atoms/Button';
 import { X, Printer } from 'lucide-react';
-import { useSettings } from '../../store/SettingsContext';
+import { useSettings } from '../../hooks/useSettings';
 import { printReceipt } from '../../utils/printHelpers';
 
 interface PrintManagerProps {
@@ -27,7 +27,7 @@ export const PrintManager: React.FC<PrintManagerProps> = ({ order, isOpen, onClo
       order, 
       format, 
       docType === 'nota_venta' ? 'nota-venta' : 'ticket', 
-      true, // Doble copia
+      false, // Una copia
       settings
     );
     onClose();
@@ -66,9 +66,9 @@ export const PrintManager: React.FC<PrintManagerProps> = ({ order, isOpen, onClo
                 type="button"
                 variant={docType === 'nota_venta' ? 'primary' : 'outline'}
                 onClick={() => setDocType('nota_venta')}
-                disabled={order.status !== 'entregado' && order.status !== 'listo'}
+                disabled={order.status !== 'entregado'}
                 className="w-full text-xs py-2"
-                title={order.status !== 'entregado' && order.status !== 'listo' ? 'Solo disponible cuando está listo o entregado' : ''}
+                title={order.status !== 'entregado' ? 'La Nota de Venta solo se genera al entregar el equipo' : ''}
               >
                 Nota de Venta
               </Button>
@@ -77,7 +77,11 @@ export const PrintManager: React.FC<PrintManagerProps> = ({ order, isOpen, onClo
 
 
           <div className="bg-primary-50 border border-primary-100 rounded-xl px-4 py-2.5 text-xs text-primary-700 font-medium text-center">
-            Se imprimirán <strong>2 COPIAS</strong>:<br/> (LOCAL + CLIENTE)
+            {docType === 'ingreso' ? (
+              <>Se imprimirán <strong>2 COPIAS</strong>:<br/> (Términos + Firmas)</>
+            ) : (
+              <>Se imprimirá <strong>1 COPIA</strong></>
+            )}
           </div>
         </div>
 

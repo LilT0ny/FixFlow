@@ -4,7 +4,7 @@ import type { DeviceCheckInForm } from '../../../../types';
 import { printReceiptDoubleCopy } from '../../../../utils/printHelpers';
 import { Button } from '../../../../components/atoms/Button';
 import { Card } from '../../../../components/atoms/Card';
-import { useSettings } from '../../../../store/SettingsContext';
+import { useSettings } from '../../../../hooks/useSettings';
 
 interface RegistrationReceiptProps {
   data: DeviceCheckInForm;
@@ -66,7 +66,7 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
             <div className="p-4 bg-primary-50 rounded-xl border border-primary-100">
               <h3 className="text-xs font-bold text-primary-500 uppercase tracking-wider mb-3">Detalles del Dispositivo</h3>
               <div className="space-y-2 text-surface-800">
-                <p><span className="text-surface-500">Dispositivo:</span> {data.device.brand} {data.device.model}</p>
+                <p><span className="text-surface-500">Dispositivo:</span> {data.device?.brand} {data.device?.model}</p>
                 <p className="flex items-start gap-1">
                   <span className="text-surface-500 min-w-max">Falla:</span> 
                   <span className="font-medium text-danger-600">{data.repair.reportedIssue}</span>

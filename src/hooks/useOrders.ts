@@ -53,8 +53,8 @@ export function useOrders() {
    * Devuelve la orden creada con el ID asignado por MariaDB.
    * @param {DeviceCheckInForm} data - Datos del formulario de ingreso.
    */
-  const addOrder = useCallback(async (data: DeviceCheckInForm): Promise<ServiceOrder> => {
-    const orderNumber = `REP-${Math.floor(Math.random() * 900000) + 100000}`;
+  const addOrder = useCallback(async (data: DeviceCheckInForm, prefix: string = 'REP'): Promise<ServiceOrder> => {
+    const orderNumber = `${prefix}-${Math.floor(Math.random() * 900000) + 100000}`;
     const orderToSave: Omit<ServiceOrder, 'id' | 'createdAt'> = {
       orderNumber,
       customer: data.customer,

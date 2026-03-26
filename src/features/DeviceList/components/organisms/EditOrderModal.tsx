@@ -79,11 +79,17 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
     } : null);
   };
 
-  const setDevice = (field: keyof ServiceOrder['device'], value: string) => {
-    setDraft(prev => prev ? {
-      ...prev,
-      device: { ...prev.device, [field]: toUpper(value) }
-    } : null);
+  const setDevice = (field: keyof NonNullable<ServiceOrder['device']>, value: string) => {
+    setDraft(prev => {
+      if (!prev) return null;
+      const currentDevice = prev.device || {
+        brand: '', model: '', serialNumber: '', deviceType: 'celular', physicalCondition: ''
+      };
+      return {
+        ...prev,
+        device: { ...currentDevice, [field]: toUpper(value) }
+      };
+    });
   };
 
   const setRepair = (field: 'reportedIssue' | 'repairTotalCost' | 'initialDeposit', value: string | number) => {
@@ -107,6 +113,9 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
       newErrors.documentId = 'Cédula/RUC inválida (verifica el dígito verificador).';
     }
 
+    const isSale = draft.orderNumber.startsWith('NT');
+
+    // Solo validar teléfono si no es venta rápida o si se ingresó algo
     if (draft.customer.phone && !validarTelefono(draft.customer.phone)) {
       newErrors.phone = 'Teléfono inválido. Usa formato 09XXXXXXXX o +593XXXXXXXXX.';
     }
@@ -115,7 +124,8 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
     const abono = Number(draft.repair.initialDeposit)  || 0;
     if (total < 0) newErrors.repairTotalCost = 'El costo no puede ser negativo.';
     if (abono < 0) newErrors.initialDeposit  = 'El abono no puede ser negativo.';
-    if (abono > total && total > 0) {
+    
+    if (!isSale && abono > total && total > 0) {
       newErrors.initialDeposit = 'El abono no puede superar el costo total.';
     }
 
@@ -148,6 +158,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
   const total = Number(draft.repair.repairTotalCost) || 0;
   const abono = Number(draft.repair.initialDeposit)  || 0;
   const saldo = total - abono;
+  const isSale = draft.orderNumber.startsWith('NT');
 
   const ErrorMsg = ({ field }: { field: string }) =>
     errors[field] ? (
@@ -165,7 +176,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
           <div>
             <h3 className="text-lg font-bold text-surface-900 flex items-center gap-2">
               <Wrench className="w-5 h-5 text-primary-600" />
-              Editar Orden #{draft.orderNumber}
+              Editar {isSale ? 'Nota de Venta' : 'Orden'} #{isSale ? draft.orderNumber : draft.orderNumber}
             </h3>
             <p className="text-xs text-surface-500 mt-0.5">Los cambios se guardarán en la base de datos.</p>
           </div>
@@ -248,90 +259,94 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
             </div>
           </section>
 
-          {/* ─── DATOS DEL DISPOSITIVO ─── */}
-          <section>
-            <h4 className="flex items-center gap-2 text-sm font-bold text-surface-800 mb-3">
-              <Smartphone className="w-4 h-4 text-primary-600" />
-              Datos del Dispositivo
-            </h4>
-            <div className={sectionClass}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className={labelClass}>Tipo</label>
-                  <select
-                    className={ic('deviceType')}
-                    title="Seleccionar tipo de dispositivo"
-                    value={draft.device.deviceType}
-                    onChange={e => setDevice('deviceType', e.target.value)}
-                  >
-                    <option value="celular">CELULAR</option>
-                    <option value="tablet">TABLET</option>
-                    <option value="laptop">LAPTOP</option>
-                    <option value="impresora">IMPRESORA</option>
-                    <option value="otro">OTRO</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Marca</label>
-                  <input
-                    type="text"
-                    className={ic('brand') + ' uppercase'}
-                    value={draft.device.brand}
-                    onChange={e => setDevice('brand', e.target.value)}
-                    placeholder="SAMSUNG, APPLE..."
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Modelo</label>
-                  <input
-                    type="text"
-                    className={ic('model') + ' uppercase'}
-                    value={draft.device.model}
-                    onChange={e => setDevice('model', e.target.value)}
-                    placeholder="A54, IPHONE 15..."
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>IMEI / Serial</label>
-                  <input
-                    type="text"
-                    className={ic('serialNumber')}
-                    value={draft.device.serialNumber}
-                    onChange={e => setDevice('serialNumber', e.target.value)}
-                    placeholder="IMEI o S/N"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Estado Físico</label>
-                  <input
-                    type="text"
-                    className={ic('physicalCondition') + ' uppercase'}
-                    value={draft.device.physicalCondition}
-                    onChange={e => setDevice('physicalCondition', e.target.value)}
-                    placeholder="GOLPES, RAYONES, PANTALLA ROTA..."
-                  />
+          {/* ─── DATOS DEL DISPOSITIVO (SOLO PARA REP O SI NT TIENE UNO) ─── */}
+          {(!isSale || draft.device) && (
+            <section>
+              <h4 className="flex items-center gap-2 text-sm font-bold text-surface-800 mb-3">
+                <Smartphone className="w-4 h-4 text-primary-600" />
+                Datos del Dispositivo
+              </h4>
+              <div className={sectionClass}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClass}>Tipo</label>
+                    <select
+                      className={ic('deviceType')}
+                      title="Seleccionar tipo de dispositivo"
+                      value={draft.device?.deviceType || 'celular'}
+                      onChange={e => setDevice('deviceType', e.target.value)}
+                    >
+                      <option value="celular">CELULAR</option>
+                      <option value="tablet">TABLET</option>
+                      <option value="laptop">LAPTOP</option>
+                      <option value="impresora">IMPRESORA</option>
+                      <option value="otro">OTRO</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Marca</label>
+                    <input
+                      type="text"
+                      className={ic('brand') + ' uppercase'}
+                      value={draft.device?.brand || ''}
+                      onChange={e => setDevice('brand', e.target.value)}
+                      placeholder="SAMSUNG, APPLE..."
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Modelo</label>
+                    <input
+                      type="text"
+                      className={ic('model') + ' uppercase'}
+                      value={draft.device?.model || ''}
+                      onChange={e => setDevice('model', e.target.value)}
+                      placeholder="A54, IPHONE 15..."
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>IMEI / Serial</label>
+                    <input
+                      type="text"
+                      className={ic('serialNumber')}
+                      value={draft.device?.serialNumber || ''}
+                      onChange={e => setDevice('serialNumber', e.target.value)}
+                      placeholder="IMEI o S/N"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Estado Físico</label>
+                    <input
+                      type="text"
+                      className={ic('physicalCondition') + ' uppercase'}
+                      value={draft.device?.physicalCondition || ''}
+                      onChange={e => setDevice('physicalCondition', e.target.value)}
+                      placeholder="GOLPES, RAYONES, PANTALLA ROTA..."
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* ─── TRABAJO Y COSTOS ─── */}
           <section>
             <h4 className="flex items-center gap-2 text-sm font-bold text-surface-800 mb-3">
               <DollarSign className="w-4 h-4 text-primary-600" />
-              Trabajo a Realizar y Costos
+              {isSale ? 'Detalle de Cobro' : 'Trabajo a Realizar y Costos'}
             </h4>
             <div className={sectionClass}>
-              <div>
-                <label className={labelClass}>Falla Reportada / Trabajo *</label>
-                <textarea
-                  rows={3}
-                  className={ic('reportedIssue') + ' resize-none uppercase'}
-                  value={draft.repair.reportedIssue}
-                  onChange={e => setRepair('reportedIssue', e.target.value)}
-                  placeholder="DESCRIPCIÓN DEL TRABAJO A REALIZAR..."
-                />
-              </div>
+              {!isSale && (
+                <div>
+                  <label className={labelClass}>Falla Reportada / Trabajo *</label>
+                  <textarea
+                    rows={3}
+                    className={ic('reportedIssue') + ' resize-none uppercase'}
+                    value={draft.repair.reportedIssue}
+                    onChange={e => setRepair('reportedIssue', e.target.value)}
+                    placeholder="DESCRIPCIÓN DEL TRABAJO A REALIZAR..."
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

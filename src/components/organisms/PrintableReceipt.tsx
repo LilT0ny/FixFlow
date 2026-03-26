@@ -50,17 +50,17 @@ export const PrintableReceipt: React.FC<PrintableReceiptProps> = ({ order }) => 
         
         <div className="border-box">
           <h3 className="bg-gray text-center uppercase mb-4 p-5-neg rounded-t-lg border-b-2-black">DETALLES DEL DISPOSITIVO</h3>
-          <p className="mb-2"><span className="bold uppercase">TIPO:</span> {formatUppercase(order.device.deviceType)}</p>
-          <p className="mb-2"><span className="bold uppercase">MARCA:</span> {formatUppercase(order.device.brand)}</p>
-          <p className="mb-2"><span className="bold uppercase">MODELO:</span> {formatUppercase(order.device.model)}</p>
-          <p className="mb-2"><span className="bold uppercase">IMEI/SN:</span> {formatUppercase(order.device.serialNumber)}</p>
+          <p className="mb-2"><span className="bold uppercase">TIPO:</span> {formatUppercase(order.device?.deviceType || 'N/A')}</p>
+          <p className="mb-2"><span className="bold uppercase">MARCA:</span> {formatUppercase(order.device?.brand || 'GENERAL')}</p>
+          <p className="mb-2"><span className="bold uppercase">MODELO:</span> {formatUppercase(order.device?.model || '')}</p>
+          <p className="mb-2"><span className="bold uppercase">IMEI/SN:</span> {formatUppercase(order.device?.serialNumber || 'N/A')}</p>
         </div>
       </div>
 
       {/* Trabajo y Costos */}
       <div className="border-box mb-4">
         <p className="mb-2 bold uppercase">ESTADO PREVIO DEL EQUIPO:</p>
-        <p className="mb-4 uppercase p-left-10">{formatUppercase(order.device.physicalCondition)}</p>
+        <p className="mb-4 uppercase p-left-10">{formatUppercase(order.device?.physicalCondition || 'N/A')}</p>
 
         <p className="mb-2 bold uppercase">TRABAJO A REALIZAR:</p>
         <p className="uppercase p-left-10">{formatUppercase(order.repair.reportedIssue)}</p>

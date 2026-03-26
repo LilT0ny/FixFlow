@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, MessageSquare, Building2, ImageIcon, Save, CheckCircle2 } from 'lucide-react';
-import { useSettings } from '../store/SettingsContext';
-import type { BusinessSettings, PrinterType } from '../store/SettingsContext';
+import { useSettings } from '../hooks/useSettings';
+import type { BusinessSettings, PrinterType } from '../types';
 import { Card } from '../components/atoms/Card';
 import { Button } from '../components/atoms/Button';
 import { Input } from '../components/atoms/Input';
