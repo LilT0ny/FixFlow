@@ -16,10 +16,10 @@ export const DeviceListFeature: React.FC = () => {
     <div className="space-y-8 max-w-[1600px] mx-auto animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-surface-900">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
             Bitácora de Reparaciones
           </h2>
-          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
             Monitoreo y Gestión de Dispositivos en Taller
           </p>
         </div>
@@ -113,11 +113,11 @@ export const DeviceListFeature: React.FC = () => {
 
         return (
           <div className="fixed inset-0 bg-surface-950/40 backdrop-blur-md z-[100] flex justify-center items-center p-6 animate-in fade-in duration-300">
-            <div className="bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] w-full max-w-md flex flex-col max-h-[90vh] animate-zoom-in overflow-hidden">
-              <div className="p-10 pb-6 flex-1 overflow-y-auto">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center shadow-sm">
-                    <MessageCircle className="w-7 h-7" />
+            <div className="bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] w-full max-w-md flex flex-col max-h-[90vh] animate-zoom-in overflow-hidden border border-white/20">
+              <div className="p-6 md:p-10 pb-6 flex-1 overflow-y-auto">
+                <div className="flex items-center justify-between mb-8 gap-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                    <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest block mb-1">Nuevo Estado</span>
@@ -220,9 +220,9 @@ export const DeviceListFeature: React.FC = () => {
                 )}
               </div>
 
-              <div className="p-8 pt-4 bg-surface-50/50 backdrop-blur-md border-t border-surface-100 flex gap-4">
-                  <button onClick={() => { ctrl.setStatusConfirmModal(null); ctrl.setPaymentMethod('efectivo'); ctrl.setBillingCustomer(null); }} className="flex-1 py-4 font-black text-[11px] uppercase tracking-widest text-surface-400 hover:text-surface-600 transition-colors">Cancelar</button>
-                  <button onClick={ctrl.confirmStatusChange} disabled={ctrl.isConfirming} className="flex-[2] bg-primary-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary-200 hover:bg-primary-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+              <div className="p-6 md:p-8 pt-4 bg-surface-50/50 backdrop-blur-md border-t border-surface-100 flex flex-col sm:flex-row gap-3 md:gap-4">
+                  <button onClick={() => { ctrl.setStatusConfirmModal(null); ctrl.setPaymentMethod('efectivo'); ctrl.setBillingCustomer(null); }} className="flex-1 py-4 font-black text-[10px] md:text-[11px] uppercase tracking-widest text-surface-400 hover:text-surface-600 transition-colors order-2 sm:order-1">Cancelar</button>
+                  <button onClick={ctrl.confirmStatusChange} disabled={ctrl.isConfirming} className="flex-[2] bg-primary-600 text-white py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-primary-200 hover:bg-primary-700 active:scale-95 transition-all flex items-center justify-center gap-2 order-1 sm:order-2">
                     {ctrl.isConfirming ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4" /> Confirmar Cambio</>}
                   </button>
               </div>

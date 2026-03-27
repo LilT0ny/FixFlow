@@ -50,15 +50,15 @@ export const Login = () => {
       <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-100/30 blur-[120px] opacity-60 animate-pulse"></div>
       <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-indigo-100/30 blur-[100px] opacity-60"></div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <div className="flex justify-center flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-[28px] bg-primary-600 flex items-center justify-center shadow-2xl shadow-primary-500/40 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500 hover:scale-110 group">
-            <Wrench className="w-10 h-10 text-white transition-transform group-hover:scale-110 duration-500" />
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 px-4 sm:px-0">
+        <div className="flex justify-center flex-col items-center mb-6 md:mb-8">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-[24px] md:rounded-[28px] bg-primary-600 flex items-center justify-center shadow-2xl shadow-primary-500/40 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500 hover:scale-110 group">
+            <Wrench className="w-8 h-8 md:w-10 md:h-10 text-white transition-transform group-hover:scale-110 duration-500" />
           </div>
-          <h2 className="mt-8 text-center text-4xl font-black text-surface-900 tracking-tighter">
+          <h2 className="mt-6 md:mt-8 text-center text-3xl md:text-4xl font-black text-surface-900 tracking-tighter leading-tight">
             Repair<span className="text-primary-600">Sys</span>
           </h2>
-          <p className="mt-2 text-center text-[11px] text-surface-400 font-black uppercase tracking-[0.3em]">
+          <p className="mt-2 text-center text-[9px] md:text-[11px] text-surface-400 font-black uppercase tracking-[0.3em]">
             Elite Tech Management
           </p>
         </div>
@@ -67,11 +67,11 @@ export const Login = () => {
           {/* Subtle line at the top */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary-400 via-primary-600 to-primary-400 opacity-80"></div>
           
-          <div className="mb-10 text-center">
-            <h3 className="text-2xl font-black text-surface-900 tracking-tight flex items-center justify-center gap-2">
+          <div className="mb-8 md:mb-10 text-center">
+            <h3 className="text-xl md:text-2xl font-black text-surface-900 tracking-tight flex items-center justify-center gap-2">
               Bienvenido
             </h3>
-            <p className="text-sm font-medium text-surface-400 mt-2">Ingresa tus credenciales para administrar tu taller.</p>
+            <p className="text-xs md:text-sm font-medium text-surface-400 mt-2">Ingresa tus credenciales para administrar tu taller.</p>
           </div>
 
           <form className="space-y-6" onSubmit={handleLogin}>
@@ -154,7 +154,7 @@ export const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full group relative overflow-hidden flex justify-center py-4.5 px-6 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(37,99,235,0.3)] text-sm font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-[6px] focus:ring-primary-500/20 transition-all active:scale-[0.96] disabled:opacity-70 disabled:cursor-not-allowed`}
+              className={`w-full group relative overflow-hidden flex justify-center py-4 px-6 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(37,99,235,0.3)] text-xs md:text-sm font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-[6px] focus:ring-primary-500/20 transition-all active:scale-[0.96] disabled:opacity-70 disabled:cursor-not-allowed`}
             >
               {isLoading ? (
                 <div className="flex items-center gap-3">

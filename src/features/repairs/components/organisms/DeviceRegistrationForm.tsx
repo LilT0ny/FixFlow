@@ -140,15 +140,15 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
   return (
     <div className="relative animate-zoom-in">
       
-      <div className="mb-12">
-        <div className="flex justify-between items-end mb-6">
+      <div className="mb-8 md:mb-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
           <div>
             <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.3em] mb-2 block">Cuestionario</span>
-            <h2 className="text-3xl font-black text-surface-900 tracking-tight">Registro de Ingreso</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight leading-tight">Registro de Ingreso</h2>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
              <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest block mb-1">Progreso</span>
-             <span className="text-lg font-black text-surface-900 tracking-tighter">Paso {step} <span className="text-surface-300 font-bold mx-0.5">/</span> 3</span>
+             <span className="text-base md:text-lg font-black text-surface-900 tracking-tighter">Paso {step} <span className="text-surface-300 font-bold mx-0.5">/</span> 3</span>
           </div>
         </div>
 
@@ -427,24 +427,24 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
           </div>
         )}
 
-        <div className="flex justify-between items-center pt-10 border-t border-surface-50 gap-4 mt-12">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-8 md:pt-10 border-t border-surface-50 gap-4 mt-8 md:mt-12">
           {step > 1 ? (
              <button
               type="button"
               onClick={handlePrev}
-              className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-surface-400 hover:bg-surface-50 transition-all active:scale-95 flex items-center gap-2"
+              className="px-6 md:px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest text-surface-400 hover:bg-surface-50 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               Regresar
             </button>
           ) : (
-            <div />
+            <div className="hidden sm:block" />
           )}
           
           <button
             type={step === 3 ? "submit" : "button"}
             onClick={step < 3 ? handleNext : undefined}
             disabled={(step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting))}
-            className={`px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 ${
+            className={`px-8 md:px-10 py-5 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 ${
               ((step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting)))
               ? 'bg-surface-100 text-surface-300 cursor-not-allowed border-none shadow-none'
               : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'

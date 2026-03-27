@@ -125,10 +125,10 @@ export const Reports = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-surface-900">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
             Reportes & Análisis
           </h2>
-          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
             Visión Estratégica y Rendimiento del Negocio
           </p>
         </div>
@@ -207,8 +207,8 @@ export const Reports = () => {
       {viewMode === "monthly" ? (
         <div className="bg-white p-8 rounded-[32px] border border-surface-200 shadow-sm animate-in zoom-in-95 duration-700 delay-200">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-            <div>
-              <h3 className="text-xl font-black text-surface-900 tracking-tight">
+            <div className="w-full lg:w-auto">
+              <h3 className="text-lg md:text-xl font-black text-surface-900 tracking-tight">
                 Análisis de Movimientos
               </h3>
               <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest mt-1">Tendencia de Ingresos vs Egresos</p>
@@ -216,16 +216,20 @@ export const Reports = () => {
 
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
               {/* Filter Toggles */}
-              <div className="flex items-center bg-surface-50 p-1.5 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100">
+              <div className="flex items-center bg-surface-50 p-1 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100 overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setViewMode("monthly")}
-                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all bg-white shadow-sm text-surface-900 border border-surface-200"
+                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
+                    viewMode === "monthly" ? "bg-white shadow-sm text-surface-900 border border-surface-200" : "text-surface-400 hover:text-surface-600"
+                  }`}
                 >
                   Vista Mensual
                 </button>
                 <button
                   onClick={() => setViewMode("daily")}
-                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all text-surface-400 hover:text-surface-600"
+                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
+                    viewMode === "daily" ? "bg-white shadow-sm text-surface-900 border border-surface-200" : "text-surface-400 hover:text-surface-600"
+                  }`}
                 >
                   Vista Diaria
                 </button>
@@ -338,16 +342,20 @@ export const Reports = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-              <div className="flex items-center bg-surface-50 p-1.5 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100">
+              <div className="flex items-center bg-surface-50 p-1 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100 overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setViewMode("monthly")}
-                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all text-surface-400 hover:text-surface-600"
+                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
+                    viewMode === "monthly" ? "text-surface-400 hover:text-surface-600" : "bg-white shadow-sm text-surface-900 border border-surface-200"
+                  }`}
                 >
                   Vista Mensual
                 </button>
                 <button
                   onClick={() => setViewMode("daily")}
-                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all bg-white shadow-sm text-surface-900 border border-surface-200"
+                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
+                    viewMode === "daily" ? "bg-white shadow-sm text-surface-900 border border-surface-200" : "text-surface-400 hover:text-surface-600"
+                  }`}
                 >
                   Vista Diaria
                 </button>

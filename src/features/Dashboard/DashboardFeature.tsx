@@ -21,10 +21,10 @@ export const DashboardFeature: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end pb-2">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-surface-900">Inicio</h2>
-          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">Inicio</h2>
+          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
             Resumen Operativo y Estado del Taller en Tiempo Real
           </p>
         </div>

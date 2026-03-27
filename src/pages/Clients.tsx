@@ -91,10 +91,10 @@ export const ClientManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-surface-900">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
             Base de Clientes
           </h2>
-          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
             Gestión Integral de Contactos y Expedientes de Servicio
           </p>
         </div>
@@ -108,7 +108,7 @@ export const ClientManagement: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-[32px] border border-surface-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-surface-50 bg-surface-50/30 backdrop-blur-md">
+        <div className="p-4 md:p-6 border-b border-surface-50 bg-surface-50/30 backdrop-blur-md">
           <div className="relative w-full md:w-[500px] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
             <input 
@@ -201,8 +201,8 @@ export const ClientManagement: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-surface-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95 duration-200 border border-white/20">
-            <h2 className="text-2xl font-bold mb-6 text-surface-900">{editingClient ? 'Editar Cliente' : 'Agregar Nuevo Cliente'}</h2>
+          <div className="bg-white rounded-[32px] w-full max-w-md p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 border border-white/20 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl md:text-2xl font-bold mb-6 text-surface-900">{editingClient ? 'Editar Cliente' : 'Agregar Nuevo Cliente'}</h2>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Nombre Completo</label>

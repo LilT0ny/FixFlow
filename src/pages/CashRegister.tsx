@@ -95,21 +95,21 @@ export const CashRegister: React.FC = () => {
     <div className="space-y-10 max-w-[1600px] mx-auto animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-surface-900">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
             Arqueo & Tesorería
           </h2>
-          <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80">
+          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
             Control Financiero y Flujo de Caja en Tiempo Real
           </p>
         </div>
         
-        <div className="flex gap-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
           <button 
             onClick={() => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
               setIsModalOpen(true);
             }} 
-            className="flex-1 md:flex-none bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-200/50 flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all active:scale-95"
+            className="flex-1 bg-emerald-600 text-white px-6 md:px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-200/50 flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
             Nuevo Ingreso
@@ -119,7 +119,7 @@ export const CashRegister: React.FC = () => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
               setIsModalOpen(true);
             }} 
-            className="flex-1 md:flex-none bg-rose-600 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-200/50 flex items-center justify-center gap-3 hover:bg-rose-700 transition-all active:scale-95"
+            className="flex-1 bg-rose-600 text-white px-6 md:px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-rose-200/50 flex items-center justify-center gap-3 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"
           >
             <Minus className="w-5 h-5" />
             Registrar Gasto
@@ -147,23 +147,23 @@ export const CashRegister: React.FC = () => {
             />
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-            <div className="flex items-center relative w-full sm:w-auto min-w-[200px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-stretch sm:items-center">
+            <div className="flex items-center relative w-full sm:w-auto min-w-[180px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
               <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none group-hover:scale-110 transition-transform" />
               <input 
                 type="date"
                 value={dateFilter}
                 onChange={e => setDateFilter(e.target.value)}
-                className="w-full pl-10 pr-2 bg-transparent text-[11px] font-black uppercase tracking-widest text-surface-700 cursor-pointer outline-none block"
+                className="w-full pl-10 pr-2 bg-transparent text-[10px] md:text-[11px] font-black uppercase tracking-widest text-surface-700 cursor-pointer outline-none block"
               />
             </div>
             
-            <div className="flex bg-surface-100/50 p-1.5 rounded-2xl shrink-0 shadow-inner overflow-x-auto no-scrollbar border border-surface-200/20">
+            <div className="flex bg-surface-100/50 p-1 rounded-2xl shrink-0 shadow-inner overflow-x-auto no-scrollbar border border-surface-200/20">
               {(['all', 'efectivo', 'transferencia'] as const).map(m => (
                 <button 
                   key={m}
                   onClick={() => setMethodFilter(m)}
-                  className={`px-6 py-2.5 text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap ${methodFilter === m ? 'bg-white shadow-xl text-primary-600 scale-[1.02]' : 'text-surface-400 hover:text-surface-600'}`}
+                  className={`px-4 md:px-6 py-2.5 text-[9px] md:text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap ${methodFilter === m ? 'bg-white shadow-xl text-primary-600 scale-[1.02]' : 'text-surface-400 hover:text-surface-600'}`}
                 >
                   {m === 'all' ? 'Consolidado' : m}
                 </button>
