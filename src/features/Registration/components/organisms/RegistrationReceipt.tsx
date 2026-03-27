@@ -18,7 +18,7 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
   const receiptData = useMemo(() => ({
     ...data,
     orderNumber,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(), // Still sending ISO but the print helper will handle it
     businessName: settings.companyName,
     businessLogo: settings.logo,
     businessPhone: settings.phone,

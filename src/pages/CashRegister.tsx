@@ -16,16 +16,18 @@ import {
 } from 'lucide-react';
 import { usePayments } from '../hooks/usePayments';
 import { StatCard } from '../components/molecules/StatCard';
+import { getLocalDate, formatToLocalDate } from '../utils/dateUtils';
 import type { TransactionType, PaymentMethod, PaymentType } from '../types';
 
 export const CashRegister: React.FC = () => {
   const { payments, addPayment } = usePayments();
-  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
+  const [dateFilter, setDateFilter] = useState(getLocalDate());
   const [methodFilter, setMethodFilter] = useState<'all' | PaymentMethod>('all');
   const [search, setSearch] = useState('');
 
   const filteredPayments = Array.isArray(payments) ? payments.filter(p => {
-    const matchesDate = !dateFilter || p.date.split('T')[0] === dateFilter;
+    const pDateLocal = formatToLocalDate(p.date);
+    const matchesDate = !dateFilter || pDateLocal === dateFilter;
     const matchesMethod = methodFilter === 'all' || p.method === methodFilter;
     const matchesSearch = !search || 
       p.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -146,13 +148,13 @@ export const CashRegister: React.FC = () => {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-            <div className="flex items-center relative">
-              <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none" />
+            <div className="flex items-center relative w-full sm:w-auto min-w-[200px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
+              <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none group-hover:scale-110 transition-transform" />
               <input 
                 type="date"
                 value={dateFilter}
                 onChange={e => setDateFilter(e.target.value)}
-                className="bg-white border border-surface-100 rounded-2xl pl-12 pr-6 py-3.5 text-[11px] font-black uppercase tracking-widest text-surface-700 cursor-pointer w-full md:w-auto hover:bg-surface-50 transition-colors shadow-sm outline-none"
+                className="w-full pl-10 pr-2 bg-transparent text-[11px] font-black uppercase tracking-widest text-surface-700 cursor-pointer outline-none block"
               />
             </div>
             
@@ -194,10 +196,10 @@ export const CashRegister: React.FC = () => {
                   </td>
                   <td className="px-8 py-6">
                     <div className="text-xs font-black text-surface-900 uppercase tracking-tighter">
-                      {new Date(p.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
+                      {new Date(p.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
                     </div>
                     <div className="text-[10px] text-surface-400 font-bold opacity-70">
-                      {new Date(p.date).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                      {new Date(p.date).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Guayaquil' })}
                     </div>
                   </td>
                   <td className="px-8 py-6">

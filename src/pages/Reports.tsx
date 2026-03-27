@@ -1,7 +1,5 @@
 import { useState, useMemo } from "react";
 import { useAppContext } from "../store/AppContext";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 import {
   AreaChart,
   Area,
@@ -21,6 +19,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { StatCard } from "../components/molecules/StatCard";
+import { getLocalDate, getLocalMonth, formatToLocalDate } from "../utils/dateUtils";
 import * as XLSX from "xlsx";
 
 export const Reports = () => {
@@ -33,18 +32,19 @@ export const Reports = () => {
   >("idle");
 
   // Date selection states
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const [selectedMonth, setSelectedMonth] = useState(getLocalMonth());
+  const [selectedDate, setSelectedDate] = useState(getLocalDate());
 
   // Derived data based on current view
   const filteredData = useMemo(() => {
-    if (viewMode === "monthly") {
-      return payments.filter((p) => p.date.startsWith(selectedMonth));
-    } else {
-      return payments.filter((p) => p.date.startsWith(selectedDate));
-    }
+    return payments.filter((p) => {
+      const pDateLocal = formatToLocalDate(p.date);
+      if (viewMode === "monthly") {
+        return pDateLocal.startsWith(selectedMonth);
+      } else {
+        return pDateLocal === selectedDate;
+      }
+    });
   }, [payments, viewMode, selectedMonth, selectedDate]);
 
   // Calculations for Net Balance
@@ -75,7 +75,7 @@ export const Reports = () => {
     }
 
     filteredData.forEach((p) => {
-      const dayStr = p.date.split("T")[0];
+      const dayStr = formatToLocalDate(p.date);
       const existing = daysMap.get(dayStr);
       if (existing) {
         if (p.transactionType === "ingreso") existing.Ingresos += p.amount;
@@ -91,7 +91,14 @@ export const Reports = () => {
 
     setTimeout(() => {
       const formattedData = filteredData.map((p) => ({
-        Fecha: new Date(p.date).toLocaleString(),
+        Fecha: new Intl.DateTimeFormat('es-EC', { 
+          timeZone: 'America/Guayaquil', 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }).format(new Date(p.date)),
         Concepto: p.description || "Sin descripcion",
         Tipo: p.transactionType.toUpperCase(),
         Categoria: p.type,
@@ -225,20 +232,17 @@ export const Reports = () => {
               </div>
 
               {/* Date Custom Picker */}
-              <div className="flex items-center relative w-full sm:w-auto justify-center bg-surface-50 border border-surface-200 rounded-2xl px-5 py-2.5 hover:bg-white hover:shadow-sm transition-all group">
-                <CalendarDays className="w-4.5 h-4.5 text-surface-400 group-hover:text-primary-600 transition-colors" />
-                
-                <div className="ml-3 relative min-w-[140px] text-center">
-                  <span className="text-xs font-black text-surface-900 uppercase tracking-tight">
-                    {format(parseISO(`${selectedMonth}-01`), "MMMM yyyy", { locale: es })}
-                  </span>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </div>
+              <div className="flex items-center relative w-full sm:w-auto min-w-[200px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
+                <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none group-hover:scale-110 transition-transform" />
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) setSelectedMonth(val);
+                  }}
+                  className="w-full pl-10 pr-2 bg-transparent text-[11px] font-black text-surface-900 uppercase tracking-tight cursor-pointer outline-none block"
+                />
               </div>
 
               <div className="flex gap-4 ml-4 hidden md:flex shrink-0">
@@ -349,20 +353,17 @@ export const Reports = () => {
                 </button>
               </div>
 
-              <div className="flex items-center relative w-full sm:w-auto justify-center bg-surface-50 border border-surface-200 rounded-2xl px-5 py-2.5 hover:bg-white hover:shadow-sm transition-all group">
-                <CalendarDays className="w-4.5 h-4.5 text-surface-400 group-hover:text-primary-600 transition-colors" />
-                
-                <div className="ml-3 relative min-w-[140px] text-center">
-                  <span className="text-xs font-black text-surface-900 uppercase tracking-tight">
-                    {format(parseISO(selectedDate), "dd 'de' MMMM, yyyy", { locale: es })}
-                  </span>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </div>
+              <div className="flex items-center relative w-full sm:w-auto min-w-[200px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
+                <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none group-hover:scale-110 transition-transform" />
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) setSelectedDate(val);
+                  }}
+                  className="w-full pl-10 pr-2 bg-transparent text-[11px] font-black text-surface-900 uppercase tracking-tight cursor-pointer outline-none block"
+                />
               </div>
             </div>
           </div>
@@ -382,7 +383,11 @@ export const Reports = () => {
                   <tr key={payment.id} className="hover:bg-surface-50/70 transition-colors group">
                     <td className="px-8 py-5 whitespace-nowrap text-[11px] font-black text-surface-400">
                       <div className="bg-surface-100 px-3 py-1.5 rounded-xl border border-surface-200/50 text-surface-700 shadow-sm inline-block">
-                        {new Date(payment.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(payment.date).toLocaleTimeString('es-EC', { 
+                          hour: "2-digit", 
+                          minute: "2-digit", 
+                          timeZone: 'America/Guayaquil' 
+                        })}
                       </div>
                     </td>
                     <td className="px-8 py-5">
