@@ -219,17 +219,13 @@ export const Reports = () => {
               <div className="flex items-center bg-surface-50 p-1 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100 overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setViewMode("monthly")}
-                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
-                    viewMode === "monthly" ? "bg-white shadow-sm text-surface-900 border border-surface-200" : "text-surface-400 hover:text-surface-600"
-                  }`}
+                  className="flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap bg-white shadow-sm text-surface-900 border border-surface-200"
                 >
                   Vista Mensual
                 </button>
                 <button
                   onClick={() => setViewMode("daily")}
-                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
-                    viewMode === "daily" ? "bg-white shadow-sm text-surface-900 border border-surface-200" : "text-surface-400 hover:text-surface-600"
-                  }`}
+                  className="flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap text-surface-400 hover:text-surface-600"
                 >
                   Vista Diaria
                 </button>
@@ -345,17 +341,13 @@ export const Reports = () => {
               <div className="flex items-center bg-surface-50 p-1 rounded-2xl w-full sm:w-auto shrink-0 border border-surface-100 overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setViewMode("monthly")}
-                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
-                    viewMode === "monthly" ? "text-surface-400 hover:text-surface-600" : "bg-white shadow-sm text-surface-900 border border-surface-200"
-                  }`}
+                  className="flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap text-surface-400 hover:text-surface-600"
                 >
                   Vista Mensual
                 </button>
                 <button
                   onClick={() => setViewMode("daily")}
-                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${
-                    viewMode === "daily" ? "bg-white shadow-sm text-surface-900 border border-surface-200" : "text-surface-400 hover:text-surface-600"
-                  }`}
+                  className="flex items-center justify-center gap-2 px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap bg-white shadow-sm text-surface-900 border border-surface-200"
                 >
                   Vista Diaria
                 </button>
