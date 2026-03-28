@@ -11,8 +11,7 @@ import {
   Loader2,
   CheckCircle2,
   X,
-  CreditCard,
-  Phone
+  CreditCard
 } from 'lucide-react';
 import { usePayments } from '../hooks/usePayments';
 import { StatCard } from '../components/molecules/StatCard';
@@ -176,61 +175,62 @@ export const CashRegister: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
-                <th className="px-8 py-5 text-center w-24">Tipo</th>
-                <th className="px-8 py-5">Temporalidad</th>
-                <th className="px-8 py-5">Segmento</th>
-                <th className="px-8 py-5">Concepto / Referencia</th>
-                <th className="px-8 py-5">Canal</th>
-                <th className="px-8 py-5 text-right">Monto Neto</th>
+              <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
+                <th className="px-6 md:px-8 py-5 text-center w-16 md:w-24">Tipo</th>
+                <th className="px-6 md:px-8 py-5 hidden md:table-cell">Temporalidad</th>
+                <th className="px-6 md:px-8 py-5 hidden sm:table-cell">Segmento</th>
+                <th className="px-6 md:px-8 py-5">Concepto / Referencia</th>
+                <th className="px-6 md:px-8 py-5 hidden lg:table-cell">Canal</th>
+                <th className="px-6 md:px-8 py-5 text-right">Monto</th>
+              </tr>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-50">
               {filteredPayments.map((p, idx) => (
                 <tr key={p.id} style={{ animationDelay: `${idx * 40}ms` }} className="hover:bg-surface-50/50 transition-colors group animate-in fade-in slide-in-from-left-4">
-                  <td className="px-8 py-6 text-center">
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mx-auto shadow-sm transition-transform group-hover:scale-110 ${
+                  <td className="px-6 md:px-8 py-6 text-center">
+                    <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto shadow-sm transition-transform group-hover:scale-110 ${
                       p.transactionType === 'ingreso' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
                     }`}>
-                      {p.transactionType === 'ingreso' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                      {p.transactionType === 'ingreso' ? <TrendingUp className="w-4 h-4 md:w-5 md:h-5" /> : <TrendingDown className="w-4 h-4 md:w-5 md:h-5" />}
                     </div>
                   </td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 md:px-8 py-6 hidden md:table-cell">
                     <div className="text-xs font-black text-surface-900 uppercase tracking-tighter">
-                      {new Date(p.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
-                    </div>
-                    <div className="text-[10px] text-surface-400 font-bold opacity-70">
-                      {new Date(p.date).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Guayaquil' })}
+                      {new Date(p.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <span className="text-[10px] text-surface-500 font-black uppercase tracking-widest bg-surface-100/50 px-2.5 py-1 rounded-lg border border-surface-200/30">
+                  <td className="px-6 md:px-8 py-6 hidden sm:table-cell">
+                    <span className="text-[9px] md:text-[10px] text-surface-500 font-black uppercase tracking-widest bg-surface-100/50 px-2 md:px-2.5 py-1 rounded-lg border border-surface-200/30">
                       {p.type}
                     </span>
                   </td>
-                  <td className="px-8 py-6">
-                    <div className="text-sm font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{p.description}</div>
-                    {p.customer && (
-                      <div className="flex items-center gap-4 mt-2">
-                        <div className="flex items-center gap-1.5 text-[9px] font-black text-surface-400 bg-surface-50 px-2 py-1 rounded-lg border border-surface-100 uppercase tracking-tight">
-                          <CreditCard className="w-3 h-3 text-primary-400" />
-                          {p.customer.documentId || 'N/A'}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[9px] text-surface-400 font-black uppercase tracking-widest opacity-60">
-                          <Phone className="w-3 h-3" />
-                          {p.customer.phone || 'N/A'}
-                        </div>
-                      </div>
-                    )}
+                  <td className="px-6 md:px-8 py-6">
+                    <div className="text-xs md:text-sm font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate max-w-[150px] md:max-w-none">{p.description}</div>
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2">
+                       <div className="md:hidden text-[9px] font-black text-surface-400 uppercase">
+                          {new Date(p.date).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                       </div>
+                       {p.customer && (
+                         <div className="flex items-center gap-1.5 text-[9px] font-black text-surface-400 bg-surface-50 px-2 py-1 rounded-lg border border-surface-100 uppercase tracking-tight">
+                           <CreditCard className="w-3 h-3 text-primary-400" />
+                           {p.customer.documentId || 'N/A'}
+                         </div>
+                       )}
+                       <div className="lg:hidden text-[9px] font-black uppercase bg-surface-100/30 px-2 py-1 rounded-lg text-surface-500 border border-surface-200/50">
+                          {p.method}
+                       </div>
+                    </div>
                   </td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 md:px-8 py-6 hidden lg:table-cell">
                     <span className="text-[10px] font-black uppercase bg-white border border-surface-100 px-3 py-1.5 rounded-xl text-surface-500 shadow-sm">
                       {p.method}
                     </span>
                   </td>
-                  <td className={`px-8 py-6 text-right ${
+                  <td className={`px-6 md:px-8 py-6 text-right whitespace-nowrap ${
                     p.transactionType === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
-                    <span className="text-2xl font-black tracking-tighter">
+                    <span className="text-xl md:text-2xl font-black tracking-tighter">
                       {p.transactionType === 'ingreso' ? '+' : '-'}${Math.abs(p.amount).toFixed(2)}
                     </span>
                   </td>

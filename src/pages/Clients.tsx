@@ -100,7 +100,7 @@ export const ClientManagement: React.FC = () => {
         </div>
         <button 
           onClick={() => { setEditingClient(null); setFormData({ fullName: '', documentId: '', phone: '', email: '', address: '' }); setIsModalOpen(true); }} 
-          className="bg-primary-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-primary-100 flex items-center justify-center gap-2 hover:bg-primary-700 transition-all active:scale-95"
+          className="w-full md:w-auto bg-primary-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-primary-200/50 flex items-center justify-center gap-3 hover:bg-primary-700 transition-all active:scale-95 whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
           Nuevo Cliente
@@ -125,57 +125,64 @@ export const ClientManagement: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
-                <th className="px-8 py-5">Nombre Completo</th>
-                <th className="px-8 py-5">Documento / Cédula</th>
-                <th className="px-8 py-5">Contacto</th>
-                <th className="px-8 py-5">Email</th>
-                <th className="px-8 py-5">Dirección</th>
-                <th className="px-8 py-5 text-right">Acciones</th>
+                <th className="px-6 md:px-8 py-5">Cliente</th>
+                <th className="px-6 md:px-8 py-5 hidden sm:table-cell">Identidad</th>
+                <th className="px-6 md:px-8 py-5 hidden md:table-cell">Contacto</th>
+                <th className="px-6 md:px-8 py-5 hidden lg:table-cell">Email</th>
+                <th className="px-6 md:px-8 py-5 hidden xl:table-cell">Dirección</th>
+                <th className="px-6 md:px-8 py-5 text-right">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100">
               {filteredClients.map(client => (
                 <tr key={client.id} className="hover:bg-surface-50/70 transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{client.fullName}</div>
-
+                  <td className="px-6 md:px-8 py-5">
+                    <div className="font-black text-sm md:text-base text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{client.fullName}</div>
+                    <div className="sm:hidden mt-2 flex flex-col gap-1.5">
+                       <span className="flex items-center gap-1.5 text-[9px] font-black text-surface-400 uppercase">
+                          <CreditCard className="w-3 h-3 text-primary-400" /> {client.documentId || 'S/N'}
+                       </span>
+                       <span className="flex items-center gap-1.5 text-[9px] font-black text-surface-400 uppercase">
+                          <Phone className="w-3 h-3 text-primary-400" /> {client.phone || 'S/N'}
+                       </span>
+                    </div>
                   </td>
-                  <td className="px-8 py-5">
+                  <td className="px-6 md:px-8 py-5 hidden sm:table-cell">
                     <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
                       <CreditCard className="w-3.5 h-3.5 text-primary-400" /> 
                       {client.documentId || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-8 py-5">
+                  <td className="px-6 md:px-8 py-5 hidden md:table-cell">
                     <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
                       <Phone className="w-3.5 h-3.5 text-primary-400" /> 
                       {client.phone || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-8 py-5">
+                  <td className="px-6 md:px-8 py-5 hidden lg:table-cell">
                     <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
                       <Mail className="w-3.5 h-3.5 text-primary-400" /> 
                       {client.email || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-8 py-5">
+                  <td className="px-6 md:px-8 py-5 hidden xl:table-cell">
                     <div className="flex items-center gap-2 text-xs text-surface-600 font-black bg-surface-100/50 px-3 py-1.5 rounded-xl border border-surface-200/50 w-fit shadow-sm">
                       <MapPin className="w-3.5 h-3.5 text-primary-400" /> 
                       {client.address || 'S/N'}
                     </div>
                   </td>
-                  <td className="px-8 py-5 text-right">
+                  <td className="px-6 md:px-8 py-5 text-right">
                     <div className="flex justify-end gap-2">
                       <button 
                         onClick={() => handleEdit(client)} 
-                        className="p-2.5 text-primary-600 hover:bg-primary-50 rounded-xl transition-all hover:scale-110 active:scale-90 border border-transparent hover:border-primary-100"
+                        className="p-2 md:p-2.5 text-primary-600 hover:bg-primary-50 rounded-xl transition-all hover:scale-110 active:scale-90 border border-transparent hover:border-primary-100"
                         title="Editar Cliente"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(client.id)} 
-                        className="p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-all hover:scale-110 active:scale-90 border border-transparent hover:border-rose-100"
+                        className="p-2 md:p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-all hover:scale-110 active:scale-90 border border-transparent hover:border-rose-100"
                         title="Eliminar Cliente"
                       >
                         <Trash2 className="w-4 h-4" />
