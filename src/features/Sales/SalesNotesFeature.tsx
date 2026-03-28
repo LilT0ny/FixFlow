@@ -164,9 +164,8 @@ export const SalesNotesFeature: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[600px] md:min-w-0">
             <thead>
-              <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
               <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
                 <th className="px-6 md:px-8 py-5">Folio</th>
                 <th className="px-6 md:px-8 py-5 hidden md:table-cell">Emisión</th>
@@ -175,23 +174,22 @@ export const SalesNotesFeature: React.FC = () => {
                 <th className="px-6 md:px-8 py-5 text-right">Monto</th>
                 <th className="px-6 md:px-8 py-5 text-center">Gestión</th>
               </tr>
-              </tr>
             </thead>
             <tbody className="divide-y divide-surface-50">
               {salesNotes.map((note, idx) => (
                 <tr key={note.id} style={{ animationDelay: `${idx * 40}ms` }} className="hover:bg-surface-50/50 transition-colors group animate-in fade-in slide-in-from-left-4">
-                  <td className="px-6 md:px-8 py-6">
-                    <span className="font-black text-primary-600 bg-primary-50 px-2.5 md:px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] border border-primary-100 uppercase tracking-widest shadow-sm">
+                  <td className="px-6 md:px-8 py-6 whitespace-nowrap">
+                    <span className="font-black text-primary-600 bg-primary-50 px-2.5 md:px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] border border-primary-100 uppercase tracking-widest shadow-sm group-hover:bg-primary-600 group-hover:text-white transition-all">
                       {note.orderNumber}
                     </span>
                   </td>
-                  <td className="px-6 md:px-8 py-6 hidden md:table-cell">
+                  <td className="px-6 md:px-8 py-6 hidden md:table-cell whitespace-nowrap">
                     <div className="text-xs font-black text-surface-900 uppercase tracking-tighter">
                       {new Date(note.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
                     </div>
                   </td>
                   <td className="px-6 md:px-8 py-6">
-                    <div className="text-sm font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate max-w-[120px] md:max-w-none">{note.customer.fullName}</div>
+                    <div className="text-sm font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate max-w-[150px] md:max-w-none">{note.customer.fullName}</div>
                     <div className="text-surface-400 font-black text-[9px] mt-2 flex items-center gap-2 bg-surface-50 w-fit px-2 py-1 rounded-lg border border-surface-100 uppercase tracking-widest">
                       <CreditCard className="w-3 h-3 text-primary-400" /> 
                       {note.customer.documentId || 'N/A'}
@@ -199,12 +197,12 @@ export const SalesNotesFeature: React.FC = () => {
                   </td>
 
                   <td className="px-6 md:px-8 py-6 hidden sm:table-cell">
-                    <div className="text-[11px] text-surface-500 font-black uppercase tracking-tight line-clamp-2 leading-relaxed max-w-xs">{note.repair.reportedIssue}</div>
+                    <div className="text-[11px] text-surface-500 font-black uppercase tracking-tight line-clamp-2 leading-relaxed max-w-xs group-hover:text-surface-900 transition-colors">{note.repair.reportedIssue}</div>
                   </td>
                   <td className="px-6 md:px-8 py-6 text-right whitespace-nowrap">
-                    <span className="font-black text-xl md:text-2xl text-surface-900 tracking-tighter">${Number(note.repair.repairTotalCost).toFixed(2)}</span>
+                    <span className="font-black text-xl md:text-2xl text-emerald-600 tracking-tighter">${Number(note.repair.repairTotalCost).toFixed(2)}</span>
                   </td>
-                  <td className="px-6 md:px-8 py-6">
+                  <td className="px-6 md:px-8 py-6 text-center">
                     <div className="flex justify-center gap-2">
                        <button
                         onClick={() => {

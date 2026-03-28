@@ -175,14 +175,12 @@ export const CashRegister: React.FC = () => {
           <table className="w-full text-left min-w-[500px] md:min-w-0">
             <thead>
               <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
-              <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
                 <th className="px-6 md:px-8 py-5 text-center w-16 md:w-24">Tipo</th>
                 <th className="px-6 md:px-8 py-5 hidden md:table-cell">Temporalidad</th>
                 <th className="px-6 md:px-8 py-5 hidden sm:table-cell">Segmento</th>
                 <th className="px-6 md:px-8 py-5">Concepto / Referencia</th>
                 <th className="px-6 md:px-8 py-5 hidden lg:table-cell">Canal</th>
                 <th className="px-6 md:px-8 py-5 text-right">Monto</th>
-              </tr>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-50">
