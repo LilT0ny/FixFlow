@@ -27,8 +27,8 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
 
 
   return (
-    <div className="bg-white rounded-[32px] border border-surface-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row px-4 md:px-8 py-5 md:py-6 border-b border-surface-100 justify-between items-start sm:items-center bg-white gap-4">
+      <div className="bg-white rounded-[20px] md:rounded-[32px] border border-surface-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col sm:flex-row px-4 md:px-8 py-5 md:py-6 border-b border-surface-100 justify-between items-start sm:items-center bg-white gap-4">
         <div>
           <h3 className="text-base md:text-lg font-black text-surface-900 tracking-tight">Ingresos Recientes</h3>
           <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest mt-0.5">Últimos equipos registrados</p>
@@ -42,7 +42,7 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[700px]">
+        <table className="w-full text-left border-collapse min-w-[500px] md:min-w-0">
           <thead>
             <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
               <th className="px-6 md:px-8 py-5">
@@ -74,7 +74,7 @@ export const TablaIngresosRecientes: React.FC<TablaIngresosRecientesProps> = ({ 
                   <span className="font-black text-surface-900 bg-surface-100 px-3 py-1.5 rounded-xl text-[10px] md:text-xs tracking-tight shadow-sm border border-surface-200/50">{orden.orderNumber}</span>
                 </td>
                 <td className="px-6 md:px-8 py-5">
-                  <div className="text-xs md:text-sm font-black text-surface-900 leading-none">
+                  <div className="text-xs md:text-sm font-black text-surface-900 leading-none truncate max-w-[120px] md:max-w-none">
                     {orden.customer.fullName}
                   </div>
                   <p className="text-[10px] text-surface-400 mt-1.5 font-medium leading-none">{orden.customer.phone || 'Sin teléfono'}</p>

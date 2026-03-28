@@ -149,7 +149,7 @@ export const SalesNotesFeature: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden animate-zoom-in">
+      <div className="bg-white rounded-[24px] md:rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden animate-zoom-in">
         <div className="p-6 border-b border-surface-50 bg-surface-50/30 backdrop-blur-md">
           <div className="relative w-full md:w-[500px] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
@@ -251,7 +251,7 @@ export const SalesNotesFeature: React.FC = () => {
       {/* ─── Modal: Crear Nota de Venta ─── */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-surface-950/40 backdrop-blur-md z-[100] flex justify-center items-center p-6 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] w-full max-w-4xl max-h-[90vh] flex flex-col animate-zoom-in overflow-hidden border border-white/20">
+          <div className="bg-white rounded-[24px] md:rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] w-full max-w-4xl max-h-[90vh] flex flex-col animate-zoom-in overflow-hidden border border-white/20">
             {/* Header */}
             <div className="px-6 md:px-10 py-6 md:py-8 border-b border-surface-50 bg-surface-50/30 flex justify-between items-center">
               <div className="flex items-center gap-4 md:gap-5">
@@ -268,7 +268,7 @@ export const SalesNotesFeature: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-10 space-y-12 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 md:space-y-12 no-scrollbar">
               {/* Sección Cliente */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3 text-primary-600">
@@ -276,7 +276,7 @@ export const SalesNotesFeature: React.FC = () => {
                   <span className="text-[11px] font-black uppercase tracking-[0.2em]">Entidad de la Operación</span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Documento de Identidad (C.I / RUC)</label>
                     <div className="relative group">
@@ -307,7 +307,7 @@ export const SalesNotesFeature: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Contacto Telefónico</label>
                     <input
@@ -403,7 +403,7 @@ export const SalesNotesFeature: React.FC = () => {
               </div>
 
               {/* Tips / Info */}
-              <div className="bg-surface-50 rounded-[28px] p-6 flex items-start gap-4 border border-surface-100 shadow-inner">
+              <div className="bg-surface-50 rounded-[20px] md:rounded-[28px] p-4 md:p-6 flex items-start gap-4 border border-surface-100 shadow-inner">
                 <Info className="w-6 h-6 text-primary-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="text-[11px] font-black text-surface-400 uppercase tracking-widest">Aviso Operacional</p>

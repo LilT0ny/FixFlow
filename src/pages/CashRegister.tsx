@@ -102,13 +102,13 @@ export const CashRegister: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full md:w-auto">
           <button 
             onClick={() => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
               setIsModalOpen(true);
             }} 
-            className="flex-1 bg-emerald-600 text-white px-6 md:px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-200/50 flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
+            className="w-full sm:flex-1 bg-emerald-600 text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-200/50 flex items-center justify-center gap-2 md:gap-3 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
             Nuevo Ingreso
@@ -118,7 +118,7 @@ export const CashRegister: React.FC = () => {
               setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
               setIsModalOpen(true);
             }} 
-            className="flex-1 bg-rose-600 text-white px-6 md:px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-rose-200/50 flex items-center justify-center gap-3 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"
+            className="w-full sm:flex-1 bg-rose-600 text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-rose-200/50 flex items-center justify-center gap-2 md:gap-3 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"
           >
             <Minus className="w-5 h-5" />
             Registrar Gasto
@@ -133,14 +133,14 @@ export const CashRegister: React.FC = () => {
         <StatCard title="Balance Consolidado" amount={totals.total} icon={TrendingUp} color="text-primary-600" bgColor="bg-primary-50" delay="300ms" />
       </div>
 
-      <div className="bg-white rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden animate-zoom-in">
-        <div className="p-6 border-b border-surface-50 flex flex-col md:flex-row gap-6 items-center justify-between bg-surface-50/30 backdrop-blur-md">
-          <div className="relative w-full md:w-[400px] group">
+      <div className="bg-white rounded-[24px] md:rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden animate-zoom-in">
+        <div className="p-4 md:p-6 border-b border-surface-50 flex flex-col lg:flex-row gap-4 md:gap-6 items-center justify-between bg-surface-50/30 backdrop-blur-md">
+          <div className="relative w-full lg:w-[400px] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
             <input 
               type="text" 
               placeholder="Filtro por concepto..."
-              className="w-full pl-12 pr-6 py-3.5 bg-white border border-surface-100 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-bold text-sm shadow-sm"
+              className="w-full pl-12 pr-6 py-3.5 bg-white border border-surface-100 rounded-xl md:rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-bold text-sm shadow-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -157,7 +157,7 @@ export const CashRegister: React.FC = () => {
               />
             </div>
             
-            <div className="flex bg-surface-100/50 p-1 rounded-2xl shrink-0 shadow-inner overflow-x-auto no-scrollbar border border-surface-200/20">
+            <div className="flex bg-surface-100/50 p-1 rounded-xl md:rounded-2xl shrink-0 shadow-inner overflow-x-auto border border-surface-200/20">
               {(['all', 'efectivo', 'transferencia'] as const).map(m => (
                 <button 
                   key={m}
@@ -172,7 +172,7 @@ export const CashRegister: React.FC = () => {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[500px] md:min-w-0">
             <thead>
               <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
               <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
