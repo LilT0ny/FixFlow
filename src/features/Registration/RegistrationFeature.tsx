@@ -11,6 +11,8 @@ import { DeviceRegistrationForm } from '../repairs/components/organisms/DeviceRe
 import { useRegistration } from './hooks/useRegistration';
 import type { DeviceCheckInForm } from '../../types';
 
+
+
 // Initial state decoupled clearly
 const INITIAL_REGISTRATION_STATE: DeviceCheckInForm = {
   customer: { fullName: '', documentId: '', phone: '', email: '' },
