@@ -5,14 +5,14 @@ import { SettingsProvider } from './store/SettingsContext';
 import { AdminLayout } from './layouts/AdminLayout';
 import { DashboardFeature } from './features/Dashboard/DashboardFeature';
 import { DeviceListFeature } from './features/DeviceList/DeviceListFeature';
-import { CashRegister } from './pages/CashRegister';
-import { Reports } from './pages/Reports';
+import { CashRegisterFeature } from './features/CashRegister/CashRegisterFeature';
+import { ReportsFeature } from './features/Reports/ReportsFeature';
 import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
 import { RegistrationFeature } from './features/Registration/RegistrationFeature';
 import { SalesNotesFeature } from './features/Sales/SalesNotesFeature';
-import { ClientManagement } from './pages/Clients';
-import { Settings } from './pages/Settings';
+import { ClientsFeature } from './features/Clients/ClientsFeature';
+import { SettingsFeature } from './features/Settings/SettingsFeature';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAppContext();
@@ -35,10 +35,10 @@ function App() {
               <Route path="check-in" element={<RegistrationFeature />} />
               <Route path="devices" element={<DeviceListFeature />} />
               <Route path="sales" element={<SalesNotesFeature />} />
-              <Route path="clients" element={<ClientManagement />} />
-              <Route path="cash" element={<CashRegister />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="settings" element={<Settings />} />
+              <Route path="clients" element={<ClientsFeature />} />
+              <Route path="cash" element={<CashRegisterFeature />} />
+              <Route path="reports" element={<ReportsFeature />} />
+              <Route path="settings" element={<SettingsFeature />} />
             </Route>
           </Routes>
         </BrowserRouter>
