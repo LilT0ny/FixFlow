@@ -245,12 +245,7 @@ export const DeviceListFeature: React.FC = () => {
           photos={ctrl.photosModal.orderToEdit.repair.evidencePhotos || []}
           onClose={() => ctrl.setPhotosModal(null)}
           onUpload={(stage, file) => ctrl.processFileUpload(ctrl.photosModal!.orderToEdit!, stage, file)}
-          onDelete={(photoIndex) => {
-            const order = ctrl.photosModal!.orderToEdit!;
-            const newPhotos = order.repair.evidencePhotos.filter((_, i) => i !== photoIndex);
-            ctrl.updateOrder(order.id, { repair: { ...order.repair, evidencePhotos: newPhotos } });
-            ctrl.setPhotosModal({ isOpen: true, orderToEdit: { ...order, repair: { ...order.repair, evidencePhotos: newPhotos } } });
-          }}
+          onDelete={(photoIndex) => ctrl.deletePhoto(ctrl.photosModal!.orderToEdit!, photoIndex)}
         />
       )}
 

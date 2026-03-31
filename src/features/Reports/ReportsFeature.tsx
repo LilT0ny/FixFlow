@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useAppContext } from "../../store/AppContext";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -9,7 +9,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import {
@@ -17,25 +16,33 @@ import {
   CalendarDays,
   BarChart3,
   ListTree,
+  TrendingUp,
+  TrendingDown,
   Loader2,
   CheckCircle2,
+  ArrowUpRight,
+  Wallet,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import { StatCard } from "../../components/molecules/StatCard";
 
-export const ReportsFeature = () => {
+export const ReportsFeature: React.FC = () => {
   const { payments } = useAppContext();
 
+  // View states
   const [viewMode, setViewMode] = useState<"daily" | "monthly">("monthly");
   const [exportStatus, setExportStatus] = useState<
     "idle" | "exporting" | "success"
   >("idle");
 
+  // Date selection states
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [selectedDate, setSelectedDate] = useState(
     today.toISOString().split("T")[0],
   );
 
+  // Derived data based on current view
   const filteredData = useMemo(() => {
     if (viewMode === "monthly") {
       return payments.filter((p) => p.date.startsWith(selectedMonth));
@@ -44,14 +51,17 @@ export const ReportsFeature = () => {
     }
   }, [payments, viewMode, selectedMonth, selectedDate]);
 
-  const totalIncome = filteredData
-    .filter((p) => p.transactionType === "ingreso")
-    .reduce((sum, p) => sum + p.amount, 0);
-  const totalExpense = filteredData
-    .filter((p) => p.transactionType === "egreso")
-    .reduce((sum, p) => sum + p.amount, 0);
-  const netBalance = totalIncome - totalExpense;
+  // Calculations for Net Balance
+  const ingresos = filteredData.filter(p => p.transactionType === "ingreso");
+  const egresos = filteredData.filter(p => p.transactionType === "egreso");
+  
+  const totals = {
+    ingresosTotal: ingresos.reduce((acc, p) => acc + p.amount, 0),
+    egresosTotal: egresos.reduce((acc, p) => acc + p.amount, 0),
+    balance: ingresos.reduce((acc, p) => acc + p.amount, 0) - egresos.reduce((acc, p) => acc + p.amount, 0),
+  };
 
+  // Chart data for monthly view
   const chartData = useMemo(() => {
     if (viewMode !== "monthly") return [];
 
@@ -111,35 +121,32 @@ export const ReportsFeature = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-surface-900">
+    <div className="space-y-10 max-w-[1600px] mx-auto animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+        <div className="space-y-1">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
             Reportes y Estadisticas
           </h2>
-          <p className="text-gray-500 mt-1">
-            Analiza los ingresos y egresos de tu negocio.
+          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
+            Analiza los Ingresos y Egresos de tu Negocio
           </p>
         </div>
-
-        <button
+        
+        <button 
           onClick={exportToExcel}
           disabled={exportStatus !== "idle"}
-          className={`px-5 py-2.5 rounded-xl font-medium shadow-sm flex items-center gap-2 transition-all duration-300 ${
+          className={`px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 transition-all active:scale-95 disabled:opacity-50 ${
             exportStatus === "success"
-              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-              : "bg-green-600 text-white hover:bg-green-700 disabled:opacity-70"
+              ? "bg-emerald-100 text-emerald-700 shadow-emerald-200/50"
+              : "bg-green-600 text-white hover:bg-green-700 shadow-green-200/50"
           }`}
         >
           {exportStatus === "exporting" ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Exportando...
-            </>
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : exportStatus === "success" ? (
             <>
               <CheckCircle2 className="w-5 h-5" />
-              ¡Completado!
+              Completado
             </>
           ) : (
             <>
@@ -150,275 +157,240 @@ export const ReportsFeature = () => {
         </button>
       </div>
 
+      {/* Success Toast */}
       {exportStatus === "success" && (
         <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-surface-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
+          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
             <div className="bg-emerald-500 p-2 rounded-full">
               <CheckCircle2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm">Reporte Generado</p>
-              <p className="text-xs text-surface-400">
-                El archivo se ha descargado correctamente.
-              </p>
+              <p className="font-bold text-sm leading-none">Reporte Generado</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">El archivo se ha descargado correctamente</p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="flex items-center relative w-full sm:w-auto justify-end">
-          <CalendarDays className="w-5 h-5 text-gray-400 absolute left-3 z-10 pointer-events-none" />
-
-          {viewMode === "monthly" ? (
-            <div className="relative group flex items-center">
-              <span className="pl-10 pr-2 py-1 text-sm font-medium text-gray-700 capitalize">
-                {format(parseISO(`${selectedMonth}-01`), "MMMM yyyy", {
-                  locale: es,
-                })}
-              </span>
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                aria-label="Seleccionar mes"
-                title="Seleccionar mes"
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-              />
-            </div>
-          ) : (
-            <div className="relative group flex items-center">
-              <span className="pl-10 pr-2 py-1 text-sm font-medium text-gray-700">
-                {format(parseISO(selectedDate), "dd 'de' MMMM, yyyy", {
-                  locale: es,
-                })}
-              </span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                aria-label="Seleccionar fecha"
-                title="Seleccionar fecha"
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto shrink-0 shadow-inner">
-          <button
-            onClick={() => setViewMode("monthly")}
-            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
-              viewMode === "monthly"
-                ? "bg-white shadow-sm text-gray-900 border border-gray-200"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" /> Mensual
-          </button>
-          <button
-            onClick={() => setViewMode("daily")}
-            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
-              viewMode === "daily"
-                ? "bg-white shadow-sm text-gray-900 border border-gray-200"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <ListTree className="w-4 h-4" /> Diario
-          </button>
-        </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total Ingresos" amount={totals.ingresosTotal} icon={TrendingUp} color="text-emerald-600" bgColor="bg-emerald-50" delay="0ms" />
+        <StatCard title="Total Egresos" amount={totals.egresosTotal} icon={TrendingDown} color="text-rose-600" bgColor="bg-rose-50" delay="100ms" />
+        <StatCard title="Balance Neto" amount={totals.balance} icon={Wallet} color={totals.balance >= 0 ? "text-blue-600" : "text-rose-600"} bgColor={totals.balance >= 0 ? "bg-blue-50" : "bg-rose-50"} delay="200ms" />
+        <StatCard title="Transacciones" amount={filteredData.length} icon={ArrowUpRight} color="text-primary-600" bgColor="bg-primary-50" delay="300ms" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm flex flex-col justify-between">
-          <p className="text-sm font-semibold text-emerald-600 mb-1">
-            Total Ingresos
-          </p>
-          <h3 className="text-3xl font-bold text-gray-900">
-            ${totalIncome.toFixed(2)}
-          </h3>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border border-red-100 shadow-sm flex flex-col justify-between">
-          <p className="text-sm font-semibold text-red-600 mb-1">
-            Total Egresos
-          </p>
-          <h3 className="text-3xl font-bold text-gray-900">
-            ${totalExpense.toFixed(2)}
-          </h3>
-        </div>
-        <div
-          className={`p-6 rounded-2xl shadow-sm flex flex-col justify-between ${
-            netBalance >= 0 ? "bg-blue-600 text-white" : "bg-red-500 text-white"
-          }`}
-        >
-          <p className="text-sm font-semibold text-white/80 mb-1">
-            Balance Neto
-          </p>
-          <h3 className="text-3xl font-bold">${netBalance.toFixed(2)}</h3>
-        </div>
-      </div>
-
-      {viewMode === "monthly" ? (
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">
-            Flujo de Caja - {selectedMonth}
-          </h3>
-          <div className="h-80">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="colorIngresos"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient
-                      id="colorEgresos"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#E5E7EB"
+      {/* Filters */}
+      <div className="bg-white rounded-[24px] md:rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden animate-zoom-in">
+        <div className="p-4 md:p-6 border-b border-surface-50 flex flex-col lg:flex-row gap-4 md:gap-6 items-center justify-between bg-surface-50/30 backdrop-blur-md">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-stretch sm:items-center">
+            <div className="flex items-center relative w-full sm:w-auto min-w-[180px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
+              <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none group-hover:scale-110 transition-transform" />
+              {viewMode === "monthly" ? (
+                <div className="relative group flex items-center w-full">
+                  <span className="pl-10 pr-2 py-1 text-[10px] md:text-[11px] font-black uppercase tracking-widest text-surface-700 w-full text-center">
+                    {format(parseISO(`${selectedMonth}-01`), "MMMM yyyy", {
+                      locale: es,
+                    })}
+                  </span>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
                   />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#6B7280", fontSize: 12 }}
-                    dy={10}
+                </div>
+              ) : (
+                <div className="relative group flex items-center w-full">
+                  <span className="pl-10 pr-2 py-1 text-[10px] md:text-[11px] font-black uppercase tracking-widest text-surface-700 w-full text-center">
+                    {format(parseISO(selectedDate), "dd MMM, yyyy", {
+                      locale: es,
+                    })}
+                  </span>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
                   />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#6B7280", fontSize: 12 }}
-                    dx={-10}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    }}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                  <Area
-                    type="monotone"
-                    dataKey="Ingresos"
-                    stroke="#10B981"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorIngresos)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="Egresos"
-                    stroke="#EF4444"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorEgresos)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-400">
-                No hay datos para mostrar en este mes.
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex bg-surface-100/50 p-1 rounded-xl md:rounded-2xl shrink-0 shadow-inner overflow-x-auto border border-surface-200/20">
+            <button 
+              onClick={() => setViewMode("monthly")}
+              className={`px-4 md:px-6 py-2.5 text-[9px] md:text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap flex items-center gap-2 ${viewMode === "monthly" ? 'bg-white shadow-xl text-primary-600 scale-[1.02]' : 'text-surface-400 hover:text-surface-600'}`}
+            >
+              <BarChart3 className="w-4 h-4" /> Mensual
+            </button>
+            <button 
+              onClick={() => setViewMode("daily")}
+              className={`px-4 md:px-6 py-2.5 text-[9px] md:text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap flex items-center gap-2 ${viewMode === "daily" ? 'bg-white shadow-xl text-primary-600 scale-[1.02]' : 'text-surface-400 hover:text-surface-600'}`}
+            >
+              <ListTree className="w-4 h-4" /> Diario
+            </button>
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900">
-              Listado Diario - {selectedDate}
+
+        {/* Content: Chart (Monthly) or Table (Daily) */}
+        {viewMode === "monthly" ? (
+          <div className="p-6 md:p-8">
+            <h3 className="text-lg font-black text-surface-900 uppercase tracking-tight mb-6">
+              Flujo de Caja - {selectedMonth}
             </h3>
+            <div className="h-80">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="colorIngresos"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient
+                        id="colorEgresos"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#6B7280", fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#6B7280", fontSize: 12 }}
+                      dx={-10}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Ingresos"
+                      stroke="#10B981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorIngresos)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Egresos"
+                      stroke="#EF4444"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorEgresos)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-surface-400">
+                  <div className="text-center">
+                    <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p className="text-sm font-black uppercase tracking-widest">No hay datos para mostrar en este mes</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+        ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px] md:min-w-0">
+            <table className="w-full text-left min-w-[500px] md:min-w-0">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                  <th className="px-6 py-4 font-semibold">Hora</th>
-                  <th className="px-6 py-4 font-semibold">Concepto</th>
-                  <th className="px-4 py-4 font-semibold hidden md:table-cell">
-                    Categoría
-                  </th>
-                  <th className="px-4 py-4 font-semibold hidden sm:table-cell">
-                    Método
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-right">Valor</th>
+                <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
+                  <th className="px-6 md:px-8 py-5">Hora</th>
+                  <th className="px-6 md:px-8 py-5">Concepto / Referencia</th>
+                  <th className="px-6 md:px-8 py-5 hidden md:table-cell">Categoria</th>
+                  <th className="px-6 md:px-8 py-5 hidden sm:table-cell">Metodo</th>
+                  <th className="px-6 md:px-8 py-5 text-right">Monto</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredData.map((payment) => (
-                  <tr
-                    key={payment.id}
-                    className="hover:bg-gray-50 transition-colors"
+              <tbody className="divide-y divide-surface-50">
+                {filteredData.map((payment, idx) => (
+                  <tr 
+                    key={payment.id} 
+                    style={{ animationDelay: `${idx * 40}ms` }} 
+                    className="hover:bg-surface-50/50 transition-colors group animate-in fade-in slide-in-from-left-4"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                      {new Date(payment.date).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-semibold text-gray-900 truncate max-w-[150px] md:max-w-none">
-                        {payment.description || "Sin descripción"}
+                    <td className="px-6 md:px-8 py-6">
+                      <div className="text-xs font-black text-surface-900 uppercase tracking-tighter">
+                        {new Date(payment.date).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </div>
                     </td>
-                    <td className="px-4 py-4 hidden md:table-cell">
-                      <span className="text-sm capitalize text-gray-600">
+                    <td className="px-6 md:px-8 py-6">
+                      <div className="text-xs md:text-sm font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate max-w-[150px] md:max-w-none">
+                        {payment.description || "Sin descripcion"}
+                      </div>
+                    </td>
+                    <td className="px-6 md:px-8 py-6 hidden md:table-cell">
+                      <span className="text-[9px] md:text-[10px] text-surface-500 font-black uppercase tracking-widest bg-surface-100/50 px-2 md:px-2.5 py-1 rounded-lg border border-surface-200/30">
                         {payment.type}
                       </span>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm capitalize text-gray-600 hidden sm:table-cell">
-                      {payment.method}
+                    <td className="px-6 md:px-8 py-6 hidden sm:table-cell">
+                      <span className="text-[10px] font-black uppercase bg-white border border-surface-100 px-3 py-1.5 rounded-xl text-surface-500 shadow-sm">
+                        {payment.method}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span
-                        className={`font-bold text-base sm:text-lg ${
-                          payment.transactionType === "egreso"
-                            ? "text-red-500"
-                            : "text-emerald-600"
-                        }`}
-                      >
-                        {payment.transactionType === "egreso" ? "-" : "+"}$
-                        {payment.amount.toFixed(2)}
+                    <td className={`px-6 md:px-8 py-6 text-right whitespace-nowrap ${
+                      payment.transactionType === "egreso" ? "text-rose-600" : "text-emerald-600"
+                    }`}>
+                      <span className="text-xl md:text-2xl font-black tracking-tighter">
+                        {payment.transactionType === "egreso" ? "-" : "+"}${payment.amount.toFixed(2)}
                       </span>
                     </td>
                   </tr>
                 ))}
                 {filteredData.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-10 text-center text-gray-500"
-                    >
-                      No se registraron movimientos en esta fecha.
+                    <td colSpan={5} className="px-8 py-32 text-center">
+                      <div className="w-24 h-24 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-surface-100">
+                        <BarChart3 className="w-10 h-10 text-surface-200 opacity-50" />
+                      </div>
+                      <h4 className="text-lg font-black text-surface-900 tracking-tight">Sin correspondencias</h4>
+                      <p className="text-[10px] text-surface-400 font-black uppercase tracking-widest mt-2">No se registraron movimientos en esta fecha</p>
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+
+export default ReportsFeature;
