@@ -31,3 +31,6 @@ dist-ssr
 # Database
 database.sql
 supabase.sql
+
+# Documentation and Business Logic
+/Informacion y contexto del sistema/
