@@ -13,7 +13,6 @@ import { RegistrationFeature } from './features/Registration/RegistrationFeature
 import { SalesNotesFeature } from './features/Sales/SalesNotesFeature';
 import { ClientsFeature } from './features/Clients/ClientsFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
-import { LoginPage } from './features/Auth/LoginPage';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -29,7 +28,8 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/saas-login" element={<LoginPage />} />
+            {/* Redirigir /saas-login al login unificado */}
+            <Route path="/saas-login" element={<Navigate to="/login" replace />} />
             <Route path="/status/:id" element={<ClientStatus />} />
 
             {/* Master Admin routes */}
