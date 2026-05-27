@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AuthService, AuthUser, TenantService, Tenant } from '../services/SaaSAuthService';
+import type { AuthUser, Tenant } from '../services/SaaSAuthService';
+import { AuthService, TenantService } from '../services/SaaSAuthService';
 
 // ════════════════════════════════════════════════════════════
 // useAuth - Hook para manejar autenticación
