@@ -1,32 +1,43 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTenants } from '../../hooks/useAuthSaaS';
 import { useAuth } from '../../hooks/useAuthSaaS';
-import { Plus, LogOut, Trash2, Edit2 } from 'lucide-react';
+import { Plus, LogOut, Trash2, Users, Building2, Activity } from 'lucide-react';
 import { CreateTenantModal } from './CreateTenantModal';
+import { TenantUsersModal } from './TenantUsersModal';
 import type { Tenant } from '../../services/SaaSAuthService';
 
+const PLAN_COLORS: Record<string, string> = {
+  basic: 'bg-gray-100 text-gray-700',
+  professional: 'bg-blue-100 text-blue-700',
+  enterprise: 'bg-purple-100 text-purple-700',
+};
+
 export const MasterAdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { user, loading: authLoading, logout } = useAuth();
   const { tenants, loading, createTenant, deactivateTenant } = useTenants();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
 
   // Validar que sea master admin
   useEffect(() => {
-    if (user && !user.is_master) {
-      window.location.href = '/dashboard';
+    if (!authLoading) {
+      if (!user) {
+        navigate('/login');
+      } else if (!user.is_master) {
+        navigate('/');
+      }
     }
-  }, [user]);
+  }, [user, authLoading, navigate]);
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const handleDeleteTenant = async (tenantId: string) => {
-    if (!confirm('¿Desactivar este tenant? Sus usuarios no podrán ingresar.')) {
-      return;
-    }
+    if (!confirm('¿Desactivar este taller? Sus usuarios no podrán ingresar hasta que lo reactives.')) return;
     try {
       await deactivateTenant(tenantId);
     } catch (error) {
@@ -43,115 +54,148 @@ export const MasterAdminDashboard = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  const activeCount = tenants.filter(t => t.activo).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">FixFlow Admin</h1>
-            <p className="text-sm text-gray-600 mt-1">Gestión de Clientes (Tenants)</p>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900 leading-none">FixFlow Admin</h1>
+              <p className="text-xs text-gray-500 mt-0.5">Panel de control maestro</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user?.username}</p>
-              <p className="text-xs text-gray-500">Master Admin</p>
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-semibold text-gray-900">{user?.username}</p>
+              <p className="text-xs text-blue-600 font-medium">Master Admin</p>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition text-sm"
             >
               <LogOut className="w-4 h-4" />
-              Salir
+              <span className="hidden sm:inline">Salir</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Create Button */}
-        <div className="flex justify-between items-center mb-8">
+        {/* Stats bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500 mb-1">Talleres activos</p>
+            <p className="text-2xl font-bold text-blue-600">{activeCount}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500 mb-1">Total clientes</p>
+            <p className="text-2xl font-bold text-gray-900">{tenants.length}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm col-span-2 sm:col-span-1">
+            <p className="text-xs text-gray-500 mb-1">Estado sistema</p>
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-green-500" />
+              <p className="text-sm font-semibold text-green-600">Operativo</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Header actions */}
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Tus Clientes</h2>
-            <p className="text-gray-600 text-sm mt-1">Administra las empresas que usan FixFlow</p>
+            <h2 className="text-xl font-bold text-gray-900">Talleres / Clientes</h2>
+            <p className="text-gray-500 text-sm mt-0.5">Administrá las empresas que usan FixFlow</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition shadow-sm text-sm font-medium"
           >
-            <Plus className="w-5 h-5" />
-            Nuevo Cliente
+            <Plus className="w-4 h-4" />
+            Nuevo taller
           </button>
         </div>
 
         {/* Loading */}
         {loading && (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
           </div>
         )}
 
         {/* Tenants Grid */}
         {!loading && tenants.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {tenants.map((tenant) => (
               <div
                 key={tenant.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition p-6"
+                className="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden"
               >
-                {/* Header */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{tenant.nombre_empresa}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{tenant.slug}</p>
+                {/* Card header */}
+                <div className="p-5 pb-3">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                        <span className="text-blue-700 font-bold text-sm">
+                          {tenant.nombre_empresa.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-gray-900 truncate">{tenant.nombre_empresa}</h3>
+                        <p className="text-xs text-gray-400 mt-0.5 font-mono">{tenant.slug}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        tenant.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {tenant.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
                   </div>
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                      tenant.activo
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {tenant.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
 
-                {/* Details */}
-                <div className="space-y-2 text-sm mb-4">
-                  {tenant.email && (
-                    <div>
-                      <p className="text-gray-600">Email: {tenant.email}</p>
-                    </div>
-                  )}
-                  {tenant.ruc && (
-                    <div>
-                      <p className="text-gray-600">RUC: {tenant.ruc}</p>
-                    </div>
-                  )}
-                  {tenant.telefono && (
-                    <div>
-                      <p className="text-gray-600">Teléfono: {tenant.telefono}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-gray-600">Plan: <span className="font-semibold">{tenant.plan}</span></p>
+                  {/* Details */}
+                  <div className="space-y-1.5 text-xs text-gray-500">
+                    {tenant.email && <p>📧 {tenant.email}</p>}
+                    {tenant.telefono && <p>📞 {tenant.telefono}</p>}
+                    {tenant.ruc && <p>🪪 RUC: {tenant.ruc}</p>}
+                  </div>
+
+                  <div className="mt-3">
+                    <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold ${PLAN_COLORS[tenant.plan] || PLAN_COLORS.basic}`}>
+                      Plan {tenant.plan}
+                    </span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-gray-200">
+                <div className="flex gap-2 px-5 pb-4 pt-2 border-t border-gray-50 mt-2">
                   <button
                     onClick={() => setSelectedTenant(tenant)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition text-xs font-medium"
                   >
-                    <Edit2 className="w-4 h-4" />
-                    Ver Usuarios
+                    <Users className="w-3.5 h-3.5" />
+                    Usuarios
                   </button>
                   {tenant.activo && (
                     <button
                       onClick={() => handleDeleteTenant(tenant.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded transition"
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition"
+                      title="Desactivar taller"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -164,18 +208,18 @@ export const MasterAdminDashboard = () => {
 
         {/* Empty State */}
         {!loading && tenants.length === 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <div className="inline-block p-4 bg-gray-100 rounded-lg mb-4">
-              <Plus className="w-8 h-8 text-gray-400" />
+          <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-16 text-center">
+            <div className="inline-flex w-16 h-16 items-center justify-center bg-blue-50 rounded-2xl mb-4">
+              <Building2 className="w-8 h-8 text-blue-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay clientes aún</h3>
-            <p className="text-gray-600 mb-6">Crea tu primer cliente para empezar</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">No hay talleres aún</h3>
+            <p className="text-gray-500 text-sm mb-6">Creá tu primer cliente para que empiece a usar FixFlow</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition font-medium text-sm"
             >
-              <Plus className="w-5 h-5" />
-              Crear Cliente
+              <Plus className="w-4 h-4" />
+              Crear taller
             </button>
           </div>
         )}
@@ -190,18 +234,10 @@ export const MasterAdminDashboard = () => {
       )}
 
       {selectedTenant && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">{selectedTenant.nombre_empresa}</h2>
-            <p className="text-gray-600 mb-4">Vista de usuarios - próximamente</p>
-            <button
-              onClick={() => setSelectedTenant(null)}
-              className="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded transition"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
+        <TenantUsersModal
+          tenant={selectedTenant}
+          onClose={() => setSelectedTenant(null)}
+        />
       )}
     </div>
   );

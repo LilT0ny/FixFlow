@@ -1,6 +1,12 @@
 // src/services/OrderService.ts
 import { supabase } from '../lib/supabase';
+import { AuthService } from './SaaSAuthService';
 import type { ServiceOrder, EvidencePhoto, OrderStatus, DeviceCheckInForm } from '../types';
+
+/** Helper: obtiene el tenant_id de la sesión actual */
+function getCurrentTenantId(): string | null {
+  return AuthService.getCurrentTenantId();
+}
 
 /** Tipos de respuesta para mantener compatibilidad */
 interface SaveOrderResponse {
@@ -83,14 +89,15 @@ export const OrderService = {
   },
 
   /**
-   * Busca un cliente por su número de cédula/RUC.
+   * Busca un cliente por su número de cédula/RUC (filtrado por tenant).
    */
   async checkClientByCedula(cedula: string): Promise<{ found: boolean; client?: ServiceOrder['customer'] }> {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('cedula', cedula)
-      .maybeSingle();
+    const tenantId = getCurrentTenantId();
+    
+    let query = supabase.from('clientes').select('*').eq('cedula', cedula);
+    if (tenantId) query = query.eq('tenant_id', tenantId);
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
 
@@ -110,21 +117,29 @@ export const OrderService = {
   },
 
   /**
-   * Obtiene todas las órdenes y notas de venta activas desde ambas tablas.
+   * Obtiene todas las órdenes y notas de venta activas del tenant actual.
    */
   async getOrders(): Promise<ServiceOrder[]> {
-    const [repRes, ntRes] = await Promise.all([
-      supabase.from('ordenes_servicio').select(`
-        *,
-        cliente:id_cliente (*),
-        dispositivo:id_dispositivo (*, cliente:id_cliente (*)),
-        fotos:fotos_evidencia (*)
-      `).eq('eliminado', 0).order('fecha_creacion', { ascending: false }),
-      supabase.from('notas_venta').select(`
-        *,
-        cliente:id_cliente (*)
-      `).eq('eliminado', 0).order('fecha_creacion', { ascending: false })
-    ]);
+    const tenantId = getCurrentTenantId();
+
+    let repQuery = supabase.from('ordenes_servicio').select(`
+      *,
+      cliente:id_cliente (*),
+      dispositivo:id_dispositivo (*, cliente:id_cliente (*)),
+      fotos:fotos_evidencia (*)
+    `).eq('eliminado', 0).order('fecha_creacion', { ascending: false });
+
+    let ntQuery = supabase.from('notas_venta').select(`
+      *,
+      cliente:id_cliente (*)
+    `).eq('eliminado', 0).order('fecha_creacion', { ascending: false });
+
+    if (tenantId) {
+      repQuery = repQuery.eq('tenant_id', tenantId);
+      ntQuery = ntQuery.eq('tenant_id', tenantId);
+    }
+
+    const [repRes, ntRes] = await Promise.all([repQuery, ntQuery]);
 
     if (repRes.error) throw repRes.error;
     if (ntRes.error) throw ntRes.error;
@@ -163,19 +178,24 @@ export const OrderService = {
    * Registra una nueva orden (REP) o Nota de Venta (NT).
    */
   async saveOrder(orderData: Omit<ServiceOrder, 'id' | 'createdAt'>): Promise<SaveOrderResponse> {
+    const tenantId = getCurrentTenantId();
+
     try {
       const isNT = orderData.orderNumber.startsWith('NT');
 
-      // 1. Upsert del Cliente
+      // 1. Upsert del Cliente (con tenant_id)
+      const clientPayload: Record<string, unknown> = {
+        nombre_completo: orderData.customer.fullName,
+        cedula: orderData.customer.documentId,
+        telefono: orderData.customer.phone,
+        direccion: orderData.customer.address,
+        email: orderData.customer.email
+      };
+      if (tenantId) clientPayload.tenant_id = tenantId;
+
       const { data: client, error: clientErr } = await supabase
         .from('clientes')
-        .upsert({
-          nombre_completo: orderData.customer.fullName,
-          cedula: orderData.customer.documentId,
-          telefono: orderData.customer.phone,
-          direccion: orderData.customer.address,
-          email: orderData.customer.email
-        }, { onConflict: 'cedula' })
+        .upsert(clientPayload, { onConflict: 'cedula' })
         .select().single();
 
       if (clientErr) throw clientErr;
@@ -184,81 +204,89 @@ export const OrderService = {
 
       if (isNT) {
         const method = (orderData as OrderCreationPayload).paymentMethod || 'efectivo';
-        // FLUJO NV: Tabla notas_venta
+        const ntPayload: Record<string, unknown> = {
+          numero_nota: orderData.orderNumber,
+          id_cliente: client.id,
+          total: Number(orderData.repair.repairTotalCost),
+          descripcion_general: orderData.repair.reportedIssue,
+          metodo_pago: method
+        };
+        if (tenantId) ntPayload.tenant_id = tenantId;
+
         const { data: nt, error: ntErr } = await supabase
           .from('notas_venta')
-          .insert({
-            numero_nota: orderData.orderNumber,
-            id_cliente: client.id,
-            total: Number(orderData.repair.repairTotalCost),
-            descripcion_general: orderData.repair.reportedIssue,
-            metodo_pago: method
-          })
+          .insert(ntPayload)
           .select().single();
         if (ntErr) throw ntErr;
         resultId = nt.id;
         
-        // Registrar el ingreso financiero si no se indica saltar
         if (!(orderData as OrderCreationPayload).skipIncomeRecord) {
-          await supabase.from('ingresos').insert({
+          const ingPayload: Record<string, unknown> = {
             monto: Number(orderData.repair.repairTotalCost),
             metodo: method,
             tipo: 'repuestos',
             descripcion: `VENTA DIRECTA - NOTA #${orderData.orderNumber}`,
             id_cliente: client.id
-          });
+          };
+          if (tenantId) ingPayload.tenant_id = tenantId;
+          await supabase.from('ingresos').insert(ingPayload);
         }
 
       } else {
-        // FLUJO REP: Tabla ordenes_servicio
+        // FLUJO REP
         let deviceId = null;
         if (orderData.device) {
+          const devPayload: Record<string, unknown> = {
+            id_cliente: client.id,
+            marca: orderData.device.brand,
+            modelo: orderData.device.model,
+            imei_sn: orderData.device.serialNumber,
+            tipo_dispositivo: orderData.device.deviceType,
+            estado_fisico: orderData.device.physicalCondition
+          };
+          if (tenantId) devPayload.tenant_id = tenantId;
+
           const { data: dev, error: devErr } = await supabase
             .from('dispositivos')
-            .insert({
-              id_cliente: client.id,
-              marca: orderData.device.brand,
-              modelo: orderData.device.model,
-              imei_sn: orderData.device.serialNumber,
-              tipo_dispositivo: orderData.device.deviceType,
-              estado_fisico: orderData.device.physicalCondition
-            })
+            .insert(devPayload)
             .select().single();
           if (devErr) throw devErr;
           deviceId = dev.id;
         }
 
         const abono = Number(orderData.repair.initialDeposit) || 0;
+        const orderPayload: Record<string, unknown> = {
+          numero_orden: orderData.orderNumber,
+          id_cliente: client.id,
+          id_dispositivo: deviceId,
+          falla_reportada: orderData.repair.reportedIssue,
+          costo_total_reparacion: Number(orderData.repair.repairTotalCost) || 0,
+          abono_inicial: abono,
+          estado: 'recibido'
+        };
+        if (tenantId) orderPayload.tenant_id = tenantId;
+
         const { data: order, error: orderErr } = await supabase
           .from('ordenes_servicio')
-          .insert({
-            numero_orden: orderData.orderNumber,
-            id_cliente: client.id,
-            id_dispositivo: deviceId,
-            falla_reportada: orderData.repair.reportedIssue,
-            costo_total_reparacion: Number(orderData.repair.repairTotalCost) || 0,
-            abono_inicial: abono,
-            estado: 'recibido'
-          })
+          .insert(orderPayload)
           .select().single();
         if (orderErr) throw orderErr;
         resultId = order.id;
 
-        // Registrar ingreso de abono si aplica
         if (abono > 0) {
-          await supabase.from('ingresos').insert({
+          const ingPayload: Record<string, unknown> = {
             monto: abono,
             metodo: 'efectivo',
             tipo: 'reparacion',
             descripcion: `ABONO INICIAL - ORDEN #${orderData.orderNumber}`,
             id_orden: order.id,
             id_cliente: client.id
-          });
-          // Marcamos que ya se registró el ingreso para evitar duplicidad en el hook del contexto
+          };
+          if (tenantId) ingPayload.tenant_id = tenantId;
+          await supabase.from('ingresos').insert(ingPayload);
           (orderData as OrderCreationPayload).skipIncomeRecord = true;
         }
 
-        // Fotos
         if (orderData.repair.evidencePhotos?.length > 0) {
           await supabase.from('fotos_evidencia').insert(
             orderData.repair.evidencePhotos.map(p => ({
@@ -303,7 +331,6 @@ export const OrderService = {
    */
   async updateOrder(id: string, updates: Partial<ServiceOrder>): Promise<StatusResponse> {
     try {
-      // Primero obtenemos la orden actual para saber el id_dispositivo
       const { data: currentOrder, error: fetchErr } = await supabase
         .from('ordenes_servicio')
         .select('id_dispositivo, id_cliente')
@@ -312,7 +339,6 @@ export const OrderService = {
       
       if (fetchErr || !currentOrder) throw new Error("Orden no encontrada");
 
-      // Si hay actualizaciones de cliente, actualizamos el cliente directamente
       if (updates.customer && currentOrder.id_cliente) {
         await supabase.from('clientes').update({
           nombre_completo: updates.customer.fullName,
@@ -323,7 +349,6 @@ export const OrderService = {
         }).eq('id', currentOrder.id_cliente);
       }
 
-      // Si hay actualizaciones de dispositivo
       if (updates.device && currentOrder.id_dispositivo) {
         await supabase.from('dispositivos').update({
           marca: updates.device.brand,
@@ -334,7 +359,6 @@ export const OrderService = {
         }).eq('id', currentOrder.id_dispositivo);
       }
 
-      // Actualizamos la orden
       const orderUpdate: Record<string, unknown> = {};
       if (updates.status) orderUpdate.estado = updates.status;
       if (updates.repair) {
@@ -357,7 +381,6 @@ export const OrderService = {
   },
 
   async deleteOrder(id: string): Promise<StatusResponse> {
-    // Intentamos eliminar (soft delete) en ambas tablas
     await Promise.all([
       supabase.from('ordenes_servicio').update({ eliminado: 1 }).eq('id', id),
       supabase.from('notas_venta').update({ eliminado: 1 }).eq('id', id)
@@ -365,7 +388,6 @@ export const OrderService = {
     return { status: 'success' };
   },
 
-  // Helpers internos para normalizar datos (reemplazar 'any' por una interfaz genérica de Supabase)
   _mapOrder(order: Record<string, any>): ServiceOrder {
     return {
       id: order.id.toString(),
@@ -405,4 +427,3 @@ export const OrderService = {
     };
   }
 };
-

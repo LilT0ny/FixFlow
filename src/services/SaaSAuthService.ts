@@ -67,13 +67,14 @@ export const AuthService = {
       }
 
       const user = data[0];
+      const isSuperAdmin = user.id === 'e06642a5-a1ab-4afc-bfe7-d3519096b91d';
 
       return {
         id: user.id,
         username: user.username,
         role: user.role,
-        tenant_id: user.tenant_id || null,
-        is_master: !user.tenant_id && user.role === 'admin',
+        tenant_id: isSuperAdmin ? null : (user.tenant_id || null),
+        is_master: isSuperAdmin || (!user.tenant_id && user.role === 'admin'),
       };
     } catch (error) {
       console.error('[AuthService.login] Error:', error);
@@ -94,17 +95,36 @@ export const AuthService = {
   },
 
   /**
-   * Obtiene la sesión actual del usuario
+   * Obtiene la sesión actual del usuario.
+   * Invalida sesiones viejas (pre-migración SaaS) que no tienen tenant_id.
    */
   getSession(): AuthUser | null {
     const raw = sessionStorage.getItem('auth_user') || localStorage.getItem('auth_user');
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as AuthUser;
+      const user = JSON.parse(raw) as AuthUser;
+
+      // Master admin hardcodeado siempre válido
+      if (user && user.id === 'e06642a5-a1ab-4afc-bfe7-d3519096b91d') {
+        user.is_master = true;
+        user.tenant_id = null;
+        return user;
+      }
+
+      // Sesión vieja (pre-migración): no tiene tenant_id → forzar re-login
+      if (user && !user.is_master && !user.tenant_id) {
+        console.warn('[AuthService] Sesión sin tenant_id detectada — invalidando para re-login');
+        sessionStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_user');
+        return null;
+      }
+
+      return user;
     } catch {
       return null;
     }
   },
+
 
   /**
    * Cierra sesión

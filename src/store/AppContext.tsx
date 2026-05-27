@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { ServiceOrder, PaymentTransaction, DeviceCheckInForm, OrderStatus } from '../types';
 import { useOrders } from '../hooks/useOrders';
 import { usePayments } from '../hooks/usePayments';
-import { AuthService } from '../services/AuthService';
+import { AuthService } from '../services/SaaSAuthService';
 
 interface AppContextType {
   orders: ServiceOrder[];
@@ -25,27 +25,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return AuthService.getSession() !== null;
   });
 
-  // Utilize our newly separated Controller Hooks.
   const { 
     orders, 
     addOrder: baseAddOrder, 
     updateOrderStatus, 
     updateOrder, 
-    deleteOrder 
+    deleteOrder,
+    refreshOrders,
   } = useOrders();
   
   const { 
     payments, 
-    addPayment: baseAddPayment 
+    addPayment: baseAddPayment,
+    refreshPayments,
   } = usePayments();
 
-  // Combine actions when adding an order requires a payment deposit
+  /**
+   * Cuando el usuario se autentica correctamente, re-fetchar todos los datos
+   * con el tenant_id ya disponible en sesión.
+   * 
+   * Esto resuelve el problema de que useOrders/usePayments se montan ANTES
+   * del login (sin tenant_id), por lo que su carga inicial no filtra por tenant.
+   */
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshOrders();
+      refreshPayments();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  // Combinar acciones: agregar orden + pago de depósito
   const handleAddOrder = async (data: DeviceCheckInForm & { skipIncomeRecord?: boolean }) => {
-    // We pass 'REP' by default, if it's 'NT' it's handled differently
     const newOrder = await baseAddOrder(data);
     
-    // Automatically add payment log if deposit is given AND it's a repair order (REP)
-    // AND it's NOT explicitly marked to skip income (which happens for NT flows)
     if (newOrder.orderNumber.startsWith('REP') && data.repair.initialDeposit && data.repair.initialDeposit > 0 && !data.skipIncomeRecord) {
       await baseAddPayment({
         amount: data.repair.initialDeposit,
@@ -63,12 +76,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const login = async (username: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
     try {
       const user = await AuthService.login(username, password);
-      if (user) {
-        AuthService.saveSession(user, rememberMe);
+      if (!user) return false;
+
+      AuthService.saveSession(user, rememberMe);
+
+      // Master admin NO accede al sistema de taller → isAuthenticated queda false
+      // para que el ProtectedRoute no lo deje pasar, pero la sesión ya está guardada
+      if (!user.is_master && user.tenant_id) {
         setIsAuthenticated(true);
-        return true;
+        // El useEffect de arriba dispara refreshOrders + refreshPayments automáticamente
       }
-      return false;
+
+      return true;
     } catch (err) {
       console.error('[login] Error:', err);
       throw err;

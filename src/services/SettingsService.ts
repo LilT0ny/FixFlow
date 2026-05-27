@@ -1,13 +1,24 @@
 // src/services/SettingsService.ts
 import { supabase } from '../lib/supabase';
+import { AuthService } from './SaaSAuthService';
 import type { BusinessSettings } from '../types';
+
+/** Helper: obtiene el tenant_id de la sesión actual */
+function getCurrentTenantId(): string | null {
+  return AuthService.getCurrentTenantId();
+}
 
 export const SettingsService = {
   async getSettings(): Promise<BusinessSettings | null> {
+    const tenantId = getCurrentTenantId();
+
+    // Sin tenant activo no tiene sentido cargar ajustes (usuario no logueado o master admin)
+    if (!tenantId) return null;
+
     const { data, error } = await supabase
       .from('ajustes')
       .select('*')
-      .eq('id', 1)
+      .eq('tenant_id', tenantId)
       .maybeSingle();
 
     if (error) {
@@ -30,8 +41,14 @@ export const SettingsService = {
   },
 
   async updateSettings(settings: BusinessSettings): Promise<{ status: string }> {
+    const tenantId = getCurrentTenantId();
+
+    if (!tenantId) {
+      throw new Error('No se puede actualizar ajustes sin tenant_id');
+    }
+
     const payload = {
-      id: 1,
+      tenant_id: tenantId,
       nombre_empresa: settings.companyName,
       ruc: settings.ruc,
       telefono: settings.phone,
@@ -42,11 +59,11 @@ export const SettingsService = {
       updated_at: new Date().toISOString()
     };
 
-    console.log("Upserting ajustes id=1 con payload:", payload);
+    console.log("Upserting ajustes para tenant:", tenantId, payload);
 
     const { error } = await supabase
       .from('ajustes')
-      .upsert(payload, { onConflict: 'id' });
+      .upsert(payload, { onConflict: 'tenant_id' });
 
     if (error) {
       console.error("Error en UPSERT de ajustes:", error);
@@ -56,7 +73,3 @@ export const SettingsService = {
     return { status: 'success' };
   }
 };
-
-
-
-

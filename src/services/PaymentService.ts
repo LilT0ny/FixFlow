@@ -1,16 +1,29 @@
 // src/services/PaymentService.ts
 import { supabase } from '../lib/supabase';
+import { AuthService } from './SaaSAuthService';
 import type { PaymentTransaction, TransactionType } from '../types';
+
+/** Helper: obtiene el tenant_id de la sesión actual */
+function getCurrentTenantId(): string | null {
+  return AuthService.getCurrentTenantId();
+}
 
 export const PaymentService = {
   /**
-   * Obtiene todas las transacciones históricas desde ambas tablas.
+   * Obtiene todas las transacciones del tenant actual (ingresos + egresos).
    */
   async getPayments(): Promise<PaymentTransaction[]> {
-    const [ingRes, egrRes] = await Promise.all([
-      supabase.from('ingresos').select('*').order('fecha', { ascending: false }),
-      supabase.from('egresos').select('*').order('fecha', { ascending: false })
-    ]);
+    const tenantId = getCurrentTenantId();
+
+    let ingQuery = supabase.from('ingresos').select('*').order('fecha', { ascending: false });
+    let egrQuery = supabase.from('egresos').select('*').order('fecha', { ascending: false });
+
+    if (tenantId) {
+      ingQuery = ingQuery.eq('tenant_id', tenantId);
+      egrQuery = egrQuery.eq('tenant_id', tenantId);
+    }
+
+    const [ingRes, egrRes] = await Promise.all([ingQuery, egrQuery]);
 
     if (ingRes.error) throw ingRes.error;
     if (egrRes.error) throw egrRes.error;
@@ -42,23 +55,26 @@ export const PaymentService = {
   },
 
   /**
-   * Guarda una nueva transacción en la tabla correspondiente (Ingresos o Egresos).
+   * Guarda una nueva transacción con tenant_id.
    */
   async savePayment(paymentData: Partial<PaymentTransaction>): Promise<{ status: string; id: string; message?: string }> {
+    const tenantId = getCurrentTenantId();
+
     try {
       const table = paymentData.transactionType === 'ingreso' ? 'ingresos' : 'egresos';
       
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         monto: Number(paymentData.amount),
         metodo: paymentData.method,
         tipo: paymentData.type,
         descripcion: paymentData.description,
       };
 
-      // Campos específicos para ingresos
       if (paymentData.transactionType === 'ingreso') {
-          payload.id_orden = paymentData.orderId;
+        payload.id_orden = paymentData.orderId;
       }
+
+      if (tenantId) payload.tenant_id = tenantId;
 
       const { data, error } = await supabase
         .from(table)
@@ -74,4 +90,3 @@ export const PaymentService = {
     }
   }
 };
-

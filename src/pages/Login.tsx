@@ -33,7 +33,13 @@ export const Login = () => {
     try {
       const success = await login(username, password, rememberMe);
       if (success) {
-        navigate('/');
+        // Leer la sesión guardada para determinar a dónde ir
+        const session = (await import('../services/SaaSAuthService')).AuthService.getSession();
+        if (session?.is_master) {
+          navigate('/master/dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         setError('Usuario o contraseña incorrectos.');
       }
@@ -43,6 +49,7 @@ export const Login = () => {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
