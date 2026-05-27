@@ -13,6 +13,8 @@ import { RegistrationFeature } from './features/Registration/RegistrationFeature
 import { SalesNotesFeature } from './features/Sales/SalesNotesFeature';
 import { ClientsFeature } from './features/Clients/ClientsFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
+import { LoginPage } from './features/Auth/LoginPage';
+import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAppContext();
@@ -27,7 +29,11 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/saas-login" element={<LoginPage />} />
             <Route path="/status/:id" element={<ClientStatus />} />
+
+            {/* Master Admin routes */}
+            <Route path="/master/dashboard" element={<MasterAdminDashboard />} />
 
             {/* Admin routes with sidebar */}
             <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
