@@ -145,7 +145,11 @@ export const useDeviceValidation = () => {
         if (value && !validateEmail(String(value))) return 'Correo electrónico inválido';
         break;
       case 'imei':
-        if (value && !/^\d{15}$/.test(String(value))) return 'El IMEI debe tener exactamente 15 dígitos';
+        if (data.deviceType === 'celular') {
+          if (value && !/^\d{15}$/.test(String(value))) return 'El IMEI debe tener exactamente 15 dígitos';
+        } else {
+          if (value && String(value).length > 30) return 'El número de serie no puede superar los 30 caracteres';
+        }
         break;
       case 'costoEstimado':
       case 'abonoInicial':
@@ -162,8 +166,10 @@ export const useDeviceValidation = () => {
         normalizedValue = value.toUpperCase();
       } else if (field === 'email') {
         normalizedValue = value.toLowerCase();
-      } else if (field === 'cedula' || field === 'imei') {
+      } else if (field === 'cedula' || (field === 'imei' && data.deviceType === 'celular')) {
         normalizedValue = value.replace(/\D/g, '');
+      } else if (field === 'imei') {
+        normalizedValue = value.toUpperCase();
       }
     }
 

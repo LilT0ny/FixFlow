@@ -280,6 +280,14 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
                       <option value="tablet">TABLET</option>
                       <option value="laptop">LAPTOP</option>
                       <option value="impresora">IMPRESORA</option>
+                      <option value="lavadora">LAVADORA / SECADORA</option>
+                      <option value="calefon">CALEFÓN / TERMOTANQUE</option>
+                      <option value="refrigerador">REFRIGERADOR / NEVERA</option>
+                      <option value="microondas">HORNO MICROONDAS</option>
+                      <option value="tv">TELEVISOR / SMART TV</option>
+                      <option value="cocina">COCINA / HORNO A GAS</option>
+                      <option value="plancha">PLANCHA DE ROPA</option>
+                      <option value="licuadora">LICUADORA / PROCESADORA</option>
                       <option value="otro">OTRO</option>
                     </select>
                   </div>
@@ -304,13 +312,20 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>IMEI / Serial</label>
+                    <label className={labelClass}>
+                      {draft.device?.deviceType === 'celular' ? 'IMEI *' : 'Número de Serie / Serial *'}
+                    </label>
                     <input
                       type="text"
                       className={ic('serialNumber')}
                       value={draft.device?.serialNumber || ''}
-                      onChange={e => setDevice('serialNumber', e.target.value)}
-                      placeholder="IMEI o S/N"
+                      onChange={e => {
+                        const val = draft.device?.deviceType === 'celular'
+                          ? e.target.value.replace(/\D/g, '').substring(0, 15)
+                          : e.target.value.toUpperCase().substring(0, 30);
+                        setDevice('serialNumber', val);
+                      }}
+                      placeholder={draft.device?.deviceType === 'celular' ? "IMEI de 15 dígitos" : "S/N o Serie"}
                     />
                   </div>
                   <div className="sm:col-span-2">

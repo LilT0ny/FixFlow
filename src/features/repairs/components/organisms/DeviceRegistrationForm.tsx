@@ -288,6 +288,14 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                 <option value="laptop">Computadora Portátil / Laptop</option>
                 <option value="tablet">Tablet / iPad</option>
                 <option value="impresora">Impresora / Multifunción</option>
+                <option value="lavadora">Lavadora / Secadora</option>
+                <option value="calefon">Calefón / Termotanque</option>
+                <option value="refrigerador">Refrigerador / Nevera</option>
+                <option value="microondas">Horno Microondas</option>
+                <option value="tv">Televisor / Smart TV</option>
+                <option value="cocina">Cocina / Horno a Gas</option>
+                <option value="plancha">Plancha de Ropa</option>
+                <option value="licuadora">Licuadora / Procesadora</option>
                 <option value="otro">Otro Periférico</option>
               </Select>
             </FormField>
@@ -315,10 +323,10 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
               </FormField>
             </div>
 
-            <FormField label="Número de Serie / IMEI" error={touched.imei ? errors.imei : undefined}>
+            <FormField label={data.deviceType === 'celular' ? "Número de IMEI *" : "Número de Serie / Serial *"} error={touched.imei ? errors.imei : undefined}>
               <div className="relative">
                 <Input 
-                  placeholder="Ingresa el identificador único del equipo..." 
+                  placeholder={data.deviceType === 'celular' ? "Ingresa el IMEI de 15 dígitos..." : "Ingresa el número de serie único..."} 
                   value={data.imei} 
                   onChange={e => handleChange('imei', e.target.value)} 
                   onBlur={() => handleBlur('imei')} 
