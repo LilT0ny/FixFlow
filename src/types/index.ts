@@ -10,7 +10,7 @@ export interface DeviceData {
   brand: string;
   model: string;
   serialNumber: string; // IMEI/Serial
-  deviceType: 'celular' | 'impresora' | 'tablet' | 'laptop' | 'otro' | '';
+  deviceType: 'celular' | 'impresora' | 'tablet' | 'laptop' | 'lavadora' | 'calefon' | 'refrigerador' | 'microondas' | 'tv' | 'cocina' | 'plancha' | 'licuadora' | 'otro' | '';
   physicalCondition: string;
 }
 

@@ -110,8 +110,13 @@ export const ClientStatus = () => {
         </div>
       </div>
       
-      <div className="mt-8 text-center text-gray-500 text-sm pb-8">
-        Sistema de Reparación de Celulares &copy; {new Date().getFullYear()}
+      <div className="mt-8 flex flex-col items-center gap-2.5 text-gray-400 text-[10px] font-black uppercase tracking-widest pb-12 transition-all duration-300">
+        <img 
+          src="/FixFlow.svg" 
+          alt="FixFlow Logo" 
+          className="h-10 opacity-40 hover:opacity-90 filter grayscale hover:grayscale-0 transition-all duration-500 hover:scale-110 cursor-pointer" 
+        />
+        <span>Impulsado por FixFlow &copy; {new Date().getFullYear()}</span>
       </div>
     </div>
   );

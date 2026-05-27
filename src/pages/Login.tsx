@@ -52,14 +52,19 @@ export const Login = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 px-4 sm:px-0">
         <div className="flex justify-center flex-col items-center mb-6 md:mb-8">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-[24px] md:rounded-[28px] bg-primary-600 flex items-center justify-center shadow-2xl shadow-primary-500/40 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500 hover:scale-110 group">
-            <Wrench className="w-8 h-8 md:w-10 md:h-10 text-white transition-transform group-hover:scale-110 duration-500" />
+          <div className="w-44 h-44 md:w-52 md:h-52 flex items-center justify-center overflow-hidden transition-all duration-500 hover:scale-105 group relative">
+            <div className="absolute inset-0 bg-primary-500/10 rounded-[48px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <img 
+              src="/FixFlowIsologo.svg" 
+              alt="FixFlow Logo" 
+              className="w-full h-full object-contain relative z-10" 
+            />
           </div>
-          <h2 className="mt-6 md:mt-8 text-center text-3xl md:text-4xl font-black text-surface-900 tracking-tighter leading-tight">
-            Repair<span className="text-primary-600">Sys</span>
+          <h2 className="mt-4 text-center text-3xl md:text-4xl font-black text-surface-900 tracking-tighter leading-none">
+            Fix<span className="text-primary-600">Flow</span>
           </h2>
-          <p className="mt-2 text-center text-[9px] md:text-[11px] text-surface-400 font-black uppercase tracking-[0.3em]">
-            Elite Tech Management
+          <p className="mt-3.5 text-center text-[9px] md:text-[11px] text-surface-400 font-black uppercase tracking-[0.4em] opacity-80">
+            Ecosistema de Gestión Tecnológica
           </p>
         </div>
 

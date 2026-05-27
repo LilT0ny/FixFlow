@@ -22,9 +22,17 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({ deviceInfo, onUpdate, on
 
   const deviceTypes = [
     { id: 'celular', label: 'Cell Phone' },
-    { id: 'impresora', label: 'Printer' },
     { id: 'tablet', label: 'Tablet' },
     { id: 'laptop', label: 'Laptop' },
+    { id: 'impresora', label: 'Printer' },
+    { id: 'lavadora', label: 'Washing Machine' },
+    { id: 'calefon', label: 'Water Heater (Calefón)' },
+    { id: 'refrigerador', label: 'Refrigerator' },
+    { id: 'microondas', label: 'Microwave' },
+    { id: 'tv', label: 'Television' },
+    { id: 'cocina', label: 'Stove/Oven' },
+    { id: 'plancha', label: 'Iron' },
+    { id: 'licuadora', label: 'Blender' },
     { id: 'otro', label: 'Other' },
   ];
 
@@ -78,18 +86,22 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({ deviceInfo, onUpdate, on
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-surface-700 mb-1">IMEI/Serial <span className="text-danger-500">*</span></label>
+          <label className="block text-sm font-medium text-surface-700 mb-1">
+            {deviceInfo.deviceType === 'celular' ? 'IMEI' : 'Serial Number'} <span className="text-danger-500">*</span>
+          </label>
           <Input
             type="text"
             required
-            maxLength={15}
+            maxLength={deviceInfo.deviceType === 'celular' ? 15 : 30}
             icon={<QrCode className="h-5 w-5 text-surface-400" />}
             className="uppercase"
-            placeholder="Serial number or IMEI (15 digits)"
+            placeholder={deviceInfo.deviceType === 'celular' ? 'Serial number or IMEI (15 digits)' : 'Enter serial number...'}
             value={deviceInfo.serialNumber}
             onChange={(e) => {
-              const digitsOnly = e.target.value.replace(/\D/g, '').substring(0, 15);
-              onUpdate({ ...deviceInfo, serialNumber: digitsOnly });
+              const val = deviceInfo.deviceType === 'celular'
+                ? e.target.value.replace(/\D/g, '').substring(0, 15)
+                : e.target.value.toUpperCase().substring(0, 30);
+              onUpdate({ ...deviceInfo, serialNumber: val });
             }}
           />
         </div>
