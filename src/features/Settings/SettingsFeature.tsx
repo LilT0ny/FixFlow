@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Printer, MessageSquare, Building2, ImageIcon, Save, CheckCircle2, Loader2, Info } from 'lucide-react';
+import { Printer, MessageSquare, Building2, ImageIcon, Save, CheckCircle2, Loader2, Info, Plus } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
+import { CreateUserModal } from './components/CreateUserModal';
 import type { BusinessSettings, PrinterType } from '../../types';
 
 export const SettingsFeature: React.FC = () => {
   const { settings, updateSettings, isSettingsLoading } = useSettings();
   const [formData, setFormData] = React.useState<BusinessSettings>(settings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isSettingsLoading) {
@@ -49,30 +51,39 @@ export const SettingsFeature: React.FC = () => {
             Parametrización de Negocio y Preferencias de Aplicación
           </p>
         </div>
-        <button 
-          onClick={handleSave} 
-          disabled={saveStatus !== 'idle'}
-          className={`px-6 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 disabled:opacity-50 ${
-            saveStatus === 'success' ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-100'
-          }`}
-        >
-          {saveStatus === 'saving' ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Guardando...
-            </>
-          ) : saveStatus === 'success' ? (
-            <>
-              <CheckCircle2 className="w-5 h-5 animate-in zoom-in duration-300" />
-              ¡Guardado!
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              Guardar Cambios
-            </>
-          )}
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setIsCreateUserModalOpen(true)}
+            className="px-6 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100"
+          >
+            <Plus className="w-5 h-5" />
+            Nuevo Usuario
+          </button>
+          <button 
+            onClick={handleSave} 
+            disabled={saveStatus !== 'idle'}
+            className={`px-6 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 disabled:opacity-50 ${
+              saveStatus === 'success' ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-100'
+            }`}
+          >
+            {saveStatus === 'saving' ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Guardando...
+              </>
+            ) : saveStatus === 'success' ? (
+              <>
+                <CheckCircle2 className="w-5 h-5 animate-in zoom-in duration-300" />
+                ¡Guardado!
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Guardar Cambios
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {saveStatus === 'success' && (
@@ -239,8 +250,13 @@ export const SettingsFeature: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
+         </div>
+       </div>
+
+       <CreateUserModal 
+         isOpen={isCreateUserModalOpen}
+         onClose={() => setIsCreateUserModalOpen(false)}
+       />
+     </div>
+   );
 };

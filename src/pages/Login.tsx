@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../store/AppContext';
-import { Wrench, Lock, User, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
+import { Lock, User, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
 
 export const Login = () => {
   const [username, setUsername] = useState('');
