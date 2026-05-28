@@ -28,17 +28,17 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
   }), [data, orderNumber, settings]);
 
   const handlePrint = () => {
-    printReceiptDoubleCopy(receiptData, selectedFormat);
+    printReceiptDoubleCopy(receiptData, selectedFormat, 'ticket', settings);
     setIsPrintModalOpen(false);
   };
 
   // AUTO-PRINT UPON COMPONENT LOAD
   useEffect(() => {
     const timer = setTimeout(() => {
-      printReceiptDoubleCopy(receiptData, selectedFormat);
+      printReceiptDoubleCopy(receiptData, selectedFormat, 'ticket', settings);
     }, 800);
     return () => clearTimeout(timer);
-  }, [receiptData, selectedFormat]);
+  }, [receiptData, selectedFormat, settings]);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-lg mx-auto w-full py-8">
