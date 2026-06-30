@@ -23,7 +23,7 @@ import {
   ArrowUpRight,
   Wallet,
 } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { StatCard } from "../../components/molecules/StatCard";
 
 export const ReportsFeature: React.FC = () => {
@@ -91,33 +91,48 @@ export const ReportsFeature: React.FC = () => {
     return Array.from(daysMap.values());
   }, [filteredData, viewMode, selectedMonth]);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     setExportStatus("exporting");
 
-    setTimeout(() => {
-      const formattedData = filteredData.map((p) => ({
-        Fecha: new Date(p.date).toLocaleString(),
-        Concepto: p.description || "Sin descripcion",
-        Tipo: p.transactionType.toUpperCase(),
-        Categoria: p.type,
-        "Metodo de Pago": p.method,
-        Valor: p.transactionType === "egreso" ? -p.amount : p.amount,
-      }));
+    const formattedData = filteredData.map((p) => ({
+      Fecha: new Date(p.date).toLocaleString(),
+      Concepto: p.description || "Sin descripcion",
+      Tipo: p.transactionType.toUpperCase(),
+      Categoria: p.type,
+      "Metodo de Pago": p.method,
+      Valor: p.transactionType === "egreso" ? -p.amount : p.amount,
+    }));
 
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Reporte");
 
-      const fileName =
-        viewMode === "monthly"
-          ? `Reporte_${selectedMonth}.xlsx`
-          : `Reporte_${selectedDate}.xlsx`;
-      XLSX.writeFile(workbook, fileName);
+    worksheet.columns = [
+      { header: "Fecha", key: "Fecha" },
+      { header: "Concepto", key: "Concepto" },
+      { header: "Tipo", key: "Tipo" },
+      { header: "Categoria", key: "Categoria" },
+      { header: "Metodo de Pago", key: "Metodo de Pago" },
+      { header: "Valor", key: "Valor" },
+    ];
 
-      setExportStatus("success");
+    formattedData.forEach((row) => worksheet.addRow(row));
 
-      setTimeout(() => setExportStatus("idle"), 3000);
-    }, 800);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download =
+      viewMode === "monthly"
+        ? `Reporte_${selectedMonth}.xlsx`
+        : `Reporte_${selectedDate}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    setExportStatus("success");
+    setTimeout(() => setExportStatus("idle"), 3000);
   };
 
   return (
