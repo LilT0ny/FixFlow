@@ -44,35 +44,35 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-lg mx-auto w-full py-8">
       <Card className="overflow-hidden p-0 border-0 shadow-lg">
         {/* Header */}
-        <div className="bg-primary-600 px-6 py-8 text-white text-center relative overflow-hidden">
-           <div className="relative z-10 flex flex-col items-center">
-              <div className="bg-white/20 p-3 rounded-full mb-4 ring-4 ring-white/10">
-                <CheckCircle className="h-10 w-10 text-white" />
+        <div className="bg-surface-900 px-6 py-8 text-white text-center">
+           <div className="flex flex-col items-center">
+              <div className="bg-emerald-500 p-3 rounded-full mb-4 animate-scale-in">
+                <CheckCircle className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">Success!</h2>
-              <p className="text-primary-100 mt-2 text-sm font-medium uppercase tracking-wider">Order #{orderNumber}</p>
+              <h2 className="text-xl font-semibold tracking-tight">¡Registro exitoso!</h2>
+              <p className="text-surface-300 mt-1 text-sm">Orden #{orderNumber}</p>
            </div>
         </div>
 
         {/* Receipt Content */}
         <div className="p-6">
           <div className="flex flex-col gap-4">
-            <div className="p-4 bg-surface-50 rounded-xl border border-surface-100">
-              <h3 className="text-xs font-bold text-surface-500 uppercase tracking-wider mb-3">Customer Details</h3>
-              <div className="space-y-1 text-surface-800">
+            <div className="p-4 bg-surface-50 rounded-lg border border-surface-200">
+              <h3 className="text-xs font-medium text-surface-500 mb-2.5">Datos del cliente</h3>
+              <div className="space-y-1 text-sm text-surface-800">
                 <p className="font-medium text-base">{data.customer.fullName}</p>
-                <p>ID: <span className="text-surface-600">{data.customer.documentId}</span></p>
-                <p>Phone: <span className="text-surface-600">{data.customer.phone}</span></p>
+                <p>Cédula: <span className="text-surface-600">{data.customer.documentId}</span></p>
+                <p>Teléfono: <span className="text-surface-600">{data.customer.phone}</span></p>
               </div>
             </div>
 
-            <div className="p-4 bg-primary-50 rounded-xl border border-primary-100">
-              <h3 className="text-xs font-bold text-primary-500 uppercase tracking-wider mb-3">Device Details</h3>
-              <div className="space-y-2 text-surface-800">
-                <p><span className="text-surface-500">Device:</span> {data.device?.brand} {data.device?.model}</p>
+            <div className="p-4 bg-primary-50/50 rounded-lg border border-primary-100">
+              <h3 className="text-xs font-medium text-primary-700 mb-2.5">Datos del equipo</h3>
+              <div className="space-y-1.5 text-sm text-surface-800">
+                <p><span className="text-surface-500">Equipo:</span> {data.device?.brand} {data.device?.model}</p>
                 <p className="flex items-start gap-1">
-                  <span className="text-surface-500 min-w-max">Issue:</span> 
-                  <span className="font-medium text-danger-600">{data.repair?.reportedIssue}</span>
+                  <span className="text-surface-500 min-w-max">Falla:</span>
+                  <span className="font-medium">{data.repair?.reportedIssue}</span>
                 </p>
               </div>
             </div>
@@ -80,14 +80,14 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
         </div>
 
         {/* Actions */}
-        <div className="bg-surface-50 p-6 border-t border-surface-100 flex flex-col sm:flex-row gap-3">
-           <Button 
+        <div className="bg-surface-50 p-5 border-t border-surface-200 flex flex-col sm:flex-row gap-3">
+           <Button
              onClick={() => setIsPrintModalOpen(true)}
              variant="outline"
              className="flex-1 w-full"
            >
-             <Printer className="h-4 w-4 mr-2" />
-             Print Entry Ticket
+             <Printer className="h-4 w-4" />
+             Imprimir ticket de ingreso
            </Button>
         </div>
       </Card>
@@ -98,7 +98,7 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
           className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
         >
           <RefreshCw className="h-4 w-4" />
-          Register another device
+          Registrar otro dispositivo
         </button>
       </div>
 
@@ -114,25 +114,25 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
               <X className="w-5 h-5" />
             </button>
             
-            <h3 className="text-xl font-bold tracking-tight text-surface-900 mb-1 flex items-center gap-2">
-              <Printer className="w-6 h-6 text-primary-600"/> 
-              Print Ticket
+            <h3 className="text-lg font-semibold tracking-tight text-surface-900 mb-1 flex items-center gap-2">
+              <Printer className="w-5 h-5 text-primary-600"/>
+              Imprimir ticket
             </h3>
-            <p className="text-sm text-surface-500 mb-6 font-medium">Order #{orderNumber}</p>
-            
+            <p className="text-sm text-surface-500 mb-6">Orden #{orderNumber}</p>
+
             <div className="space-y-4">
-              <label className="block text-sm font-semibold text-surface-700">Print Format</label>
-              
-              <div className="grid gap-3">
+              <label className="block text-sm font-medium text-surface-700">Formato de impresión</label>
+
+              <div className="grid gap-2.5">
                 {[
-                  { id: '58mm', label: 'Thermal Ticket (58mm)', desc: 'Basic printer' },
-                  { id: '80mm', label: 'Thermal Ticket (80mm)', desc: 'Wide printer' },
-                  { id: 'A4', label: 'Normal Sheet (A4)', desc: 'Standard printer' }
+                  { id: '58mm', label: 'Ticket térmico (58mm)', desc: 'Impresora básica' },
+                  { id: '80mm', label: 'Ticket térmico (80mm)', desc: 'Impresora ancha' },
+                  { id: 'A4', label: 'Hoja normal (A4)', desc: 'Impresora estándar' }
                 ].map(format => (
-                  <label 
-                    key={format.id} 
-                    className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      selectedFormat === format.id ? 'border-primary-600 bg-primary-50 text-primary-900' : 'border-surface-200 hover:border-surface-300 bg-white text-surface-900'
+                  <label
+                    key={format.id}
+                    className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors duration-150 ${
+                      selectedFormat === format.id ? 'border-primary-500 bg-primary-50/50 text-surface-900' : 'border-surface-300 hover:border-surface-400 bg-white text-surface-900'
                     }`}
                   >
                     <div className="flex h-5 items-center">
@@ -145,7 +145,7 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="block text-sm font-bold">
+                      <span className="block text-sm font-medium">
                         {format.label}
                       </span>
                       <span className="block text-xs text-surface-500 mt-0.5">{format.desc}</span>
@@ -154,10 +154,10 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
                 ))}
               </div>
 
-              <div className="pt-4 mt-2 border-t border-surface-100 flex flex-col gap-3">
+              <div className="pt-4 mt-2 border-t border-surface-200 flex flex-col gap-3">
                 <Button onClick={handlePrint} variant="primary" className="w-full">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Send to Print
+                  <Printer className="w-4 h-4" />
+                  Enviar a imprimir
                 </Button>
               </div>
             </div>

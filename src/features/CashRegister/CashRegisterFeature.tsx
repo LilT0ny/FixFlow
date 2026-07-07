@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { usePayments } from '../../hooks/usePayments';
 import { StatCard } from '../../components/molecules/StatCard';
+import { PageHeader } from '../../components/design-system';
 import { getLocalDate, formatToLocalDate } from '../../utils/dateUtils';
 import type { TransactionType, PaymentMethod, PaymentType } from '../../types';
 
@@ -91,78 +92,70 @@ export const CashRegisterFeature: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10 max-w-[1600px] mx-auto animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
-        <div className="space-y-1">
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
-            Arqueo & Tesorería
-          </h2>
-          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
-            Control Financiero y Flujo de Caja en Tiempo Real
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full md:w-auto">
-          <button 
-            onClick={() => {
-              setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
-              setIsModalOpen(true);
-            }} 
-            className="w-full sm:flex-1 bg-emerald-600 text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-200/50 flex items-center justify-center gap-2 md:gap-3 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
-          >
-            <Plus className="w-5 h-5" />
-            Nuevo Ingreso
-          </button>
-          <button 
-            onClick={() => {
-              setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
-              setIsModalOpen(true);
-            }} 
-            className="w-full sm:flex-1 bg-rose-600 text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-rose-200/50 flex items-center justify-center gap-2 md:gap-3 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"
-          >
-            <Minus className="w-5 h-5" />
-            Registrar Gasto
-          </button>
-        </div>
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      <PageHeader
+        title="Transacciones"
+        subtitle="Control financiero y flujo de caja en tiempo real"
+      >
+        <button
+          onClick={() => {
+            setNewPayment({ amount: '', method: 'efectivo', type: 'reparacion', transactionType: 'ingreso', description: '' });
+            setIsModalOpen(true);
+          }}
+          className="w-full sm:w-auto bg-success-600 text-white px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-success-700 transition-all duration-150 active:scale-[0.98] whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo ingreso
+        </button>
+        <button
+          onClick={() => {
+            setNewPayment({ amount: '', method: 'efectivo', type: 'otro', transactionType: 'egreso', description: '' });
+            setIsModalOpen(true);
+          }}
+          className="w-full sm:w-auto bg-white border border-surface-300 text-danger-600 px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-danger-50 hover:border-danger-200 transition-all duration-150 active:scale-[0.98] whitespace-nowrap"
+        >
+          <Minus className="w-4 h-4" />
+          Registrar gasto
+        </button>
+      </PageHeader>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard title="Efectivo en caja" amount={totals.efectivo} icon={Wallet} color="text-emerald-600" bgColor="bg-emerald-50" delay="0ms" />
+        <StatCard title="Depósitos / Transf." amount={totals.transferencia} icon={ArrowUpRight} color="text-blue-600" bgColor="bg-blue-50" delay="60ms" />
+        <StatCard title="Egresos operativos" amount={totals.egresosTotal} icon={TrendingDown} color="text-rose-600" bgColor="bg-rose-50" delay="120ms" />
+        <StatCard title="Balance consolidado" amount={totals.total} icon={TrendingUp} color="text-primary-600" bgColor="bg-primary-50" delay="180ms" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Efectivo en Caja" amount={totals.efectivo} icon={Wallet} color="text-emerald-600" bgColor="bg-emerald-50" delay="0ms" />
-        <StatCard title="Depósitos / Transf." amount={totals.transferencia} icon={ArrowUpRight} color="text-blue-600" bgColor="bg-blue-50" delay="100ms" />
-        <StatCard title="Egresos Operativos" amount={totals.egresosTotal} icon={TrendingDown} color="text-rose-600" bgColor="bg-rose-50" delay="200ms" />
-        <StatCard title="Balance Consolidado" amount={totals.total} icon={TrendingUp} color="text-primary-600" bgColor="bg-primary-50" delay="300ms" />
-      </div>
-
-      <div className="bg-white rounded-[24px] md:rounded-[40px] border border-surface-100/50 shadow-2xl shadow-surface-200/30 overflow-hidden animate-zoom-in">
-        <div className="p-4 md:p-6 border-b border-surface-50 flex flex-col lg:flex-row gap-4 md:gap-6 items-center justify-between bg-surface-50/30 backdrop-blur-md">
-          <div className="relative w-full lg:w-[400px] group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Filtro por concepto..."
-              className="w-full pl-12 pr-6 py-3.5 bg-white border border-surface-100 rounded-xl md:rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-bold text-sm shadow-sm"
+      <div className="bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden animate-fade-in-up">
+        <div className="p-4 border-b border-surface-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+          <div className="relative w-full lg:w-[360px] group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 w-4 h-4 group-focus-within:text-primary-600 transition-colors duration-150" />
+            <input
+              type="text"
+              placeholder="Filtrar por concepto..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-stretch sm:items-center">
-            <div className="flex items-center relative w-full sm:w-auto min-w-[180px] bg-white border border-surface-200 rounded-2xl px-4 py-3 hover:bg-surface-50 transition-all group shadow-sm">
-              <CalendarDays className="w-5 h-5 text-primary-500 absolute left-4 z-10 pointer-events-none group-hover:scale-110 transition-transform" />
-              <input 
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
+            <div className="flex items-center relative w-full sm:w-auto min-w-[170px] bg-white border border-surface-300 rounded-lg px-3 py-2 hover:border-surface-400 transition-colors duration-150">
+              <CalendarDays className="w-4 h-4 text-surface-500 absolute left-3 z-10 pointer-events-none" />
+              <input
                 type="date"
                 value={dateFilter}
                 onChange={e => setDateFilter(e.target.value)}
-                className="w-full pl-10 pr-2 bg-transparent text-[10px] md:text-[11px] font-black uppercase tracking-widest text-surface-700 cursor-pointer outline-none block"
+                className="w-full pl-8 pr-2 bg-transparent text-sm font-medium text-surface-700 cursor-pointer outline-none block"
               />
             </div>
-            
-            <div className="flex bg-surface-100/50 p-1 rounded-xl md:rounded-2xl shrink-0 shadow-inner overflow-x-auto border border-surface-200/20">
+
+            <div className="flex bg-surface-100 p-1 rounded-lg shrink-0 overflow-x-auto">
               {(['all', 'efectivo', 'transferencia'] as const).map(m => (
-                <button 
+                <button
                   key={m}
                   onClick={() => setMethodFilter(m)}
-                  className={`px-4 md:px-6 py-2.5 text-[9px] md:text-[10px] font-black rounded-xl transition-all uppercase tracking-widest whitespace-nowrap ${methodFilter === m ? 'bg-white shadow-xl text-primary-600 scale-[1.02]' : 'text-surface-400 hover:text-surface-600'}`}
+                  className={`px-4 py-2 text-xs font-medium rounded-md transition-colors duration-150 capitalize whitespace-nowrap ${methodFilter === m ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}
                 >
                   {m === 'all' ? 'Consolidado' : m}
                 </button>
@@ -172,63 +165,63 @@ export const CashRegisterFeature: React.FC = () => {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[500px] md:min-w-0">
+          <table className="w-full text-left min-w-[560px]">
             <thead>
-              <tr className="bg-surface-50/50 text-[10px] font-black text-surface-400 uppercase tracking-[0.25em] border-b border-surface-100">
-                <th className="px-6 md:px-8 py-5 text-center w-16 md:w-24">Tipo</th>
-                <th className="px-6 md:px-8 py-5 hidden md:table-cell">Temporalidad</th>
-                <th className="px-6 md:px-8 py-5 hidden sm:table-cell">Segmento</th>
-                <th className="px-6 md:px-8 py-5">Concepto / Referencia</th>
-                <th className="px-6 md:px-8 py-5 hidden lg:table-cell">Canal</th>
-                <th className="px-6 md:px-8 py-5 text-right">Monto</th>
+              <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200">
+                <th className="px-4 md:px-6 py-3 text-center w-16">Tipo</th>
+                <th className="px-4 md:px-6 py-3 hidden md:table-cell">Fecha</th>
+                <th className="px-4 md:px-6 py-3 hidden sm:table-cell">Segmento</th>
+                <th className="px-4 md:px-6 py-3">Concepto</th>
+                <th className="px-4 md:px-6 py-3 hidden lg:table-cell">Canal</th>
+                <th className="px-4 md:px-6 py-3 text-right">Monto</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-50">
-              {filteredPayments.map((p, idx) => (
-                <tr key={p.id} style={{ animationDelay: `${idx * 40}ms` }} className="hover:bg-surface-50/50 transition-colors group animate-in fade-in slide-in-from-left-4">
-                  <td className="px-6 md:px-8 py-6 text-center">
-                    <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto shadow-sm transition-transform group-hover:scale-110 ${
-                      p.transactionType === 'ingreso' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+            <tbody className="divide-y divide-surface-100">
+              {filteredPayments.map((p) => (
+                <tr key={p.id} className="hover:bg-surface-50 transition-colors duration-150">
+                  <td className="px-4 md:px-6 py-3.5 text-center">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto ${
+                      p.transactionType === 'ingreso' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                     }`}>
-                      {p.transactionType === 'ingreso' ? <TrendingUp className="w-4 h-4 md:w-5 md:h-5" /> : <TrendingDown className="w-4 h-4 md:w-5 md:h-5" />}
+                      {p.transactionType === 'ingreso' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                     </div>
                   </td>
-                  <td className="px-6 md:px-8 py-6 hidden md:table-cell">
-                    <div className="text-xs font-black text-surface-900 uppercase tracking-tighter">
+                  <td className="px-4 md:px-6 py-3.5 hidden md:table-cell">
+                    <div className="text-sm text-surface-600">
                       {new Date(p.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
                     </div>
                   </td>
-                  <td className="px-6 md:px-8 py-6 hidden sm:table-cell">
-                    <span className="text-[9px] md:text-[10px] text-surface-500 font-black uppercase tracking-widest bg-surface-100/50 px-2 md:px-2.5 py-1 rounded-lg border border-surface-200/30">
+                  <td className="px-4 md:px-6 py-3.5 hidden sm:table-cell">
+                    <span className="text-xs font-medium text-surface-600 capitalize bg-surface-100 px-2 py-0.5 rounded-md">
                       {p.type}
                     </span>
                   </td>
-                  <td className="px-6 md:px-8 py-6">
-                    <div className="text-xs md:text-sm font-black text-surface-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate max-w-[150px] md:max-w-none">{p.description}</div>
-                    <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2">
-                       <div className="md:hidden text-[9px] font-black text-surface-400 uppercase">
+                  <td className="px-4 md:px-6 py-3.5">
+                    <div className="text-sm font-medium text-surface-900 truncate max-w-[160px] md:max-w-none">{p.description}</div>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                       <div className="md:hidden text-xs text-surface-400">
                           {new Date(p.date).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false })}
                        </div>
                        {p.customer && (
-                         <div className="flex items-center gap-1.5 text-[9px] font-black text-surface-400 bg-surface-50 px-2 py-1 rounded-lg border border-surface-100 uppercase tracking-tight">
-                           <CreditCard className="w-3 h-3 text-primary-400" />
+                         <div className="flex items-center gap-1 text-xs text-surface-500">
+                           <CreditCard className="w-3 h-3" />
                            {p.customer.documentId || 'N/A'}
                          </div>
                        )}
-                       <div className="lg:hidden text-[9px] font-black uppercase bg-surface-100/30 px-2 py-1 rounded-lg text-surface-500 border border-surface-200/50">
+                       <div className="lg:hidden text-xs text-surface-500 capitalize">
                           {p.method}
                        </div>
                     </div>
                   </td>
-                  <td className="px-6 md:px-8 py-6 hidden lg:table-cell">
-                    <span className="text-[10px] font-black uppercase bg-white border border-surface-100 px-3 py-1.5 rounded-xl text-surface-500 shadow-sm">
+                  <td className="px-4 md:px-6 py-3.5 hidden lg:table-cell">
+                    <span className="text-xs font-medium capitalize bg-surface-100 px-2 py-0.5 rounded-md text-surface-600">
                       {p.method}
                     </span>
                   </td>
-                  <td className={`px-6 md:px-8 py-6 text-right whitespace-nowrap ${
+                  <td className={`px-4 md:px-6 py-3.5 text-right whitespace-nowrap ${
                     p.transactionType === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
-                    <span className="text-xl md:text-2xl font-black tracking-tighter">
+                    <span className="text-base font-semibold tracking-tight">
                       {p.transactionType === 'ingreso' ? '+' : '-'}${Math.abs(p.amount).toFixed(2)}
                     </span>
                   </td>
@@ -236,12 +229,12 @@ export const CashRegisterFeature: React.FC = () => {
               ))}
               {filteredPayments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-8 py-32 text-center">
-                    <div className="w-24 h-24 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-surface-100">
-                       <Search className="w-10 h-10 text-surface-200 opacity-50" />
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <div className="w-12 h-12 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                       <Search className="w-5 h-5 text-surface-400" />
                     </div>
-                    <h4 className="text-lg font-black text-surface-900 tracking-tight">Sin correspondencias</h4>
-                    <p className="text-[10px] text-surface-400 font-black uppercase tracking-widest mt-2">Prueba con otros parámetros de búsqueda</p>
+                    <h4 className="text-base font-semibold text-surface-900">Sin movimientos</h4>
+                    <p className="text-sm text-surface-500 mt-1">Probá con otros parámetros de búsqueda.</p>
                   </td>
                 </tr>
               )}
@@ -251,35 +244,35 @@ export const CashRegisterFeature: React.FC = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-surface-950/40 backdrop-blur-md z-[100] flex justify-center items-center p-6 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] w-full max-w-md animate-zoom-in overflow-hidden border border-white/20">
-            <div className="px-10 py-8 border-b border-surface-50 bg-surface-50/30 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${newPayment.transactionType === 'ingreso' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
-                  {newPayment.transactionType === 'ingreso' ? <Plus className="w-7 h-7" /> : <Minus className="w-7 h-7" />}
+        <div className="fixed inset-0 bg-surface-900/40 z-[100] flex justify-center items-center p-4 animate-fade-in">
+          <div className="bg-white rounded-xl border border-surface-200 shadow-lg w-full max-w-md animate-scale-in overflow-hidden">
+            <div className="px-6 py-4 border-b border-surface-200 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newPayment.transactionType === 'ingreso' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                  {newPayment.transactionType === 'ingreso' ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-surface-900 tracking-tight leading-none">
-                    {newPayment.transactionType === 'ingreso' ? 'Captar Ingreso' : 'Registrar Salida'}
+                  <h3 className="text-lg font-semibold text-surface-900 leading-tight">
+                    {newPayment.transactionType === 'ingreso' ? 'Nuevo ingreso' : 'Registrar gasto'}
                   </h3>
-                  <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] mt-2 opacity-60">Operación Manual de Caja</p>
+                  <p className="text-sm text-surface-500">Operación manual de caja</p>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 flex items-center justify-center hover:bg-surface-100 rounded-full transition-all text-surface-400">
+              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-surface-100 rounded-lg transition-colors duration-150 text-surface-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <form onSubmit={handleCreatePayment} className="p-10 space-y-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Monto de la Operación</label>
+
+            <form onSubmit={handleCreatePayment} className="p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5">Monto de la operación</label>
                 <div className="relative group">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-surface-300 text-2xl group-focus-within:text-primary-500 transition-colors">$</span>
-                  <input 
-                    type="number" 
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 text-xl group-focus-within:text-primary-600 transition-colors duration-150">$</span>
+                  <input
+                    type="number"
                     step="0.01"
                     placeholder="0.00"
-                    className="w-full bg-surface-50 border border-surface-100 rounded-[28px] pl-12 pr-8 py-6 text-4xl font-black focus:ring-[12px] focus:ring-primary-500/5 focus:border-primary-500/30 transition-all outline-none tracking-tighter shadow-inner"
+                    className="w-full bg-white border border-surface-300 rounded-lg pl-9 pr-4 py-3 text-2xl font-semibold tracking-tight focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
                     value={newPayment.amount}
                     onChange={e => setNewPayment({...newPayment, amount: e.target.value})}
                     required
@@ -288,62 +281,62 @@ export const CashRegisterFeature: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Concepto o Destino</label>
-                <input 
+              <div>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5">Concepto o destino</label>
+                <input
                   type="text"
-                  placeholder="Ej: COMPRA DE PANTALLAS IPHONE 15..."
-                  className="w-full bg-white border border-surface-100 rounded-2xl px-6 py-4 text-sm font-black uppercase focus:ring-4 focus:ring-primary-500/10 transition-all outline-none shadow-sm"
+                  placeholder="Ej: Compra de pantallas iPhone 15..."
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
                   value={newPayment.description}
                   onChange={e => setNewPayment({...newPayment, description: e.target.value.toUpperCase()})}
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Medio de Pago</label>
-                  <select 
-                    className="w-full bg-surface-50 border border-surface-100 rounded-2xl px-5 py-4 text-[11px] font-black uppercase tracking-widest appearance-none cursor-pointer focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-surface-600 mb-1.5">Medio de pago</label>
+                  <select
+                    className="w-full bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
                     value={newPayment.method}
                     onChange={e => setNewPayment({...newPayment, method: e.target.value as PaymentMethod})}
                   >
-                    <option value="efectivo">EFECTIVO</option>
-                    <option value="transferencia">BANCO / TRANSF</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Banco / Transferencia</option>
                   </select>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Clasificación</label>
-                  <select 
-                    className="w-full bg-surface-50 border border-surface-100 rounded-2xl px-5 py-4 text-[11px] font-black uppercase tracking-widest appearance-none cursor-pointer focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
+                <div>
+                  <label className="block text-xs font-medium text-surface-600 mb-1.5">Clasificación</label>
+                  <select
+                    className="w-full bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
                     value={newPayment.type}
                     onChange={e => setNewPayment({...newPayment, type: e.target.value as PaymentType})}
                   >
-                    <option value="reparacion">SERVICIO TÉCNICO</option>
-                    <option value="repuestos">ADQUISICIÓN REPUESTOS</option>
-                    <option value="insumos">SUMINISTROS</option>
-                    <option value="otro">OTRO CONCEPTO</option>
+                    <option value="reparacion">Servicio técnico</option>
+                    <option value="repuestos">Adquisición de repuestos</option>
+                    <option value="insumos">Suministros</option>
+                    <option value="otro">Otro concepto</option>
                   </select>
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-4">
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)} 
-                  className="flex-1 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest bg-surface-100 text-surface-500 hover:bg-surface-200 transition-all active:scale-95"
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className={`flex-[2] text-white font-black py-4 rounded-2xl shadow-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 text-[11px] uppercase tracking-widest ${newPayment.transactionType === 'ingreso' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200/50' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-200/50'}`}
+                <button
+                  type="submit"
+                  className={`flex-[2] text-white text-sm font-medium h-11 rounded-lg transition-all duration-150 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'bg-success-600 hover:bg-success-700' : 'bg-danger-600 hover:bg-danger-700'}`}
                   disabled={saveStatus !== 'idle'}
                 >
-                  {saveStatus === 'saving' ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  {saveStatus === 'saving' ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                     <>
-                      <CheckCircle2 className="w-5 h-5" />
-                      Guardar Movimiento
+                      <CheckCircle2 className="w-4 h-4" />
+                      Guardar movimiento
                     </>
                   )}
                 </button>
@@ -354,14 +347,14 @@ export const CashRegisterFeature: React.FC = () => {
       )}
 
       {showSuccessToast && (
-        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
-            <div className="bg-emerald-500 p-2 rounded-full">
-              <CheckCircle2 className="w-6 h-6 text-white" />
+        <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-[100] animate-fade-in-up">
+          <div className="bg-surface-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+            <div className="bg-emerald-500 p-1.5 rounded-full shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <p className="font-bold text-sm leading-none">Movimiento Registrado</p>
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">La transacción se ha sincronizado correctamente</p>
+            <div className="min-w-0">
+              <p className="font-medium text-sm">Movimiento registrado</p>
+              <p className="text-xs text-surface-300 mt-0.5">La transacción se sincronizó correctamente</p>
             </div>
           </div>
         </div>

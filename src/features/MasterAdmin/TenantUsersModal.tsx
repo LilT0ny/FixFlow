@@ -52,12 +52,12 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-gray-900/40 flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-lg w-full max-w-lg max-h-[90vh] flex flex-col animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{tenant.nombre_empresa}</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{tenant.nombre_empresa}</h2>
             <p className="text-sm text-gray-500 mt-0.5">Usuarios del taller</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
@@ -119,7 +119,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-sm font-medium transition"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white rounded-lg text-sm font-medium transition-colors duration-150"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                     Crear usuario
@@ -127,7 +127,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
                   <button
                     type="button"
                     onClick={() => { setShowForm(false); setFormError(''); }}
-                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm transition"
+                    className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-150"
                   >
                     Cancelar
                   </button>
@@ -137,7 +137,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
           ) : (
             <button
               onClick={() => setShowForm(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 text-blue-600 rounded-xl transition mb-4 text-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-600 hover:text-gray-900 rounded-lg transition-colors duration-150 mb-4 text-sm font-medium"
             >
               <UserPlus className="w-4 h-4" />
               Agregar usuario al taller
@@ -194,10 +194,10 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-150"
           >
             Cerrar
           </button>

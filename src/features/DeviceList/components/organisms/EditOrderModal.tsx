@@ -147,13 +147,13 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
   };
 
   // ── Clases reutilizables ─────────────────────────────────────────────────
-  const inputBase = 'w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 transition-colors placeholder-surface-400';
-  const inputOk   = 'border-surface-300 focus:ring-primary-400 focus:border-primary-400';
-  const inputErr  = 'border-danger-400 focus:ring-danger-300 focus:border-danger-400';
+  const inputBase = 'w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 transition-colors duration-150 placeholder-surface-400';
+  const inputOk   = 'border-surface-300 focus:ring-primary-500/20 focus:border-primary-500';
+  const inputErr  = 'border-danger-500 focus:ring-danger-500/20 focus:border-danger-500';
   const ic = (f: string) => `${inputBase} ${errors[f] ? inputErr : inputOk}`;
 
-  const labelClass   = 'block text-xs font-bold text-surface-600 uppercase tracking-wider mb-1.5';
-  const sectionClass = 'bg-surface-50 rounded-2xl p-4 border border-surface-100 space-y-3';
+  const labelClass   = 'block text-xs font-medium text-surface-600 mb-1.5';
+  const sectionClass = 'bg-surface-50 rounded-xl p-4 border border-surface-200 space-y-3';
 
   const total = Number(draft.repair.repairTotalCost) || 0;
   const abono = Number(draft.repair.initialDeposit)  || 0;
@@ -168,13 +168,13 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
     ) : null;
 
   return (
-    <div className="fixed inset-0 bg-surface-900/60 backdrop-blur-sm z-50 flex justify-center items-center py-6 px-4 transition-opacity">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 overflow-hidden">
+    <div className="fixed inset-0 bg-surface-900/40 z-50 flex justify-center items-center py-6 px-4 animate-fade-in">
+      <div className="bg-white rounded-xl border border-surface-200 shadow-lg w-full max-w-2xl flex flex-col max-h-[92vh] animate-scale-in overflow-hidden">
 
         {/* Header */}
-        <div className="p-5 border-b border-surface-100 flex justify-between items-center bg-gradient-to-r from-primary-50 to-white shrink-0">
+        <div className="p-5 border-b border-surface-200 flex justify-between items-center shrink-0">
           <div>
-            <h3 className="text-lg font-bold text-surface-900 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-surface-900 flex items-center gap-2">
               <Wrench className="w-5 h-5 text-primary-600" />
               Editar {isSale ? 'Nota de Venta' : 'Orden'} #{isSale ? draft.orderNumber : draft.orderNumber}
             </h3>
@@ -183,7 +183,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="p-2 rounded-full hover:bg-surface-100 text-surface-400 hover:text-surface-700 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-700 transition-colors duration-150 disabled:opacity-50"
             aria-label="Cerrar"
           >
             <X className="w-5 h-5" />
@@ -195,7 +195,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
 
           {/* ─── DATOS DEL CLIENTE ─── */}
           <section>
-            <h4 className="flex items-center gap-2 text-sm font-bold text-surface-800 mb-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3">
               <User className="w-4 h-4 text-primary-600" />
               Datos del Cliente
             </h4>
@@ -262,7 +262,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
           {/* ─── DATOS DEL DISPOSITIVO (SOLO PARA REP O SI NT TIENE UNO) ─── */}
           {(!isSale || draft.device) && (
             <section>
-              <h4 className="flex items-center gap-2 text-sm font-bold text-surface-800 mb-3">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3">
                 <Smartphone className="w-4 h-4 text-primary-600" />
                 Datos del Dispositivo
               </h4>
@@ -345,7 +345,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
 
           {/* ─── TRABAJO Y COSTOS ─── */}
           <section>
-            <h4 className="flex items-center gap-2 text-sm font-bold text-surface-800 mb-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3">
               <DollarSign className="w-4 h-4 text-primary-600" />
               {isSale ? 'Detalle de Cobro' : 'Trabajo a Realizar y Costos'}
             </h4>
@@ -400,15 +400,15 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
 
               {/* Saldo calculado en tiempo real */}
               {(total > 0 || abono > 0) && (
-                <div className={`flex justify-between items-center rounded-xl px-4 py-2 border ${
+                <div className={`flex justify-between items-center rounded-lg px-4 py-2 border ${
                   saldo < 0
                     ? 'bg-danger-50 border-danger-100'
                     : saldo === 0
                     ? 'bg-success-50 border-success-100'
                     : 'bg-primary-50 border-primary-100'
                 }`}>
-                  <span className="text-sm font-semibold text-surface-700">Saldo Pendiente:</span>
-                  <span className={`text-base font-bold ${
+                  <span className="text-sm font-medium text-surface-700">Saldo pendiente:</span>
+                  <span className={`text-base font-semibold ${
                     saldo < 0 ? 'text-danger-700' : saldo === 0 ? 'text-success-700' : 'text-primary-700'
                   }`}>
                     ${saldo.toFixed(2)}
@@ -422,22 +422,22 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-surface-100 bg-surface-50/80 flex gap-3 shrink-0">
+        <div className="p-5 border-t border-surface-200 bg-surface-50 flex gap-3 shrink-0">
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="flex-1 border border-surface-300 text-surface-700 py-3 px-4 rounded-xl font-bold hover:bg-surface-100 transition-colors disabled:opacity-50"
+            className="flex-1 border border-surface-300 bg-white text-surface-700 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex-1 bg-primary-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 bg-surface-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-surface-800 transition-colors duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSaving
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-              : <><Save className="w-4 h-4" /> Guardar Cambios</>
+              : <><Save className="w-4 h-4" /> Guardar cambios</>
             }
           </button>
         </div>

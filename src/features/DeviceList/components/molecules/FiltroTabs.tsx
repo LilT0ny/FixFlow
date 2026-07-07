@@ -18,18 +18,18 @@ export const FiltroTabs: React.FC<FiltroTabsProps> = ({ activeStatuses, toggleSt
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-2 pt-2">
-      <div className="text-sm font-bold text-surface-500 mr-2 uppercase tracking-wide">Filtros:</div>
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="text-xs font-medium text-surface-500 mr-1">Filtros:</div>
       {flags.map((flag) => {
          const isActive = activeStatuses.includes(flag.id);
          return (
            <button
              key={flag.id}
              onClick={() => toggleStatus(flag.id)}
-             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-               isActive 
-                 ? 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-200' 
-                 : 'bg-white text-surface-600 border-surface-200 hover:bg-surface-50 hover:text-surface-900 hover:border-surface-300'
+             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150 border ${
+               isActive
+                 ? 'bg-surface-900 text-white border-surface-900'
+                 : 'bg-white text-surface-600 border-surface-300 hover:text-surface-900 hover:border-surface-400'
              }`}
            >
              <flag.icon className="w-3.5 h-3.5" />
@@ -41,7 +41,7 @@ export const FiltroTabs: React.FC<FiltroTabsProps> = ({ activeStatuses, toggleSt
       {activeStatuses.length > 0 && (
          <button
            onClick={clearStatuses}
-           className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-danger-600 hover:bg-danger-50 hover:text-danger-700 transition-all border border-transparent hover:border-danger-100 ml-auto"
+           className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-150 ml-auto animate-fade-in"
            title="Limpiar filtros"
          >
            <X className="w-3.5 h-3.5" />

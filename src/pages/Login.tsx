@@ -50,48 +50,34 @@ export const Login = () => {
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-[#fafafa] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
-      {/* Background decorations - More subtle and premium */}
-      <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-100/30 blur-[120px] opacity-60 animate-pulse"></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-indigo-100/30 blur-[100px] opacity-60"></div>
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 px-4 sm:px-0">
-        <div className="flex justify-center flex-col items-center mb-6 md:mb-8">
-          <div className="w-44 h-44 md:w-52 md:h-52 flex items-center justify-center overflow-hidden transition-all duration-500 hover:scale-105 group relative">
-            <div className="absolute inset-0 bg-primary-500/10 rounded-[48px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <img 
-              src="/FixFlowIsologo.svg" 
-              alt="FixFlow Logo" 
-              className="w-full h-full object-contain relative z-10" 
-            />
+    <div className="min-h-screen bg-white flex lg:flex-row-reverse font-sans">
+      {/* Credenciales — derecha en desktop, única columna en móvil */}
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 py-12">
+        <div className="w-full max-w-sm mx-auto animate-fade-in-up">
+          {/* Logo compacto — solo visible cuando el panel derecho está oculto */}
+          <div className="lg:hidden flex items-center gap-3 mb-10">
+            <div className="w-11 h-11 flex items-center justify-center overflow-hidden">
+              <img src="/FixFlowIsologo.svg" alt="FixFlow Logo" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight text-surface-900">
+              Fix<span className="text-primary-600">Flow</span>
+            </span>
           </div>
-          <h2 className="mt-4 text-center text-3xl md:text-4xl font-black text-surface-900 tracking-tighter leading-none">
-            Fix<span className="text-primary-600">Flow</span>
-          </h2>
-          <p className="mt-3.5 text-center text-[9px] md:text-[11px] text-surface-400 font-black uppercase tracking-[0.4em] opacity-80">
-            Ecosistema de Gestión Tecnológica
-          </p>
-        </div>
 
-        <div className="bg-white/80 backdrop-blur-xl py-10 px-4 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] sm:rounded-[40px] border border-white sm:px-12 relative overflow-hidden">
-          {/* Subtle line at the top */}
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary-400 via-primary-600 to-primary-400 opacity-80"></div>
-          
-          <div className="mb-8 md:mb-10 text-center">
-            <h3 className="text-xl md:text-2xl font-black text-surface-900 tracking-tight flex items-center justify-center gap-2">
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold tracking-tight text-surface-900">
               Bienvenido
-            </h3>
-            <p className="text-xs md:text-sm font-medium text-surface-400 mt-2">Ingresa tus credenciales para administrar tu taller.</p>
+            </h1>
+            <p className="text-sm text-surface-500 mt-1.5">Ingresá tus credenciales para administrar tu taller.</p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-5" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="username" className="block text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1 mb-2">Usuario del Sistema</label>
+              <label htmlFor="username" className="block text-sm font-medium text-surface-700 mb-1.5">Usuario</label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-primary-600 text-surface-300">
-                  <User className="h-5 w-5" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
+                  <User className="h-4 w-4" />
                 </div>
                 <input
                   id="username"
@@ -100,7 +86,7 @@ export const Login = () => {
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="pl-14 block w-full bg-surface-50 border border-surface-100 rounded-[22px] focus:ring-[6px] focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white py-4 text-sm font-bold text-surface-900 transition-all outline-none"
+                  className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                   placeholder="Ej. admin_repair"
                   disabled={isLoading}
                 />
@@ -108,10 +94,10 @@ export const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1 mb-2">Clave Maestra</label>
+              <label htmlFor="password" className="block text-sm font-medium text-surface-700 mb-1.5">Contraseña</label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-primary-600 text-surface-300">
-                  <Lock className="h-5 w-5" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
+                  <Lock className="h-4 w-4" />
                 </div>
                 <input
                   id="password"
@@ -120,22 +106,22 @@ export const Login = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-14 pr-14 block w-full bg-surface-50 border border-surface-100 rounded-[22px] focus:ring-[6px] focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white py-4 text-sm font-bold text-surface-900 transition-all outline-none"
+                  className="pl-10 pr-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-5 flex items-center text-surface-300 hover:text-primary-600 transition-colors outline-none focus:outline-none active:scale-90"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-surface-400 hover:text-surface-600 transition-colors duration-150"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between px-1">
+            <div className="flex items-center justify-between">
               <label className="flex items-center group cursor-pointer select-none">
                 <div className="relative flex items-center justify-center">
                   <input
@@ -144,21 +130,19 @@ export const Login = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="peer appearance-none h-5 w-5 bg-surface-100 border border-surface-200 rounded-lg checked:bg-primary-600 checked:border-primary-600 transition-all cursor-pointer"
+                    className="peer appearance-none h-4.5 w-4.5 bg-white border border-surface-300 rounded checked:bg-primary-600 checked:border-primary-600 transition-colors duration-150 cursor-pointer"
                   />
-                  <CheckCircle className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                  <CheckCircle className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                 </div>
-                <span className="ml-3 text-xs font-bold text-surface-500 group-hover:text-surface-700 transition-colors">
+                <span className="ml-2.5 text-sm text-surface-600 group-hover:text-surface-900 transition-colors duration-150">
                   Mantener mi sesión iniciada
                 </span>
               </label>
             </div>
 
             {error && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-100/50 text-red-600 text-xs font-black uppercase tracking-widest flex items-center gap-3 animate-in fade-in zoom-in duration-300">
-                <div className="bg-red-500 p-1.5 rounded-full shadow-sm shadow-red-200">
-                  <AlertCircle className="w-3.5 h-3.5 text-white" />
-                </div>
+              <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>
             )}
@@ -166,25 +150,61 @@ export const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full group relative overflow-hidden flex justify-center py-4 px-6 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(37,99,235,0.3)] text-xs md:text-sm font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-[6px] focus:ring-primary-500/20 transition-all active:scale-[0.96] disabled:opacity-70 disabled:cursor-not-allowed`}
+              className="w-full group flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white bg-surface-900 hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-1 transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Verificando...</span>
-                </div>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verificando...
+                </>
               ) : (
-                <div className="flex items-center gap-3">
-                  <span>Ingresar al Sistema</span>
-                  <ArrowRight className="w-4.5 h-4.5 transition-transform group-hover:translate-x-1" />
-                </div>
+                <>
+                  Ingresar
+                  <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                </>
               )}
             </button>
           </form>
+
+          <p className="mt-10 text-xs text-surface-400">
+            © {new Date().getFullYear()} FixFlow. Todos los derechos reservados.
+          </p>
         </div>
-        
-        <p className="mt-10 text-center text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-60">
-          © {new Date().getFullYear()} Software de Alta Precisión. Todos los derechos reservados.
+      </div>
+
+      {/* Panel de marca — izquierda en desktop, oculto en móvil */}
+      <div className="hidden lg:flex w-1/2 bg-surface-900 flex-col items-center justify-center p-12 relative overflow-hidden">
+        <div className="flex flex-col items-center text-center animate-fade-in">
+          <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center p-5 mb-8">
+            <img
+              src="/FixFlowIsologo.svg"
+              alt="FixFlow Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <h2 className="text-3xl font-semibold tracking-tight text-white">
+            Fix<span className="text-primary-400">Flow</span>
+          </h2>
+          <p className="mt-2 text-sm text-surface-400">
+            Gestión integral para tu taller
+          </p>
+
+          <div className="mt-12 space-y-3 text-left">
+            {[
+              'Ingreso de equipos con ticket automático',
+              'Notificaciones por WhatsApp en cada estado',
+              'Caja, reportes y exportación a Excel',
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3 text-sm text-surface-300">
+                <CheckCircle className="w-4 h-4 text-primary-400 shrink-0" />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="absolute bottom-8 text-xs text-surface-500">
+          Plataforma multi-taller · Datos aislados por negocio
         </p>
       </div>
     </div>

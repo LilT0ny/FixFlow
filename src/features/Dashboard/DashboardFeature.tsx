@@ -24,10 +24,10 @@ export const DashboardFeature: React.FC = () => {
     <div className="space-y-6">
       <PageHeader 
         title="Inicio" 
-        subtitle="Resumen Operativo y Estado del Taller en Tiempo Real" 
+        subtitle="Resumen operativo y estado del taller en tiempo real"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
           <StatCard 
             key={stat.label}

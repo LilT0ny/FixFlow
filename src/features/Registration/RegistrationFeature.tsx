@@ -57,7 +57,7 @@ export const RegistrationFeature: React.FC = () => {
   return (
     <RegistrationLayout title="Nuevo Ingreso" subtitle="Registra un nuevo dispositivo para reparación">
       {requestError && (
-        <div className="bg-danger-50 text-danger-600 p-4 rounded-xl mb-6 font-medium">
+        <div className="bg-danger-50 border border-danger-100 text-danger-700 p-3.5 rounded-lg mb-6 text-sm animate-scale-in">
           {requestError}
         </div>
       )}

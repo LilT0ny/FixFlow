@@ -90,30 +90,30 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:rounded-3xl sm:max-w-2xl max-h-[95dvh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
+      <div className="bg-white w-full sm:rounded-xl sm:max-w-2xl max-h-[95dvh] flex flex-col shadow-lg animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-200 shrink-0">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Fotos de Evidencia</h3>
+            <h3 className="text-lg font-semibold text-surface-900">Fotos de evidencia</h3>
             <p className="text-xs text-gray-500 mt-0.5">Orden #{orderNumber}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-100 transition-colors duration-150">
+            <X className="w-5 h-5 text-surface-500" />
           </button>
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
           {STAGES.map(({ key, label, color, bg }) => (
-            <section key={key} className={`rounded-2xl border p-4 ${bg}`}>
+            <section key={key} className={`rounded-xl border p-4 ${bg}`}>
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm font-black uppercase tracking-wider ${color}`}>{label}</span>
+                <span className={`text-sm font-semibold ${color}`}>{label}</span>
                 <div className="flex gap-2">
                   {/* Cámara */}
                   <button
                     onClick={() => openCamera(key)}
-                    className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 shadow-sm transition-all"
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-surface-300 rounded-lg hover:bg-surface-50 transition-colors duration-150"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     Cámara
@@ -121,7 +121,7 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
                   {/* Subir archivo */}
                   <button
                     onClick={() => fileInputRefs.current[key]?.click()}
-                    className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 shadow-sm transition-all"
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-surface-300 rounded-lg hover:bg-surface-50 transition-colors duration-150"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     Archivo
@@ -139,7 +139,7 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
               {/* Galería */}
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {photosByStage(key).map((photo, idx) => (
-                  <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                  <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-surface-200">
                     <img
                       src={photo.url}
                       alt={`${label} ${idx + 1}`}
@@ -162,8 +162,8 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
                   </div>
                 ))}
                 {photosByStage(key).length === 0 && (
-                  <div className="col-span-full flex items-center justify-center py-6 text-sm text-gray-400 font-medium">
-                    Sin fotos aún — usa Cámara o Archivo
+                  <div className="col-span-full flex items-center justify-center py-6 text-sm text-surface-400">
+                    Sin fotos aún — usá Cámara o Archivo
                   </div>
                 )}
               </div>
@@ -172,10 +172,10 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-100 shrink-0">
+        <div className="px-5 py-4 border-t border-surface-200 shrink-0">
           <button
             onClick={onClose}
-            className="w-full py-3 bg-primary-600 text-white rounded-2xl font-bold hover:bg-primary-700 transition-colors"
+            className="w-full h-11 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 transition-colors duration-150"
           >
             Listo ({photos.length} foto{photos.length !== 1 ? 's' : ''})
           </button>
@@ -186,7 +186,7 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
       {cameraStage && (
         <div className="fixed inset-0 z-[120] bg-black flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 shrink-0">
-            <span className="text-white font-bold text-sm uppercase tracking-wider">
+            <span className="text-white font-medium text-sm">
               Foto: {STAGES.find(s => s.key === cameraStage)?.label}
             </span>
             <button onClick={closeCamera} className="p-2 rounded-full bg-white/20">

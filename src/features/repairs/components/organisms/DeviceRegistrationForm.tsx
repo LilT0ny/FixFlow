@@ -138,31 +138,31 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
   const isSaveDisabled = step === 3 && !isStep3Valid;
 
   return (
-    <div className="relative animate-zoom-in">
+    <div className="relative animate-fade-in-up">
       
       <div className="mb-8 md:mb-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
           <div>
-            <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.3em] mb-2 block">Cuestionario</span>
-            <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight leading-tight">Registro de Ingreso</h2>
+            <h2 className="text-xl font-semibold text-surface-900 tracking-tight">Registro de ingreso</h2>
+            <p className="text-sm text-surface-500 mt-0.5">Completá los tres pasos para generar la orden.</p>
           </div>
           <div className="text-left sm:text-right">
-             <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest block mb-1">Progreso</span>
-             <span className="text-base md:text-lg font-black text-surface-900 tracking-tighter">Paso {step} <span className="text-surface-300 font-bold mx-0.5">/</span> 3</span>
+             <span className="text-xs text-surface-500 block mb-0.5">Progreso</span>
+             <span className="text-sm font-semibold text-surface-900">Paso {step} de 3</span>
           </div>
         </div>
 
-        <div className="flex gap-3 mt-4">
-          <div className={`h-2.5 flex-1 rounded-full transition-all duration-500 shadow-sm ${step >= 1 ? 'bg-primary-600' : 'bg-surface-100'}`} />
-          <div className={`h-2.5 flex-1 rounded-full transition-all duration-500 shadow-sm ${step >= 2 ? 'bg-primary-600' : 'bg-surface-100'}`} />
-          <div className={`h-2.5 flex-1 rounded-full transition-all duration-500 shadow-sm ${step >= 3 ? 'bg-primary-600' : 'bg-surface-100'}`} />
+        <div className="flex gap-2 mt-4">
+          <div className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step >= 1 ? 'bg-surface-900' : 'bg-surface-200'}`} />
+          <div className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step >= 2 ? 'bg-surface-900' : 'bg-surface-200'}`} />
+          <div className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step >= 3 ? 'bg-surface-900' : 'bg-surface-200'}`} />
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-            <h3 className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-50 pb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-surface-900 border-b border-surface-200 pb-3 flex items-center gap-2">
               <Users className="w-4 h-4 text-primary-500" />
               Datos del Propietario
             </h3>
@@ -177,11 +177,11 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                     onBlur={() => handleBlur('cedula')} 
                     error={touched.cedula && !!errors.cedula} 
                     maxLength={13} 
-                    className="pl-4 pr-16 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
+                    className="pr-16"
                     disabled={isValidatingCedula} 
                   />
                   <div className="absolute right-12 top-1/2 -translate-y-1/2">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${(data.cedula.length === 10 || data.cedula.length === 13) ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${(data.cedula.length === 10 || data.cedula.length === 13) ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
                       {data.cedula.length}
                     </span>
                   </div>
@@ -207,10 +207,10 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                     onBlur={() => handleBlur('telefono')} 
                     error={touched.telefono && !!errors.telefono} 
                     maxLength={10} 
-                    className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest pr-12"
+                    className="pr-12"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${data.telefono.length === 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${data.telefono.length === 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}`}>
                       {data.telefono.length}/10
                     </span>
                   </div>
@@ -225,9 +225,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   value={data.nombres} 
                   onChange={e => handleChange('nombres', e.target.value)} 
                   onBlur={() => handleBlur('nombres')} 
-                  error={touched.nombres && !!errors.nombres}
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                />
+                  error={touched.nombres && !!errors.nombres}                />
               </FormField>
               <FormField label="Apellidos Completos" required error={touched.apellidos ? errors.apellidos : undefined}>
                 <Input 
@@ -235,9 +233,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   value={data.apellidos} 
                   onChange={e => handleChange('apellidos', e.target.value)} 
                   onBlur={() => handleBlur('apellidos')} 
-                  error={touched.apellidos && !!errors.apellidos} 
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                />
+                  error={touched.apellidos && !!errors.apellidos}                 />
               </FormField>
             </div>
 
@@ -249,9 +245,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   value={data.email} 
                   onChange={e => handleChange('email', e.target.value)} 
                   onBlur={() => handleBlur('email')} 
-                  error={touched.email && !!errors.email} 
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                />
+                  error={touched.email && !!errors.email}                 />
               </FormField>
               
               <FormField label="Domicilio / Referencia" error={touched.direccion ? errors.direccion : undefined}>
@@ -260,9 +254,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   value={data.direccion} 
                   onChange={e => handleChange('direccion', e.target.value)} 
                   onBlur={() => handleBlur('direccion')} 
-                  error={touched.direccion && !!errors.direccion} 
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                />
+                  error={touched.direccion && !!errors.direccion}                 />
               </FormField>
             </div>
           </div>
@@ -270,7 +262,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
 
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-            <h3 className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-50 pb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-surface-900 border-b border-surface-200 pb-3 flex items-center gap-2">
               <MonitorSmartphone className="w-4 h-4 text-primary-500" />
               Especificaciones de Hardware
             </h3>
@@ -281,7 +273,6 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                 onChange={e => handleChange('deviceType', e.target.value)} 
                 onBlur={() => handleBlur('deviceType')} 
                 error={touched.deviceType && !!errors.deviceType}
-                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold appearance-none"
               >
                 <option value="" disabled>Selecciona una categoría...</option>
                 <option value="celular">Celular / Smartphone</option>
@@ -307,9 +298,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   value={data.marca} 
                   onChange={e => handleChange('marca', e.target.value)} 
                   onBlur={() => handleBlur('marca')} 
-                  error={touched.marca && !!errors.marca}
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                />
+                  error={touched.marca && !!errors.marca}                />
               </FormField>
               <FormField label="Modelo Específico" required error={touched.modelo ? errors.modelo : undefined}>
                 <Input 
@@ -317,9 +306,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   value={data.modelo} 
                   onChange={e => handleChange('modelo', e.target.value)} 
                   onBlur={() => handleBlur('modelo')} 
-                  error={touched.modelo && !!errors.modelo}
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-bold"
-                />
+                  error={touched.modelo && !!errors.modelo}                />
               </FormField>
             </div>
 
@@ -332,10 +319,10 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   onBlur={() => handleBlur('imei')} 
                   error={touched.imei && !!errors.imei} 
                   maxLength={data.deviceType === 'celular' ? 15 : 30} 
-                  className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-black tracking-widest pr-12"
+                  className="pr-12"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
                     data.deviceType === 'celular' 
                       ? (data.imei.length === 15 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400')
                       : (data.imei.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400')
@@ -354,16 +341,14 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                 onBlur={() => handleBlur('estadoFisico')} 
                 error={touched.estadoFisico && !!errors.estadoFisico} 
                 rows={4} 
-                maxLength={300} 
-                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-medium leading-relaxed"
-              />
+                maxLength={300}               />
             </FormField>
           </div>
         )}
 
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-            <h3 className="text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] border-b border-surface-50 pb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-surface-900 border-b border-surface-200 pb-3 flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary-500" />
               Detalles de Orden y Presupuesto
             </h3>
@@ -376,9 +361,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                 onBlur={() => handleBlur('trabajoRealizar')} 
                 error={touched.trabajoRealizar && !!errors.trabajoRealizar} 
                 rows={5} 
-                maxLength={500}
-                className="py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-sm font-medium leading-relaxed"
-              />
+                maxLength={500}              />
             </FormField>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -394,7 +377,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                     onChange={e => handleChange('costoEstimado', e.target.value)} 
                     onBlur={() => handleBlur('costoEstimado')} 
                     error={touched.costoEstimado && !!errors.costoEstimado}
-                    className="pl-8 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-lg font-black tracking-tight"
+                    className="pl-8 text-base font-semibold"
                   />
                 </div>
               </FormField>
@@ -410,24 +393,23 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                     onChange={e => handleChange('abonoInicial', e.target.value)} 
                     onBlur={() => handleBlur('abonoInicial')} 
                     error={touched.abonoInicial && !!errors.abonoInicial} 
-                    className="pl-8 py-3.5 rounded-2xl border-surface-200 focus:ring-primary-500 bg-surface-50/50 hover:bg-white transition-all text-lg font-black tracking-tight"
+                    className="pl-8 text-base font-semibold"
                   />
                 </div>
               </FormField>
             </div>
 
-            <div className="bg-surface-900 text-white p-6 rounded-[32px] mt-8 shadow-2xl relative overflow-hidden group">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-               <div className="relative flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+            <div className="bg-surface-900 text-white p-6 rounded-xl mt-8">
+               <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Confirmación de Datos</h4>
-                    <p className="text-xs font-medium text-white/90 leading-relaxed">
-                      Se registrará un <span className="font-black text-white">{data.deviceType} {data.marca}</span> a nombre de 
-                      <span className="font-black text-white ml-1">{data.nombres} {data.apellidos}</span>. 
-                      Verifica que los datos sean correctos antes de finalizar el proceso.
+                    <h4 className="text-xs font-medium text-white/60 mb-1">Confirmación de datos</h4>
+                    <p className="text-sm text-white/90 leading-relaxed">
+                      Se registrará un <span className="font-semibold text-white">{data.deviceType} {data.marca}</span> a nombre de
+                      <span className="font-semibold text-white ml-1">{data.nombres} {data.apellidos}</span>.
+                      Verificá que los datos sean correctos antes de finalizar el proceso.
                     </p>
                   </div>
                </div>
@@ -435,57 +417,57 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-8 md:pt-10 border-t border-surface-50 gap-4 mt-8 md:mt-12">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-6 border-t border-surface-200 gap-3 mt-8">
           {step > 1 ? (
              <button
               type="button"
               onClick={handlePrev}
-              className="px-6 md:px-8 py-4 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest text-surface-400 hover:bg-surface-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="px-5 h-11 rounded-lg text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-150 flex items-center justify-center gap-2"
             >
               Regresar
             </button>
           ) : (
             <div className="hidden sm:block" />
           )}
-          
+
           <button
             type={step === 3 ? "submit" : "button"}
             onClick={step < 3 ? handleNext : undefined}
             disabled={(step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting))}
-            className={`px-8 md:px-10 py-5 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 ${
+            className={`px-8 h-11 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2 ${
               ((step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting)))
-              ? 'bg-surface-100 text-surface-300 cursor-not-allowed border-none shadow-none'
-              : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
+              ? 'bg-surface-100 text-surface-400 cursor-not-allowed'
+              : 'bg-surface-900 text-white hover:bg-surface-800'
             }`}
           >
             {step === 3 ? (
               isSubmitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Procesando...
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  Finalizar Registro
+                  <CheckCircle2 className="w-4 h-4" />
+                  Finalizar registro
                 </>
               )
             ) : (
-              'Siguiente Paso'
+              'Siguiente paso'
             )}
           </button>
         </div>
       </form>
 
       {showSuccessToast && (
-        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
-            <div className="bg-emerald-500 p-2 rounded-full">
-              <CheckCircle2 className="w-6 h-6 text-white" />
+        <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-[100] animate-fade-in-up">
+          <div className="bg-surface-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+            <div className="bg-emerald-500 p-1.5 rounded-full shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <p className="font-bold text-sm leading-none">Registro Completado</p>
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">La orden de servicio se ha generado con éxito</p>
+            <div className="min-w-0">
+              <p className="font-medium text-sm">Registro completado</p>
+              <p className="text-xs text-surface-300 mt-0.5">La orden de servicio se generó con éxito</p>
             </div>
           </div>
         </div>
@@ -493,12 +475,10 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
 
       {/* AUTOFILL NOTIFICATION */}
       {showAutofillToast && foundClient && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-12 duration-700">
-          <div className="bg-primary-600/90 text-white backdrop-blur-md px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-primary-400/50">
-            <div className="bg-white/20 p-1.5 rounded-full">
-              <Users className="w-3.5 h-3.5" />
-            </div>
-            <p className="text-xs font-black uppercase tracking-widest">Cliente frecuente: {foundClient.fullName}</p>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-max max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-surface-900 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2.5">
+            <Users className="w-4 h-4 text-primary-400 shrink-0" />
+            <p className="text-sm font-medium truncate">Cliente frecuente: {foundClient.fullName}</p>
           </div>
         </div>
       )}

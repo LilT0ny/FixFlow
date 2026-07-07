@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTenants } from '../../hooks/useAuthSaaS';
 import { useAuth } from '../../hooks/useAuthSaaS';
-import { Plus, LogOut, Trash2, Users, Building2, Activity } from 'lucide-react';
+import { Plus, LogOut, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard } from 'lucide-react';
 import { CreateTenantModal } from './CreateTenantModal';
 import { TenantUsersModal } from './TenantUsersModal';
 import type { Tenant } from '../../services/SaaSAuthService';
@@ -70,11 +70,11 @@ export const MasterAdminDashboard = () => {
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-gray-900 rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 leading-none">FixFlow Admin</h1>
+              <h1 className="text-lg font-semibold text-gray-900 leading-none">FixFlow Admin</h1>
               <p className="text-xs text-gray-500 mt-0.5">Panel de control maestro</p>
             </div>
           </div>
@@ -97,16 +97,16 @@ export const MasterAdminDashboard = () => {
       {/* Main */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Stats bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8 animate-fade-in-up">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs">
             <p className="text-xs text-gray-500 mb-1">Talleres activos</p>
-            <p className="text-2xl font-bold text-blue-600">{activeCount}</p>
+            <p className="text-2xl font-semibold tracking-tight text-blue-600">{activeCount}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs">
             <p className="text-xs text-gray-500 mb-1">Total clientes</p>
-            <p className="text-2xl font-bold text-gray-900">{tenants.length}</p>
+            <p className="text-2xl font-semibold tracking-tight text-gray-900">{tenants.length}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm col-span-2 sm:col-span-1">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs col-span-2 sm:col-span-1">
             <p className="text-xs text-gray-500 mb-1">Estado sistema</p>
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-green-500" />
@@ -118,12 +118,12 @@ export const MasterAdminDashboard = () => {
         {/* Header actions */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Talleres / Clientes</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-gray-900">Talleres / Clientes</h2>
             <p className="text-gray-500 text-sm mt-0.5">Administrá las empresas que usan FixFlow</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition shadow-sm text-sm font-medium"
+            className="flex items-center gap-2 px-4 h-10 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors duration-150 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             Nuevo taller
@@ -139,29 +139,30 @@ export const MasterAdminDashboard = () => {
 
         {/* Tenants Grid */}
         {!loading && tenants.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {tenants.map((tenant) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {tenants.map((tenant, idx) => (
               <div
                 key={tenant.id}
-                className="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden"
+                style={{ animationDelay: `${idx * 40}ms` }}
+                className="bg-white rounded-xl border border-gray-200 shadow-xs hover:shadow-sm hover:border-gray-300 transition-all duration-150 overflow-hidden animate-fade-in-up"
               >
                 {/* Card header */}
                 <div className="p-5 pb-3">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
-                        <span className="text-blue-700 font-bold text-sm">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <span className="text-blue-700 font-semibold text-sm">
                           {tenant.nombre_empresa.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-gray-900 truncate">{tenant.nombre_empresa}</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">{tenant.nombre_empresa}</h3>
                         <p className="text-xs text-gray-400 mt-0.5 font-mono">{tenant.slug}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        tenant.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${
+                        tenant.activo ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'
                       }`}>
                         {tenant.activo ? 'Activo' : 'Inactivo'}
                       </span>
@@ -170,23 +171,23 @@ export const MasterAdminDashboard = () => {
 
                   {/* Details */}
                   <div className="space-y-1.5 text-xs text-gray-500">
-                    {tenant.email && <p>📧 {tenant.email}</p>}
-                    {tenant.telefono && <p>📞 {tenant.telefono}</p>}
-                    {tenant.ruc && <p>🪪 RUC: {tenant.ruc}</p>}
+                    {tenant.email && <p className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {tenant.email}</p>}
+                    {tenant.telefono && <p className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {tenant.telefono}</p>}
+                    {tenant.ruc && <p className="flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> RUC: {tenant.ruc}</p>}
                   </div>
 
                   <div className="mt-3">
-                    <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold ${PLAN_COLORS[tenant.plan] || PLAN_COLORS.basic}`}>
+                    <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium capitalize ${PLAN_COLORS[tenant.plan] || PLAN_COLORS.basic}`}>
                       Plan {tenant.plan}
                     </span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 px-5 pb-4 pt-2 border-t border-gray-50 mt-2">
+                <div className="flex gap-2 px-5 pb-4 pt-3 border-t border-gray-100 mt-2">
                   <button
                     onClick={() => setSelectedTenant(tenant)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition text-xs font-medium"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors duration-150 text-xs font-medium"
                   >
                     <Users className="w-3.5 h-3.5" />
                     Usuarios
@@ -194,7 +195,7 @@ export const MasterAdminDashboard = () => {
                   {tenant.activo && (
                     <button
                       onClick={() => handleDeleteTenant(tenant.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition"
+                      className="px-3 py-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
                       title="Desactivar taller"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -208,15 +209,15 @@ export const MasterAdminDashboard = () => {
 
         {/* Empty State */}
         {!loading && tenants.length === 0 && (
-          <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-16 text-center">
-            <div className="inline-flex w-16 h-16 items-center justify-center bg-blue-50 rounded-2xl mb-4">
-              <Building2 className="w-8 h-8 text-blue-400" />
+          <div className="bg-gray-50/50 rounded-xl border border-dashed border-gray-300 p-16 text-center animate-scale-in">
+            <div className="inline-flex w-12 h-12 items-center justify-center bg-gray-100 rounded-full mb-4">
+              <Building2 className="w-5 h-5 text-gray-400" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">No hay talleres aún</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-1">No hay talleres aún</h3>
             <p className="text-gray-500 text-sm mb-6">Creá tu primer cliente para que empiece a usar FixFlow</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition font-medium text-sm"
+              className="inline-flex items-center gap-2 px-5 h-10 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors duration-150 font-medium text-sm"
             >
               <Plus className="w-4 h-4" />
               Crear taller

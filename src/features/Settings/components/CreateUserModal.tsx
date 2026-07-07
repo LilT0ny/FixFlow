@@ -92,21 +92,21 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-[32px] shadow-2xl border border-surface-200 w-full max-w-md animate-in fade-in zoom-in duration-300">
+        <div className="bg-white rounded-xl shadow-lg border border-surface-200 w-full max-w-md animate-scale-in">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-surface-100">
+          <div className="flex items-center justify-between p-5 border-b border-surface-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-surface-50 flex items-center justify-center text-surface-400 border border-surface-100">
+              <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-surface-900">Crear Nuevo Usuario</h3>
-                <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest">Acceso al Sistema</p>
+                <h3 className="text-sm font-semibold text-surface-900">Crear nuevo usuario</h3>
+                <p className="text-xs text-surface-500">Acceso al sistema</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-surface-50 rounded-xl transition-colors text-surface-400 hover:text-surface-900"
+              className="p-2 hover:bg-surface-100 rounded-lg transition-colors duration-150 text-surface-400 hover:text-surface-900"
             >
               <X className="w-5 h-5" />
             </button>
@@ -115,19 +115,15 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
           {/* Content */}
           <div className="p-6 space-y-4">
             {error && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-100/50 text-red-600 text-xs font-black uppercase tracking-widest flex items-center gap-3">
-                <div className="bg-red-500 p-1.5 rounded-full">
-                  <AlertCircle className="w-3.5 h-3.5 text-white" />
-                </div>
+              <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100/50 text-emerald-600 text-xs font-black uppercase tracking-widest flex items-center gap-3">
-                <div className="bg-emerald-500 p-1.5 rounded-full">
-                  <CheckCircle className="w-3.5 h-3.5 text-white" />
-                </div>
+              <div className="p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
+                <CheckCircle className="w-4 h-4 shrink-0" />
                 {success}
               </div>
             )}
@@ -135,7 +131,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Username */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">
+                <label className="block text-xs font-medium text-surface-600">
                   Usuario del Sistema
                 </label>
                 <input
@@ -144,14 +140,14 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="Ej. julio_repair"
                   disabled={isLoading}
-                  className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 disabled:opacity-50 transition-all outline-none"
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
                 />
                 <p className="text-[9px] text-surface-400">Mín. 3 caracteres, solo letras y números</p>
               </div>
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">
+                <label className="block text-xs font-medium text-surface-600">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -161,7 +157,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     disabled={isLoading}
-                    className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-4 pr-12 py-3 text-sm font-bold focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 disabled:opacity-50 transition-all outline-none"
+                    className="w-full bg-white border border-surface-300 rounded-lg px-3.5 pr-11 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
                   />
                   <button
                     type="button"
@@ -176,7 +172,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
 
               {/* Confirm Password */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">
+                <label className="block text-xs font-medium text-surface-600">
                   Confirmar Contraseña
                 </label>
                 <div className="relative">
@@ -186,7 +182,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     disabled={isLoading}
-                    className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-4 pr-12 py-3 text-sm font-bold focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 disabled:opacity-50 transition-all outline-none"
+                    className="w-full bg-white border border-surface-300 rounded-lg px-3.5 pr-11 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
                   />
                   <button
                     type="button"
@@ -200,7 +196,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
 
               {/* Role */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">
+                <label className="block text-xs font-medium text-surface-600">
                   Rol
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -210,10 +206,10 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                       type="button"
                       onClick={() => setRole(r)}
                       disabled={isLoading}
-                      className={`px-3 py-2 border rounded-lg text-center transition-all text-xs font-black uppercase tracking-tighter active:scale-95 disabled:opacity-50 ${
+                      className={`px-3 py-2 border rounded-lg text-center transition-colors duration-150 text-sm font-medium disabled:opacity-50 ${
                         role === r
-                          ? 'border-primary-600 bg-primary-50 text-primary-700 shadow-sm'
-                          : 'border-surface-200 text-surface-500 hover:bg-surface-50'
+                          ? 'border-surface-900 bg-surface-900 text-white'
+                          : 'border-surface-300 text-surface-600 hover:border-surface-400'
                       }`}
                     >
                       {r === 'user' && 'Usuario'}
@@ -235,14 +231,14 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                   type="button"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 border border-surface-200 rounded-2xl text-sm font-black text-surface-600 hover:bg-surface-50 transition-all disabled:opacity-50"
+                  className="flex-1 px-4 h-11 border border-surface-300 rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-2xl text-sm font-black hover:bg-primary-700 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 h-11 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 transition-all duration-150 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -252,7 +248,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                   ) : (
                     <>
                       <Plus className="w-4 h-4" />
-                      Crear Usuario
+                      Crear usuario
                     </>
                   )}
                 </button>

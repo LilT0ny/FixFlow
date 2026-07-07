@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Printer, MessageSquare, Building2, ImageIcon, Save, CheckCircle2, Loader2, Info, Plus } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
 import { CreateUserModal } from './components/CreateUserModal';
+import { PageHeader } from '../../components/design-system';
 import type { BusinessSettings, PrinterType } from '../../types';
 
 export const SettingsFeature: React.FC = () => {
@@ -42,138 +43,131 @@ export const SettingsFeature: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
-        <div className="space-y-1">
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
-            Ajustes del Sistema
-          </h2>
-          <p className="text-[10px] md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
-            Parametrización de Negocio y Preferencias de Aplicación
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={() => setIsCreateUserModalOpen(true)}
-            className="px-6 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100"
-          >
-            <Plus className="w-5 h-5" />
-            Nuevo Usuario
-          </button>
-          <button 
-            onClick={handleSave} 
-            disabled={saveStatus !== 'idle'}
-            className={`px-6 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 disabled:opacity-50 ${
-              saveStatus === 'success' ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-100'
-            }`}
-          >
-            {saveStatus === 'saving' ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Guardando...
-              </>
-            ) : saveStatus === 'success' ? (
-              <>
-                <CheckCircle2 className="w-5 h-5 animate-in zoom-in duration-300" />
-                ¡Guardado!
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5" />
-                Guardar Cambios
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Configuración"
+        subtitle="Parámetros del negocio y preferencias de la aplicación"
+      >
+        <button
+          onClick={() => setIsCreateUserModalOpen(true)}
+          className="px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] bg-white border border-surface-300 text-surface-700 hover:bg-surface-50"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo usuario
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saveStatus !== 'idle'}
+          className={`px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] disabled:opacity-50 ${
+            saveStatus === 'success' ? 'bg-success-600 text-white' : 'bg-surface-900 text-white hover:bg-surface-800'
+          }`}
+        >
+          {saveStatus === 'saving' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Guardando...
+            </>
+          ) : saveStatus === 'success' ? (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              ¡Guardado!
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Guardar cambios
+            </>
+          )}
+        </button>
+      </PageHeader>
 
       {saveStatus === 'success' && (
-        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-surface-900 text-white px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-4 border border-surface-700 backdrop-blur-md">
-            <div className="bg-emerald-500 p-2 rounded-full">
-              <CheckCircle2 className="w-6 h-6 text-white" />
+        <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-[100] animate-fade-in-up">
+          <div className="bg-surface-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+            <div className="bg-emerald-500 p-1.5 rounded-full shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <p className="font-bold text-sm leading-none">Configuración Actualizada</p>
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mt-1">Los cambios se aplicaron correctamente</p>
+            <div className="min-w-0">
+              <p className="font-medium text-sm">Configuración actualizada</p>
+              <p className="text-xs text-surface-300 mt-0.5">Los cambios se aplicaron correctamente</p>
             </div>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-[32px] border border-surface-200 p-8 space-y-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-surface-200 p-6 space-y-5 shadow-xs">
           <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-surface-50 flex items-center justify-center text-surface-400 border border-surface-100">
+            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-surface-900">Perfil de Empresa</h2>
-              <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest">Datos para Facturación</p>
+              <h2 className="text-sm font-semibold text-surface-900">Perfil de empresa</h2>
+              <p className="text-xs text-surface-500">Datos para facturación</p>
             </div>
           </div>
           
           <div className="space-y-5">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Nombre Comercial / Razón Social</label>
+              <label className="block text-xs font-medium text-surface-600">Nombre Comercial / Razón Social</label>
               <input 
                 value={formData.companyName}
                 onChange={e => setFormData({ ...formData, companyName: e.target.value.toUpperCase() })}
                 title="Nombre legal de la empresa"
-                className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-5 py-3.5 text-sm font-bold uppercase focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">RUC / Identificación Fiscal</label>
+              <label className="block text-xs font-medium text-surface-600">RUC / Identificación Fiscal</label>
               <input 
                 value={formData.ruc || ''}
                 onChange={e => setFormData({ ...formData, ruc: e.target.value })}
                 title="RUC o Identificación fiscal"
                 placeholder="Ej. 1712345678001"
-                className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-5 py-3.5 text-sm font-black focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Teléfono / WhatsApp</label>
+              <label className="block text-xs font-medium text-surface-600">Teléfono / WhatsApp</label>
               <input 
                 value={formData.phone}
                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
                 title="Teléfono de contacto"
-                className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Dirección Matriz</label>
+              <label className="block text-xs font-medium text-surface-600">Dirección Matriz</label>
               <input 
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value.toUpperCase() })}
-                className="w-full bg-surface-50 border border-surface-200 rounded-2xl px-5 py-3.5 text-sm font-bold uppercase focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Identidad Visual (Logo)</label>
-              <div className="flex items-center gap-5 border-2 border-dashed border-surface-100 p-5 rounded-[24px] hover:bg-surface-50 transition-colors group">
-                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center overflow-hidden border border-surface-200 shadow-sm group-hover:scale-105 transition-transform">
+              <label className="block text-xs font-medium text-surface-600">Identidad Visual (Logo)</label>
+              <div className="flex items-center gap-4 border border-dashed border-surface-300 p-4 rounded-xl hover:bg-surface-50 transition-colors duration-150">
+                <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-surface-200 shrink-0">
                   {formData.logo ? (
                     <img src={formData.logo} alt="Logo" className="w-full h-full object-contain p-2" />
                   ) : (
-                    <ImageIcon className="w-10 h-10 text-surface-200" />
+                    <ImageIcon className="w-8 h-8 text-surface-300" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <input 
-                    type="file" 
-                    id="logo-upload" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    id="logo-upload"
+                    className="hidden"
                     accept="image/*"
                     onChange={handleLogoChange}
                   />
-                  <label 
-                    htmlFor="logo-upload" 
-                    className="cursor-pointer inline-flex px-4 py-2 bg-white border border-surface-200 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-primary-50 hover:text-primary-600 transition-all shadow-sm active:scale-95"
+                  <label
+                    htmlFor="logo-upload"
+                    className="cursor-pointer inline-flex px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150"
                   >
-                    Seleccionar Imagen
+                    Seleccionar imagen
                   </label>
-                  <p className="text-[10px] text-surface-400 mt-2 leading-tight">Formatos: PNG, JPG, SVG.<br/>Recomendado: Fondo transparente.</p>
+                  <p className="text-xs text-surface-500 mt-2 leading-snug">Formatos: PNG, JPG, SVG. Recomendado: fondo transparente.</p>
                 </div>
               </div>
             </div>
@@ -181,68 +175,68 @@ export const SettingsFeature: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-[32px] border border-surface-200 p-8 space-y-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-surface-200 p-6 space-y-5 shadow-xs">
             <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-surface-50 flex items-center justify-center text-surface-400 border border-surface-100">
+              <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500">
                 <Printer className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-bold text-surface-900">Configuración de Ticket</h2>
-                <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest">Hardware de Impresión</p>
+                <h2 className="text-sm font-semibold text-surface-900">Configuración de ticket</h2>
+                <p className="text-xs text-surface-500">Hardware de impresión</p>
               </div>
             </div>
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Ancho de Papel Predeterminado</label>
+              <label className="block text-xs font-medium text-surface-600">Ancho de Papel Predeterminado</label>
               <div className="grid grid-cols-3 gap-3">
                 {(['58mm', '80mm', 'A4'] as PrinterType[]).map(type => (
                   <button
                     key={type}
                     onClick={() => setFormData({ ...formData, printerType: type })}
-                    className={`px-4 py-3 border rounded-2xl text-center transition-all text-xs font-black uppercase tracking-tighter active:scale-95 ${
-                      formData.printerType === type 
-                        ? 'border-primary-600 bg-primary-50 text-primary-700 shadow-sm' 
-                        : 'border-surface-200 text-surface-500 hover:bg-surface-50'
+                    className={`px-4 py-2.5 border rounded-lg text-center transition-colors duration-150 text-sm font-medium ${
+                      formData.printerType === type
+                        ? 'border-surface-900 bg-surface-900 text-white'
+                        : 'border-surface-300 text-surface-600 hover:border-surface-400'
                     }`}
                   >
                     {type}
                   </button>
                 ))}
               </div>
-              <div className="bg-blue-50/50 p-4 rounded-2xl flex gap-3 border border-blue-100">
-                <Info className="w-5 h-5 text-blue-400 shrink-0" />
-                <p className="text-[11px] text-blue-700 leading-tight italic">
+              <div className="bg-primary-50/50 p-3.5 rounded-lg flex gap-2.5 border border-primary-100">
+                <Info className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-surface-600 leading-snug">
                   Esta configuración se aplicará automáticamente a todos los formatos de impresión térmica del sistema.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-[32px] border border-surface-200 p-8 space-y-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-surface-200 p-6 space-y-5 shadow-xs">
             <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-surface-50 flex items-center justify-center text-surface-400 border border-surface-100">
+              <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-bold text-surface-900">Mensajería Automática</h2>
-                <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest">Plantillas de WhatsApp</p>
+                <h2 className="text-sm font-semibold text-surface-900">Mensajería automática</h2>
+                <p className="text-xs text-surface-500">Plantillas de WhatsApp</p>
               </div>
             </div>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                 <label className="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Estructura del Mensaje</label>
-                <textarea 
-                  className="w-full p-5 bg-surface-50 border border-surface-200 rounded-[24px] focus:ring-4 focus:ring-primary-500/10 outline-none text-sm font-medium leading-relaxed min-h-[160px]"
+                 <label className="block text-xs font-medium text-surface-600">Estructura del Mensaje</label>
+                <textarea
+                  className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none text-sm leading-relaxed min-h-[160px]"
                   value={formData.whatsappTemplate}
                   onChange={e => setFormData({ ...formData, whatsappTemplate: e.target.value })}
                   placeholder="Escribe el mensaje aquí..."
                   title="WhatsApp Notification Template"
                 />
               </div>
-              <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-100">
-                <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-3">Marcadores Dinámicos:</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-surface-50 rounded-lg p-3.5 border border-surface-200">
+                <p className="text-xs font-medium text-surface-600 mb-2.5">Marcadores dinámicos:</p>
+                <div className="flex flex-wrap gap-1.5">
                   {['{{customer}}', '{{device}}', '{{model}}', '{{status}}', '{{orderNumber}}', '{{total}}', '{{abono}}', '{{saldo}}'].map(tag => (
-                    <code key={tag} className="bg-white px-2.5 py-1 rounded-lg border border-amber-200 text-[10px] font-mono font-bold text-amber-700 select-all hover:bg-amber-100 transition-colors">
+                    <code key={tag} className="bg-white px-2 py-0.5 rounded border border-surface-200 text-xs font-mono text-surface-700 select-all hover:bg-surface-100 transition-colors duration-150">
                       {tag}
                     </code>
                   ))}
