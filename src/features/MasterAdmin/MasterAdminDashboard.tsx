@@ -80,7 +80,7 @@ export const MasterAdminDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-gray-900">{user?.username}</p>
+              <p className="text-sm font-semibold text-gray-900">{user?.nombre || user?.email}</p>
               <p className="text-xs text-blue-600 font-medium">Master Admin</p>
             </div>
             <button

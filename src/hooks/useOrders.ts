@@ -49,28 +49,24 @@ export function useOrders() {
   }, []);
 
   /**
-   * Registra un nuevo ingreso de equipo en la BD.
-   * Devuelve la orden creada con el ID asignado por MariaDB.
+   * Registra un nuevo ingreso de equipo (REP) o nota de venta (NT).
+   * El número de orden lo asigna el SERVIDOR (contador por tenant) —
+   * el cliente nunca lo genera.
    */
-  const addOrder = useCallback(async (data: DeviceCheckInForm, prefix: string = 'REP'): Promise<ServiceOrder> => {
-    const orderNumber = `${prefix}-${Math.floor(Math.random() * 900000) + 100000}`;
-    
-    // Unimos los datos recibidos (que pueden traer flags extra como skipIncomeRecord) 
-    // con los campos requeridos para la orden.
-    const orderToSave: Omit<ServiceOrder, 'id' | 'createdAt'> & { paymentMethod?: string; skipIncomeRecord?: boolean } = {
+  const addOrder = useCallback(async (data: DeviceCheckInForm, kind: 'REP' | 'NT' = 'REP'): Promise<ServiceOrder> => {
+    const orderToSave: Omit<ServiceOrder, 'id' | 'createdAt' | 'orderNumber'> & { paymentMethod?: string; skipIncomeRecord?: boolean } = {
       ...data,
-      orderNumber,
-      status:   'recibido' as OrderStatus
+      status: 'recibido' as OrderStatus
     };
 
     dbg('addOrder', '→ payload enviado:', JSON.stringify(orderToSave, null, 2));
 
     try {
-      const result = await OrderService.saveOrder(orderToSave);
+      const result = await OrderService.saveOrder(orderToSave, kind);
       dbg('addOrder', '← respuesta DB:', result);
 
       if (result.status === 'success') {
-        const newOrder: ServiceOrder = {
+        const newOrder: ServiceOrder = result.order ?? {
           id:          result.id,
           orderNumber: result.orderNumber,
           customer:    data.customer,

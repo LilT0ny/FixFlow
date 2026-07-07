@@ -1,15 +1,15 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '../../lib/supabase';
-import type { AuthUser } from '../../services/SaaSAuthService';
+import { UserService, type AuthUser, type UserRole } from '../../services/SaaSAuthService';
 
 export interface TenantUser extends AuthUser {
   activo: boolean;
 }
 
 interface CreateUserPayload {
-  username: string;
+  email: string;
   password: string;
-  role: 'admin' | 'user' | 'technician';
+  nombre?: string;
+  role?: UserRole;
 }
 
 export function useTenantUsers(tenantId: string | null) {
@@ -22,12 +22,9 @@ export function useTenantUsers(tenantId: string | null) {
     setLoading(true);
     setError(null);
     try {
-      // Usamos RPC porque la tabla usuarios tiene RLS USING(FALSE)
-      const { data, error: err } = await supabase.rpc('get_tenant_users', {
-        p_tenant_id: tenantId,
-      });
-      if (err) throw err;
-      setUsers((data || []) as TenantUser[]);
+      // RLS: master lee usuarios de cualquier tenant; owner los de su taller
+      const data = await UserService.getUsersByTenant(tenantId);
+      setUsers(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error cargando usuarios');
     } finally {
@@ -37,32 +34,24 @@ export function useTenantUsers(tenantId: string | null) {
 
   const createUser = useCallback(async (input: CreateUserPayload) => {
     if (!tenantId) throw new Error('No hay tenant seleccionado');
-    const { data, error: err } = await supabase.rpc('create_user', {
-      p_username: input.username.toLowerCase(),
-      p_password: input.password,
-      p_role: input.role,
-      p_tenant_id: tenantId,
+    const user = await UserService.createUser({
+      email: input.email,
+      password: input.password,
+      nombre: input.nombre,
+      role: input.role || 'member',
+      tenant_id: tenantId,
     });
-    if (err) throw err;
     await fetchUsers();
-    return data?.[0];
+    return user;
   }, [tenantId, fetchUsers]);
 
   const deactivateUser = useCallback(async (userId: string) => {
-    const { error: err } = await supabase.rpc('set_user_active', {
-      p_user_id: userId,
-      p_activo: false,
-    });
-    if (err) throw err;
+    await UserService.setUserActive(userId, false);
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, activo: false } : u));
   }, []);
 
   const activateUser = useCallback(async (userId: string) => {
-    const { error: err } = await supabase.rpc('set_user_active', {
-      p_user_id: userId,
-      p_activo: true,
-    });
-    if (err) throw err;
+    await UserService.setUserActive(userId, true);
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, activo: true } : u));
   }, []);
 

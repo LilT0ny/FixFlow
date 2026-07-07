@@ -162,10 +162,9 @@ export const useDeviceList = () => {
       const saldo = total - abono;
 
       if (newStatus === 'entregado') {
-        // Solo guardamos el pago manual del saldo si NO vamos a generar una Nota de Venta.
-        // Si generamos Nota de Venta, la propia creación de la Nota (NT) registrará el ingreso 
-        // con la numeración de nota correspondiente, evitando el duplicado.
-        if (saldo > 0 && !generateSalesNote) {
+        // El abono inicial ya generó su ingreso al crear la orden; al entregar,
+        // lo que entra en caja es el SALDO pendiente — siempre, con o sin nota.
+        if (saldo > 0) {
           await PaymentService.savePayment({
             amount: saldo,
             method: paymentMethod as 'efectivo' | 'transferencia',
@@ -178,6 +177,8 @@ export const useDeviceList = () => {
         }
 
         // AUTO-GENERAR NOTA DE VENTA (NT) SI SE SOLICITÓ
+        // La nota es un DOCUMENTO para el cliente: detalla el total, pero no
+        // registra ingreso (skipIncomeRecord) — la caja ya cuadra con abono + saldo.
         if (generateSalesNote) {
           const description = `REPARACIÓN: ${currentOrder.device?.brand} ${currentOrder.device?.model} - ${currentOrder.repair.reportedIssue}`;
           await addOrder({
@@ -189,7 +190,7 @@ export const useDeviceList = () => {
               evidencePhotos: []
             },
             paymentMethod: paymentMethod,
-            skipIncomeRecord: false // Queremos que este sea el único ingreso registrado (el del ticket)
+            skipIncomeRecord: true
           } as DeviceCheckInForm & { paymentMethod: string; skipIncomeRecord: boolean }, 'NT');
         }
       }

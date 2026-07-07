@@ -9,12 +9,12 @@ interface CreateUserModalProps {
 }
 
 export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClose, onUserCreated }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [nombre, setNombre] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [role, setRole] = useState<'user' | 'technician' | 'admin'>('user');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,13 +25,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
     setSuccess('');
 
     // Validaciones
-    if (!username.trim()) {
-      setError('El usuario es requerido');
-      return;
-    }
-
-    if (username.length < 3) {
-      setError('El usuario debe tener al menos 3 caracteres');
+    if (!email.trim()) {
+      setError('El correo es requerido');
       return;
     }
 
@@ -52,20 +47,23 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
 
     setIsLoading(true);
     try {
+      // El owner crea miembros de su taller; el miembro deberá cambiar
+      // esta contraseña temporal en su primer ingreso.
       const result = await UserManagementService.createUser({
-        username: username.trim().toLowerCase(),
+        email: email.trim().toLowerCase(),
+        nombre: nombre.trim(),
         password,
-        role,
+        role: 'member',
       });
 
       if (result) {
-        setSuccess(`Usuario "${result.username}" creado exitosamente`);
+        setSuccess(`Usuario "${result.email}" creado exitosamente`);
         // Limpiar formulario
-        setUsername('');
+        setEmail('');
+        setNombre('');
         setPassword('');
         setConfirmPassword('');
-        setRole('user');
-        
+
         // Cerrar modal después de 1.5 segundos
         setTimeout(() => {
           onClose();
@@ -129,20 +127,34 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username */}
+              {/* Email */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-surface-600">
-                  Usuario del Sistema
+                  Correo del miembro
                 </label>
                 <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                  placeholder="Ej. julio_repair"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                  placeholder="Ej. julio@taller.com"
                   disabled={isLoading}
                   className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
                 />
-                <p className="text-[9px] text-surface-400">Mín. 3 caracteres, solo letras y números</p>
+              </div>
+
+              {/* Nombre */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-surface-600">
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Ej. Julio Pérez"
+                  disabled={isLoading}
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
+                />
               </div>
 
               {/* Password */}
@@ -194,36 +206,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                 </div>
               </div>
 
-              {/* Role */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-surface-600">
-                  Rol
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['user', 'technician', 'admin'] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      disabled={isLoading}
-                      className={`px-3 py-2 border rounded-lg text-center transition-colors duration-150 text-sm font-medium disabled:opacity-50 ${
-                        role === r
-                          ? 'border-surface-900 bg-surface-900 text-white'
-                          : 'border-surface-300 text-surface-600 hover:border-surface-400'
-                      }`}
-                    >
-                      {r === 'user' && 'Usuario'}
-                      {r === 'technician' && 'Técnico'}
-                      {r === 'admin' && 'Admin'}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[9px] text-surface-400">
-                  {role === 'admin' && 'Acceso completo al sistema'}
-                  {role === 'technician' && 'Solo órdenes y clientes'}
-                  {role === 'user' && 'Acceso limitado'}
-                </p>
-              </div>
+              <p className="text-xs text-surface-500 bg-surface-50 border border-surface-200 rounded-lg p-3">
+                El miembro ingresará con esta contraseña temporal y el sistema le pedirá cambiarla en su primer inicio de sesión.
+              </p>
 
               {/* Buttons */}
               <div className="flex gap-3 pt-4">

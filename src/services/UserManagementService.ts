@@ -1,135 +1,83 @@
 import { supabase } from '../lib/supabase';
+import { UserService, type UserRole } from './SaaSAuthService';
 
 export interface CreateUserRequest {
-  username: string;
+  email: string;
   password: string;
-  role?: string;
+  nombre?: string;
+  role?: UserRole;
+  tenant_id?: string | null;
 }
 
 export interface CreateUserResponse {
   id: string;
-  username: string;
+  email: string;
   role: string;
   success: boolean;
 }
 
 export const UserManagementService = {
   /**
-   * Crea un nuevo usuario en el sistema.
-   * La contraseña se hashea con bcrypt via pgcrypto en el servidor.
+   * Crea un nuevo usuario vía Edge Function `create-user` (el admin API
+   * de Supabase Auth requiere service role, que jamás toca el navegador).
+   * El usuario nace con contraseña temporal y debe_cambiar_password=true.
    */
   async createUser(request: CreateUserRequest): Promise<CreateUserResponse | null> {
-    try {
-      // Validar entrada
-      if (!request.username || !request.password) {
-        throw new Error('Usuario y contraseña son requeridos');
-      }
-
-      if (request.username.length < 3) {
-        throw new Error('El usuario debe tener al menos 3 caracteres');
-      }
-
-      if (request.password.length < 8) {
-        throw new Error('La contraseña debe tener al menos 8 caracteres');
-      }
-
-      // Llamar a la función RPC para crear el usuario
-      const { data, error } = await supabase.rpc('create_user', {
-        p_username: request.username.trim().toLowerCase(),
-        p_password: request.password,
-        p_role: request.role || 'user',
-      });
-
-      if (error) {
-        console.error('[UserManagementService] Error en RPC create_user:', error.message);
-        
-        // Detectar errores específicos
-        if (error.message.includes('duplicate')) {
-          throw new Error('El usuario ya existe');
-        }
-        throw new Error('Error al crear el usuario. Intenta de nuevo.');
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error('Error al crear el usuario');
-      }
-
-      const user = data[0];
-      return {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        success: true,
-      };
-    } catch (err) {
-      console.error('[UserManagementService] Error:', err);
-      throw err;
+    if (!request.email || !request.password) {
+      throw new Error('Correo y contraseña son requeridos');
     }
+    if (request.password.length < 8) {
+      throw new Error('La contraseña debe tener al menos 8 caracteres');
+    }
+
+    const user = await UserService.createUser({
+      email: request.email,
+      password: request.password,
+      nombre: request.nombre,
+      role: request.role || 'member',
+      tenant_id: request.tenant_id,
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      success: true,
+    };
   },
 
   /**
-   * Obtiene la lista de todos los usuarios (solo para admins)
+   * Lista los usuarios visibles para la sesión actual
+   * (RLS: owner ve su taller, master ve todos).
    */
-  async listUsers(): Promise<Array<{ id: string; username: string; role: string; activo: boolean; created_at: string }> | null> {
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('id, username, role, activo, created_at')
-        .order('created_at', { ascending: false });
+  async listUsers(): Promise<Array<{ id: string; email: string; nombre: string; role: string; activo: boolean; created_at: string }> | null> {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, email, nombre, rol, activo, created_at')
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('[UserManagementService] Error listando usuarios:', error.message);
-        throw new Error('Error al obtener usuarios');
-      }
-
-      return data || [];
-    } catch (err) {
-      console.error('[UserManagementService] Error:', err);
-      throw err;
+    if (error) {
+      console.error('[UserManagementService] Error listando usuarios:', error.message);
+      throw new Error('Error al obtener usuarios');
     }
+
+    return (data || []).map(u => ({
+      id: u.id,
+      email: u.email,
+      nombre: u.nombre,
+      role: u.rol,
+      activo: u.activo,
+      created_at: u.created_at,
+    }));
   },
 
-  /**
-   * Desactiva un usuario (no lo elimina)
-   */
   async deactivateUser(userId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('usuarios')
-        .update({ activo: false })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('[UserManagementService] Error desactivando usuario:', error.message);
-        throw new Error('Error al desactivar usuario');
-      }
-
-      return true;
-    } catch (err) {
-      console.error('[UserManagementService] Error:', err);
-      throw err;
-    }
+    await UserService.setUserActive(userId, false);
+    return true;
   },
 
-  /**
-   * Reactiva un usuario desactivado
-   */
   async activateUser(userId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('usuarios')
-        .update({ activo: true })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('[UserManagementService] Error activando usuario:', error.message);
-        throw new Error('Error al activar usuario');
-      }
-
-      return true;
-    } catch (err) {
-      console.error('[UserManagementService] Error:', err);
-      throw err;
-    }
+    await UserService.setUserActive(userId, true);
+    return true;
   },
 };

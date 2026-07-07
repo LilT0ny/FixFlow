@@ -1,32 +1,25 @@
 // src/services/ClientService.ts
 import { supabase } from '../lib/supabase';
-import { AuthService } from './SaaSAuthService';
 import type { CustomerData } from '../types';
 
 export interface Client extends CustomerData {
   id: string;
 }
 
-/** Helper: obtiene el tenant_id de la sesión actual */
-function getCurrentTenantId(): string | null {
-  return AuthService.getCurrentTenantId();
-}
-
 export const ClientService = {
   /**
-   * Obtiene la lista completa de clientes del tenant actual.
+   * Obtiene la lista completa de clientes (RLS filtra por tenant).
    */
   async getAllClients(): Promise<Client[]> {
-    const tenantId = getCurrentTenantId();
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .order('nombre_completo', { ascending: true });
 
-    let query = supabase.from('clientes').select('*').order('nombre_completo', { ascending: true });
-    if (tenantId) query = query.eq('tenant_id', tenantId);
-
-    const { data, error } = await query;
     if (error) throw error;
 
     return (data || []).map(c => ({
-      id: c.id.toString(),
+      id: c.id,
       fullName: c.nombre_completo,
       documentId: c.cedula,
       phone: c.telefono,
@@ -36,32 +29,29 @@ export const ClientService = {
   },
 
   /**
-   * Guarda o actualiza un cliente (con tenant_id).
+   * Guarda o actualiza un cliente. La cédula es única POR TALLER:
+   * el conflicto se resuelve contra (tenant_id, cedula) y el tenant_id
+   * lo pone el default del servidor.
    */
   async saveClient(client: Client | Omit<Client, 'id'>): Promise<{ status: string; id: string }> {
-    const tenantId = getCurrentTenantId();
-
-    const payload: Record<string, unknown> = {
-      nombre_completo: client.fullName,
-      cedula: client.documentId,
-      telefono: client.phone,
-      direccion: client.address,
-      email: client.email
-    };
-    if (tenantId) payload.tenant_id = tenantId;
-
     const { data, error } = await supabase
       .from('clientes')
-      .upsert(payload, { onConflict: 'cedula' })
+      .upsert({
+        nombre_completo: client.fullName,
+        cedula: client.documentId,
+        telefono: client.phone || '',
+        direccion: client.address,
+        email: client.email || null
+      }, { onConflict: 'tenant_id,cedula' })
       .select()
       .single();
 
     if (error) throw error;
-    return { status: 'success', id: data.id.toString() };
+    return { status: 'success', id: data.id };
   },
 
   /**
-   * Elimina un cliente por su ID.
+   * Elimina un cliente por su ID (RLS: solo el owner del taller puede borrar).
    */
   async deleteClient(id: string): Promise<{ status: string }> {
     const { error } = await supabase

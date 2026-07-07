@@ -1,47 +1,50 @@
 // src/services/StorageService.ts
 import { supabase } from '../lib/supabase';
+import { AuthService } from './SaaSAuthService';
 
-const STORAGE_BUCKET = 'evidence-photos';
+const STORAGE_BUCKET = 'evidencias';
+
+/**
+ * Convención de path: {tenant_id}/{archivo} — las policies de storage
+ * solo permiten subir/borrar dentro de la carpeta del propio taller.
+ */
+function tenantFolder(): string {
+  const tenantId = AuthService.getCurrentTenantId();
+  if (!tenantId) throw new Error('Sesión sin taller activo: no se puede subir archivos');
+  return tenantId;
+}
 
 /**
  * Sube una imagen a Supabase Storage y devuelve la URL pública
  */
 export const uploadPhoto = async (file: File, orderId?: string, stage?: string): Promise<string> => {
-  try {
-    // Generar nombre de archivo único
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 8);
-    const extension = file.name.split('.').pop() || 'jpg';
-    const fileName = `${orderId || 'temp'}_${stage || 'general'}_${timestamp}_${randomId}.${extension}`;
-    
-    // Subir el archivo
-    const { error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type,
-      });
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 8);
+  const extension = file.name.split('.').pop() || 'jpg';
+  const fileName = `${tenantFolder()}/${orderId || 'temp'}_${stage || 'general'}_${timestamp}_${randomId}.${extension}`;
 
-    if (error) {
-      console.error('Error uploading to Supabase Storage:', error);
-      throw new Error(`Error al subir la foto: ${error.message}`);
-    }
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    });
 
-    // Obtener la URL pública
-    const { data: urlData } = supabase.storage
-      .from(STORAGE_BUCKET)
-      .getPublicUrl(fileName);
-
-    if (!urlData?.publicUrl) {
-      throw new Error('No se pudo obtener la URL de la foto');
-    }
-
-    return urlData.publicUrl;
-  } catch (error) {
-    console.error('Error in uploadPhoto:', error);
-    throw error;
+  if (error) {
+    console.error('Error uploading to Supabase Storage:', error);
+    throw new Error(`Error al subir la foto: ${error.message}`);
   }
+
+  const { data: urlData } = supabase.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(fileName);
+
+  if (!urlData?.publicUrl) {
+    throw new Error('No se pudo obtener la URL de la foto');
+  }
+
+  return urlData.publicUrl;
 };
 
 /**
@@ -49,40 +52,36 @@ export const uploadPhoto = async (file: File, orderId?: string, stage?: string):
  */
 export const uploadPhotos = async (files: File[], orderId?: string): Promise<string[]> => {
   const urls: string[] = [];
-  
+
   for (const file of files) {
     const url = await uploadPhoto(file, orderId);
     urls.push(url);
   }
-  
+
   return urls;
 };
 
 /**
- * Elimina una foto de Supabase Storage usando su URL
+ * Elimina una foto de Supabase Storage usando su URL.
+ * El path dentro del bucket incluye la carpeta del tenant.
  */
 export const deletePhoto = async (photoUrl: string): Promise<void> => {
-  try {
-    // Extraer el nombre del archivo de la URL
-    const urlParts = photoUrl.split('/');
-    const fileName = urlParts[urlParts.length - 1];
-    
-    if (!fileName) {
-      console.warn('Could not extract filename from URL:', photoUrl);
-      return;
-    }
+  const marker = `/${STORAGE_BUCKET}/`;
+  const idx = photoUrl.indexOf(marker);
+  const filePath = idx >= 0 ? photoUrl.slice(idx + marker.length) : '';
 
-    const { error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .remove([fileName]);
+  if (!filePath) {
+    console.warn('Could not extract file path from URL:', photoUrl);
+    return;
+  }
 
-    if (error) {
-      console.error('Error deleting from Supabase Storage:', error);
-      throw new Error(`Error al eliminar la foto: ${error.message}`);
-    }
-  } catch (error) {
-    console.error('Error in deletePhoto:', error);
-    throw error;
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .remove([filePath]);
+
+  if (error) {
+    console.error('Error deleting from Supabase Storage:', error);
+    throw new Error(`Error al eliminar la foto: ${error.message}`);
   }
 };
 
@@ -102,7 +101,7 @@ export const checkStorageBucket = async (): Promise<boolean> => {
   try {
     const { error } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .list('', { limit: 1 });
+      .list(tenantFolder(), { limit: 1 });
 
     if (error) {
       console.warn('Storage bucket not accessible:', error);

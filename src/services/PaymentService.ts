@@ -1,89 +1,59 @@
 // src/services/PaymentService.ts
 import { supabase } from '../lib/supabase';
-import { AuthService } from './SaaSAuthService';
-import type { PaymentTransaction, TransactionType } from '../types';
-
-/** Helper: obtiene el tenant_id de la sesión actual */
-function getCurrentTenantId(): string | null {
-  return AuthService.getCurrentTenantId();
-}
+import type { PaymentTransaction } from '../types';
 
 export const PaymentService = {
   /**
-   * Obtiene todas las transacciones del tenant actual (ingresos + egresos).
+   * Obtiene todas las transacciones del tenant (RLS filtra).
+   * Ingresos y egresos viven en UNA tabla: transacciones.
    */
   async getPayments(): Promise<PaymentTransaction[]> {
-    const tenantId = getCurrentTenantId();
+    const { data, error } = await supabase
+      .from('transacciones')
+      .select('*')
+      .order('fecha', { ascending: false });
 
-    let ingQuery = supabase.from('ingresos').select('*').order('fecha', { ascending: false });
-    let egrQuery = supabase.from('egresos').select('*').order('fecha', { ascending: false });
+    if (error) throw error;
 
-    if (tenantId) {
-      ingQuery = ingQuery.eq('tenant_id', tenantId);
-      egrQuery = egrQuery.eq('tenant_id', tenantId);
-    }
-
-    const [ingRes, egrRes] = await Promise.all([ingQuery, egrQuery]);
-
-    if (ingRes.error) throw ingRes.error;
-    if (egrRes.error) throw egrRes.error;
-
-    const ingresos = (ingRes.data || []).map(t => ({
-      id: t.id.toString(),
+    return (data || []).map(t => ({
+      id: t.id,
       date: t.fecha,
       amount: Number(t.monto),
       method: t.metodo,
-      type: t.tipo,
-      transactionType: 'ingreso' as TransactionType,
+      type: t.categoria,
+      transactionType: t.tipo,
       description: t.descripcion,
-      orderId: t.id_orden?.toString()
+      orderId: t.orden_id ?? undefined,
     }));
-
-    const egresos = (egrRes.data || []).map(t => ({
-      id: t.id.toString(),
-      date: t.fecha,
-      amount: Number(t.monto),
-      method: t.metodo,
-      type: t.tipo,
-      transactionType: 'egreso' as TransactionType,
-      description: t.descripcion
-    }));
-
-    return [...ingresos, ...egresos].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    ) as PaymentTransaction[];
   },
 
   /**
-   * Guarda una nueva transacción con tenant_id.
+   * Guarda una transacción. tenant_id y registrado_por los pone el
+   * servidor (defaults + RLS). Un egreso jamás lleva orden/cliente:
+   * lo garantiza el CHECK egreso_sin_vinculos.
    */
   async savePayment(paymentData: Partial<PaymentTransaction>): Promise<{ status: string; id: string; message?: string }> {
-    const tenantId = getCurrentTenantId();
-
     try {
-      const table = paymentData.transactionType === 'ingreso' ? 'ingresos' : 'egresos';
-      
       const payload: Record<string, unknown> = {
+        tipo: paymentData.transactionType,
         monto: Number(paymentData.amount),
         metodo: paymentData.method,
-        tipo: paymentData.type,
-        descripcion: paymentData.description,
+        categoria: paymentData.type,
+        descripcion: paymentData.description || '',
       };
 
-      if (paymentData.transactionType === 'ingreso') {
-        payload.id_orden = paymentData.orderId;
+      if (paymentData.transactionType === 'ingreso' && paymentData.orderId) {
+        payload.orden_id = paymentData.orderId;
       }
 
-      if (tenantId) payload.tenant_id = tenantId;
-
       const { data, error } = await supabase
-        .from(table)
+        .from('transacciones')
         .insert(payload)
         .select()
         .single();
 
       if (error) throw error;
-      return { status: 'success', id: data.id.toString() };
+      return { status: 'success', id: data.id };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
       return { status: 'error', id: '', message: msg };

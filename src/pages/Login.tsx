@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../store/AppContext';
-import { Lock, User, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
 
 export const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAppContext();
@@ -24,24 +23,24 @@ export const Login = () => {
     e.preventDefault();
     setError('');
 
-    if (!username.trim() || !password) {
+    if (!email.trim() || !password) {
       setError('Por favor completa todos los campos.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const success = await login(username, password, rememberMe);
-      if (success) {
-        // Leer la sesión guardada para determinar a dónde ir
-        const session = (await import('../services/SaaSAuthService')).AuthService.getSession();
-        if (session?.is_master) {
+      const user = await login(email, password);
+      if (user) {
+        if (user.debe_cambiar_password) {
+          navigate('/change-password');
+        } else if (user.is_master) {
           navigate('/master/dashboard');
         } else {
           navigate('/');
         }
       } else {
-        setError('Usuario o contraseña incorrectos.');
+        setError('Correo o contraseña incorrectos.');
       }
     } catch {
       setError('Error de conexión. Intenta de nuevo más tarde.');
@@ -74,20 +73,20 @@ export const Login = () => {
 
           <form className="space-y-5" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-surface-700 mb-1.5">Usuario</label>
+              <label htmlFor="email" className="block text-sm font-medium text-surface-700 mb-1.5">Correo</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
-                  <User className="h-4 w-4" />
+                  <Mail className="h-4 w-4" />
                 </div>
                 <input
-                  id="username"
-                  type="text"
+                  id="email"
+                  type="email"
                   required
-                  autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                  placeholder="Ej. admin_repair"
+                  placeholder="tu@taller.com"
                   disabled={isLoading}
                 />
               </div>
@@ -119,25 +118,6 @@ export const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center group cursor-pointer select-none">
-                <div className="relative flex items-center justify-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="peer appearance-none h-4.5 w-4.5 bg-white border border-surface-300 rounded checked:bg-primary-600 checked:border-primary-600 transition-colors duration-150 cursor-pointer"
-                  />
-                  <CheckCircle className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
-                </div>
-                <span className="ml-2.5 text-sm text-surface-600 group-hover:text-surface-900 transition-colors duration-150">
-                  Mantener mi sesión iniciada
-                </span>
-              </label>
             </div>
 
             {error && (

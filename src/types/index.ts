@@ -32,7 +32,7 @@ export interface DeviceCheckInForm {
   repair: RepairDetails;
 }
 
-export type OrderStatus = 'recibido' | 'diagnostico' | 'esperando_repuestos' | 'listo' | 'entregado';
+export type OrderStatus = 'recibido' | 'diagnostico' | 'esperando_repuestos' | 'listo' | 'entregado' | 'no_reparado';
 
 export interface ServiceOrder {
   id: string;
@@ -82,5 +82,6 @@ export interface BusinessSettings {
   phone: string;
   address: string;
   ruc: string;
+  termsConditions?: string;
 }
 

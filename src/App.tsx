@@ -9,6 +9,7 @@ import { CashRegisterFeature } from './features/CashRegister/CashRegisterFeature
 import { ReportsFeature } from './features/Reports/ReportsFeature';
 import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
+import { ChangePassword } from './pages/ChangePassword';
 import { RegistrationFeature } from './features/Registration/RegistrationFeature';
 import { SalesNotesFeature } from './features/Sales/SalesNotesFeature';
 import { ClientsFeature } from './features/Clients/ClientsFeature';
@@ -16,7 +17,9 @@ import { SettingsFeature } from './features/Settings/SettingsFeature';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAppContext();
+  const { isAuthenticated, authUser, authLoading } = useAppContext();
+  if (authLoading) return null; // esperar restauración de sesión antes de decidir
+  if (authUser?.debe_cambiar_password) return <Navigate to="/change-password" replace />;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
@@ -30,6 +33,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             {/* Redirigir /saas-login al login unificado */}
             <Route path="/saas-login" element={<Navigate to="/login" replace />} />
+            <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/status/:id" element={<ClientStatus />} />
 
             {/* Master Admin routes */}

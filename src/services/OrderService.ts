@@ -1,12 +1,6 @@
 // src/services/OrderService.ts
 import { supabase } from '../lib/supabase';
-import { AuthService } from './SaaSAuthService';
 import type { ServiceOrder, EvidencePhoto, OrderStatus, DeviceCheckInForm } from '../types';
-
-/** Helper: obtiene el tenant_id de la sesión actual */
-function getCurrentTenantId(): string | null {
-  return AuthService.getCurrentTenantId();
-}
 
 /** Tipos de respuesta para mantener compatibilidad */
 interface SaveOrderResponse {
@@ -29,6 +23,59 @@ export interface OrderCreationPayload extends DeviceCheckInForm {
   skipIncomeRecord?: boolean;
 }
 
+/** Select con todos los embeds del esquema v2: cliente vía dispositivo,
+ *  trabajos + transacciones para calcular total/abonado. */
+const ORDER_SELECT = `
+  *,
+  dispositivo:dispositivo_id (*, cliente:cliente_id (*)),
+  fotos:fotos_evidencia (*),
+  trabajos:orden_trabajo (id, descripcion, costo),
+  pagos:transacciones (monto, tipo)
+`;
+
+type OrderRow = Record<string, any>;
+
+function mapOrder(order: OrderRow): ServiceOrder {
+  const trabajos: { costo: number }[] = order.trabajos || [];
+  const pagos: { monto: number; tipo: string }[] = order.pagos || [];
+  const total = trabajos.reduce((sum, t) => sum + Number(t.costo), 0);
+  const abonado = pagos
+    .filter(p => p.tipo === 'ingreso')
+    .reduce((sum, p) => sum + Number(p.monto), 0);
+  const cliente = order.dispositivo?.cliente;
+
+  return {
+    id: order.id,
+    orderNumber: order.numero_orden,
+    status: order.estado,
+    createdAt: order.created_at,
+    deleted: order.deleted_at != null,
+    customer: {
+      fullName: cliente?.nombre_completo || 'Cliente Desconocido',
+      documentId: cliente?.cedula || '',
+      phone: cliente?.telefono || '',
+      address: cliente?.direccion || '',
+      email: cliente?.email || '',
+    },
+    device: order.dispositivo ? {
+      brand: order.dispositivo.marca,
+      model: order.dispositivo.modelo,
+      serialNumber: order.dispositivo.imei_sn || '',
+      deviceType: order.dispositivo.tipo,
+      physicalCondition: order.dispositivo.estado_fisico,
+    } : undefined,
+    repair: {
+      reportedIssue: order.falla_reportada,
+      repairTotalCost: total,
+      initialDeposit: abonado,
+      evidencePhotos: (order.fotos || []).map((f: { etapa: EvidencePhoto['stage']; url_foto: string }) => ({
+        stage: f.etapa,
+        url: f.url_foto,
+      })),
+    },
+  };
+}
+
 export const OrderService = {
   /**
    * Helper privado para obtener una orden completa (con joins) por su ID.
@@ -36,68 +83,23 @@ export const OrderService = {
   async _getOrderById(id: string): Promise<ServiceOrder | null> {
     const { data: order, error } = await supabase
       .from('ordenes_servicio')
-      .select(`
-        *,
-        cliente:id_cliente (*),
-        dispositivo:id_dispositivo (
-          *,
-          cliente:id_cliente (*)
-        ),
-        fotos:fotos_evidencia (*)
-      `)
+      .select(ORDER_SELECT)
       .eq('id', id)
       .single();
 
     if (error || !order) return null;
-
-    return {
-      id: order.id.toString(),
-      orderNumber: order.numero_orden,
-      status: order.estado,
-      createdAt: order.fecha_creacion,
-      deleted: order.eliminado,
-      customer: order.dispositivo?.cliente ? {
-        fullName: order.dispositivo.cliente.nombre_completo,
-        documentId: order.dispositivo.cliente.cedula,
-        phone: order.dispositivo.cliente.telefono,
-        address: order.dispositivo.cliente.direccion,
-        email: order.dispositivo.cliente.email,
-      } : {
-        fullName: order.cliente?.nombre_completo || 'Cliente Desconocido',
-        documentId: order.cliente?.cedula || '',
-        phone: order.cliente?.telefono || '',
-        address: order.cliente?.direccion || '',
-        email: order.cliente?.email || '',
-      },
-      device: order.dispositivo ? {
-        brand: order.dispositivo.marca,
-        model: order.dispositivo.modelo,
-        serialNumber: order.dispositivo.imei_sn,
-        deviceType: order.dispositivo.tipo_dispositivo,
-        physicalCondition: order.dispositivo.estado_fisico,
-      } : undefined,
-      repair: {
-        reportedIssue: order.falla_reportada,
-        initialDeposit: Number(order.abono_inicial),
-        repairTotalCost: Number(order.costo_total_reparacion),
-        evidencePhotos: order.fotos ? (order.fotos as { etapa: EvidencePhoto['stage']; url_foto: string }[]).map((f) => ({
-          stage: f.etapa,
-          url: f.url_foto
-        })) : []
-      }
-    };
+    return mapOrder(order);
   },
 
   /**
-   * Busca un cliente por su número de cédula/RUC (filtrado por tenant).
+   * Busca un cliente por su número de cédula/RUC (RLS filtra por tenant).
    */
   async checkClientByCedula(cedula: string): Promise<{ found: boolean; client?: ServiceOrder['customer'] }> {
-    const tenantId = getCurrentTenantId();
-    
-    let query = supabase.from('clientes').select('*').eq('cedula', cedula);
-    if (tenantId) query = query.eq('tenant_id', tenantId);
-
-    const { data, error } = await query.maybeSingle();
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('cedula', cedula)
+      .maybeSingle();
 
     if (error) throw error;
 
@@ -117,192 +119,140 @@ export const OrderService = {
   },
 
   /**
-   * Obtiene todas las órdenes y notas de venta activas del tenant actual.
+   * Obtiene todas las órdenes y notas de venta activas (RLS filtra por tenant).
    */
   async getOrders(): Promise<ServiceOrder[]> {
-    const tenantId = getCurrentTenantId();
-
-    let repQuery = supabase.from('ordenes_servicio').select(`
-      *,
-      cliente:id_cliente (*),
-      dispositivo:id_dispositivo (*, cliente:id_cliente (*)),
-      fotos:fotos_evidencia (*)
-    `).eq('eliminado', 0).order('fecha_creacion', { ascending: false });
-
-    let ntQuery = supabase.from('notas_venta').select(`
-      *,
-      cliente:id_cliente (*)
-    `).eq('eliminado', 0).order('fecha_creacion', { ascending: false });
-
-    if (tenantId) {
-      repQuery = repQuery.eq('tenant_id', tenantId);
-      ntQuery = ntQuery.eq('tenant_id', tenantId);
-    }
-
-    const [repRes, ntRes] = await Promise.all([repQuery, ntQuery]);
+    const [repRes, ntRes] = await Promise.all([
+      supabase.from('ordenes_servicio')
+        .select(ORDER_SELECT)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
+      supabase.from('notas_venta')
+        .select(`*, cliente:cliente_id (*), items:nota_venta_item (descripcion, cantidad, precio_unitario)`)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
+    ]);
 
     if (repRes.error) throw repRes.error;
     if (ntRes.error) throw ntRes.error;
 
-    // Mapeo de Reparaciones usando el helper interno
-    const repairs = (repRes.data || []).map(order => this._mapOrder(order));
-    
-    // Mapeo de Notas de Venta simplificado
-    const sales = (ntRes.data || []).map(nt => ({
-      id: nt.id.toString(),
-      orderNumber: nt.numero_nota,
-      status: 'entregado' as OrderStatus,
-      createdAt: nt.fecha_creacion,
-      deleted: nt.eliminado === 1,
-      customer: {
-        fullName: nt.cliente?.nombre_completo || 'Cliente Desconocido',
-        documentId: nt.cliente?.cedula || '',
-        phone: nt.cliente?.telefono || '',
-        address: nt.cliente?.direccion || '',
-        email: nt.cliente?.email || '',
-      },
-      repair: {
-        reportedIssue: nt.descripcion_general || 'VENTA DIRECTA',
-        repairTotalCost: Number(nt.total),
-        initialDeposit: Number(nt.total),
-        evidencePhotos: []
-      }
-    }));
+    const repairs = (repRes.data || []).map(order => mapOrder(order));
 
-    return [...repairs, ...sales].sort((a, b) => 
+    const sales = (ntRes.data || []).map(nt => {
+      const items: { descripcion: string; cantidad: number; precio_unitario: number }[] = nt.items || [];
+      const total = items.reduce((sum, i) => sum + i.cantidad * Number(i.precio_unitario), 0);
+      return {
+        id: nt.id,
+        orderNumber: nt.numero_nota,
+        status: 'entregado' as OrderStatus,
+        createdAt: nt.created_at,
+        deleted: nt.deleted_at != null,
+        customer: {
+          fullName: nt.cliente?.nombre_completo || 'Cliente Desconocido',
+          documentId: nt.cliente?.cedula || '',
+          phone: nt.cliente?.telefono || '',
+          address: nt.cliente?.direccion || '',
+          email: nt.cliente?.email || '',
+        },
+        repair: {
+          reportedIssue: items.map(i => i.descripcion).join(', ') || 'VENTA DIRECTA',
+          repairTotalCost: total,
+          initialDeposit: total,
+          evidencePhotos: []
+        }
+      };
+    });
+
+    return [...repairs, ...sales].sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   },
 
   /**
-   * Registra una nueva orden (REP) o Nota de Venta (NT).
+   * Registra una nueva orden (REP) o Nota de Venta (NT) vía RPC transaccional.
+   * La numeración la asigna el servidor (contadores por tenant).
    */
-  async saveOrder(orderData: Omit<ServiceOrder, 'id' | 'createdAt'>): Promise<SaveOrderResponse> {
-    const tenantId = getCurrentTenantId();
-
+  async saveOrder(
+    orderData: Omit<ServiceOrder, 'id' | 'createdAt' | 'orderNumber'> & { orderNumber?: string },
+    kind: 'REP' | 'NT' = 'REP'
+  ): Promise<SaveOrderResponse> {
     try {
-      const isNT = orderData.orderNumber.startsWith('NT');
+      const method = (orderData as OrderCreationPayload).paymentMethod || 'efectivo';
 
-      // 1. Upsert del Cliente (con tenant_id)
-      const clientPayload: Record<string, unknown> = {
-        nombre_completo: orderData.customer.fullName,
-        cedula: orderData.customer.documentId,
-        telefono: orderData.customer.phone,
-        direccion: orderData.customer.address,
-        email: orderData.customer.email
-      };
-      if (tenantId) clientPayload.tenant_id = tenantId;
+      if (kind === 'NT') {
+        // Cliente opcional: si viene con cédula, upsert previo para vincularlo
+        let clienteId: string | null = null;
+        if (orderData.customer?.documentId) {
+          const { data: client, error: clientErr } = await supabase
+            .from('clientes')
+            .upsert({
+              nombre_completo: orderData.customer.fullName,
+              cedula: orderData.customer.documentId,
+              telefono: orderData.customer.phone || '',
+              direccion: orderData.customer.address,
+              email: orderData.customer.email || null,
+            }, { onConflict: 'tenant_id,cedula' })
+            .select('id')
+            .single();
+          if (clientErr) throw clientErr;
+          clienteId = client.id;
+        }
 
-      const { data: client, error: clientErr } = await supabase
-        .from('clientes')
-        .upsert(clientPayload, { onConflict: 'cedula' })
-        .select().single();
+        const { data, error } = await supabase.rpc('crear_nota_venta', {
+          p_items: [{
+            descripcion: orderData.repair.reportedIssue || 'VENTA DIRECTA',
+            cantidad: 1,
+            precio_unitario: Number(orderData.repair.repairTotalCost) || 0,
+          }],
+          p_metodo: method,
+          p_cliente_id: clienteId,
+          p_registrar_ingreso: !(orderData as OrderCreationPayload).skipIncomeRecord,
+        });
+        if (error) throw error;
 
-      if (clientErr) throw clientErr;
-
-      let resultId = '';
-
-      if (isNT) {
-        const method = (orderData as OrderCreationPayload).paymentMethod || 'efectivo';
-        const ntPayload: Record<string, unknown> = {
-          numero_nota: orderData.orderNumber,
-          id_cliente: client.id,
-          total: Number(orderData.repair.repairTotalCost),
-          descripcion_general: orderData.repair.reportedIssue,
-          metodo_pago: method
+        return {
+          status: 'success',
+          id: data.nota_id,
+          orderNumber: data.numero_nota,
         };
-        if (tenantId) ntPayload.tenant_id = tenantId;
-
-        const { data: nt, error: ntErr } = await supabase
-          .from('notas_venta')
-          .insert(ntPayload)
-          .select().single();
-        if (ntErr) throw ntErr;
-        resultId = nt.id;
-        
-        if (!(orderData as OrderCreationPayload).skipIncomeRecord) {
-          const ingPayload: Record<string, unknown> = {
-            monto: Number(orderData.repair.repairTotalCost),
-            metodo: method,
-            tipo: 'repuestos',
-            descripcion: `VENTA DIRECTA - NOTA #${orderData.orderNumber}`,
-            id_cliente: client.id
-          };
-          if (tenantId) ingPayload.tenant_id = tenantId;
-          await supabase.from('ingresos').insert(ingPayload);
-        }
-
-      } else {
-        // FLUJO REP
-        let deviceId = null;
-        if (orderData.device) {
-          const devPayload: Record<string, unknown> = {
-            id_cliente: client.id,
-            marca: orderData.device.brand,
-            modelo: orderData.device.model,
-            imei_sn: orderData.device.serialNumber,
-            tipo_dispositivo: orderData.device.deviceType,
-            estado_fisico: orderData.device.physicalCondition
-          };
-          if (tenantId) devPayload.tenant_id = tenantId;
-
-          const { data: dev, error: devErr } = await supabase
-            .from('dispositivos')
-            .insert(devPayload)
-            .select().single();
-          if (devErr) throw devErr;
-          deviceId = dev.id;
-        }
-
-        const abono = Number(orderData.repair.initialDeposit) || 0;
-        const orderPayload: Record<string, unknown> = {
-          numero_orden: orderData.orderNumber,
-          id_cliente: client.id,
-          id_dispositivo: deviceId,
-          falla_reportada: orderData.repair.reportedIssue,
-          costo_total_reparacion: Number(orderData.repair.repairTotalCost) || 0,
-          abono_inicial: abono,
-          estado: 'recibido'
-        };
-        if (tenantId) orderPayload.tenant_id = tenantId;
-
-        const { data: order, error: orderErr } = await supabase
-          .from('ordenes_servicio')
-          .insert(orderPayload)
-          .select().single();
-        if (orderErr) throw orderErr;
-        resultId = order.id;
-
-        if (abono > 0) {
-          const ingPayload: Record<string, unknown> = {
-            monto: abono,
-            metodo: 'efectivo',
-            tipo: 'reparacion',
-            descripcion: `ABONO INICIAL - ORDEN #${orderData.orderNumber}`,
-            id_orden: order.id,
-            id_cliente: client.id
-          };
-          if (tenantId) ingPayload.tenant_id = tenantId;
-          await supabase.from('ingresos').insert(ingPayload);
-          (orderData as OrderCreationPayload).skipIncomeRecord = true;
-        }
-
-        if (orderData.repair.evidencePhotos?.length > 0) {
-          await supabase.from('fotos_evidencia').insert(
-            orderData.repair.evidencePhotos.map(p => ({
-              id_orden: order.id,
-              etapa: p.stage,
-              url_foto: p.url
-            }))
-          );
-        }
       }
 
-      const finalOrder = await this._getOrderById(resultId);
-      return { 
-        status: 'success', 
-        id: resultId, 
-        orderNumber: orderData.orderNumber,
+      // FLUJO REP: una sola RPC transaccional (cliente + dispositivo + orden +
+      // trabajos + fotos + abono en transacciones — todo o nada)
+      const { data, error } = await supabase.rpc('crear_orden_completa', {
+        p_cliente: {
+          nombre_completo: orderData.customer.fullName,
+          cedula: orderData.customer.documentId,
+          telefono: orderData.customer.phone || '',
+          email: orderData.customer.email || '',
+          direccion: orderData.customer.address || '',
+        },
+        p_dispositivo: {
+          tipo: orderData.device?.deviceType || 'otro',
+          marca: orderData.device?.brand || 'N/D',
+          modelo: orderData.device?.model || 'N/D',
+          imei_sn: orderData.device?.serialNumber || '',
+          estado_fisico: orderData.device?.physicalCondition || '',
+        },
+        p_trabajos: [{
+          descripcion: 'Reparación',
+          costo: Number(orderData.repair.repairTotalCost) || 0,
+        }],
+        p_falla: orderData.repair.reportedIssue,
+        p_abono: Number(orderData.repair.initialDeposit) || 0,
+        p_metodo_abono: method,
+        p_fotos: (orderData.repair.evidencePhotos || []).map(p => ({
+          etapa: p.stage,
+          url_foto: p.url,
+        })),
+      });
+      if (error) throw error;
+
+      const finalOrder = await this._getOrderById(data.orden_id);
+      return {
+        status: 'success',
+        id: data.orden_id,
+        orderNumber: data.numero_orden,
         order: finalOrder || undefined
       };
     } catch (err: unknown) {
@@ -312,7 +262,7 @@ export const OrderService = {
   },
 
   /**
-   * Actualiza el estado de la orden.
+   * Actualiza el estado de la orden (el historial lo escribe un trigger).
    */
   async updateOrderStatus(id: string, status: string): Promise<StatusResponse> {
     const { error } = await supabase
@@ -321,54 +271,94 @@ export const OrderService = {
       .eq('id', id);
 
     if (error) throw error;
-    
+
     const updatedOrder = await this._getOrderById(id);
     return { status: 'success', order: updatedOrder || undefined };
   },
 
   /**
-   * Actualiza los datos de una orden.
+   * Actualiza los datos de una orden (cliente vía dispositivo, trabajos y abono).
    */
   async updateOrder(id: string, updates: Partial<ServiceOrder>): Promise<StatusResponse> {
     try {
       const { data: currentOrder, error: fetchErr } = await supabase
         .from('ordenes_servicio')
-        .select('id_dispositivo, id_cliente')
+        .select('id, dispositivo_id, dispositivo:dispositivo_id (cliente_id)')
         .eq('id', id)
         .single();
-      
+
       if (fetchErr || !currentOrder) throw new Error("Orden no encontrada");
 
-      if (updates.customer && currentOrder.id_cliente) {
-        await supabase.from('clientes').update({
+      const clienteId = (currentOrder.dispositivo as unknown as { cliente_id: string } | null)?.cliente_id;
+
+      if (updates.customer && clienteId) {
+        const { error } = await supabase.from('clientes').update({
           nombre_completo: updates.customer.fullName,
           cedula: updates.customer.documentId,
           telefono: updates.customer.phone,
           direccion: updates.customer.address,
           email: updates.customer.email
-        }).eq('id', currentOrder.id_cliente);
+        }).eq('id', clienteId);
+        if (error) throw error;
       }
 
-      if (updates.device && currentOrder.id_dispositivo) {
-        await supabase.from('dispositivos').update({
+      if (updates.device && currentOrder.dispositivo_id) {
+        const { error } = await supabase.from('dispositivos').update({
           marca: updates.device.brand,
           modelo: updates.device.model,
           imei_sn: updates.device.serialNumber,
-          tipo_dispositivo: updates.device.deviceType,
+          tipo: updates.device.deviceType,
           estado_fisico: updates.device.physicalCondition
-        }).eq('id', currentOrder.id_dispositivo);
+        }).eq('id', currentOrder.dispositivo_id);
+        if (error) throw error;
       }
 
       const orderUpdate: Record<string, unknown> = {};
       if (updates.status) orderUpdate.estado = updates.status;
-      if (updates.repair) {
-        if (updates.repair.reportedIssue !== undefined) orderUpdate.falla_reportada = updates.repair.reportedIssue;
-        if (updates.repair.repairTotalCost !== undefined) orderUpdate.costo_total_reparacion = Number(updates.repair.repairTotalCost);
-        if (updates.repair.initialDeposit !== undefined) orderUpdate.abono_inicial = Number(updates.repair.initialDeposit);
+      if (updates.repair?.reportedIssue !== undefined) orderUpdate.falla_reportada = updates.repair.reportedIssue;
+      if (Object.keys(orderUpdate).length > 0) {
+        const { error } = await supabase.from('ordenes_servicio').update(orderUpdate).eq('id', id);
+        if (error) throw error;
       }
 
-      if (Object.keys(orderUpdate).length > 0) {
-        await supabase.from('ordenes_servicio').update(orderUpdate).eq('id', id);
+      // Total de reparación: la UI maneja un único monto → una fila en orden_trabajo
+      if (updates.repair?.repairTotalCost !== undefined) {
+        const nuevoTotal = Number(updates.repair.repairTotalCost) || 0;
+        await supabase.from('orden_trabajo').delete().eq('orden_id', id);
+        const { error } = await supabase.from('orden_trabajo').insert({
+          orden_id: id,
+          descripcion: 'Reparación',
+          costo: nuevoTotal,
+        });
+        if (error) throw error;
+      }
+
+      // Abono inicial: vive en transacciones; se ajusta la fila de abono si existe
+      if (updates.repair?.initialDeposit !== undefined) {
+        const nuevoAbono = Number(updates.repair.initialDeposit) || 0;
+        const { data: abonoRow } = await supabase
+          .from('transacciones')
+          .select('id')
+          .eq('orden_id', id)
+          .eq('tipo', 'ingreso')
+          .like('descripcion', 'ABONO INICIAL%')
+          .maybeSingle();
+
+        if (abonoRow && nuevoAbono > 0) {
+          await supabase.from('transacciones').update({ monto: nuevoAbono }).eq('id', abonoRow.id);
+        } else if (abonoRow && nuevoAbono === 0) {
+          await supabase.from('transacciones').delete().eq('id', abonoRow.id);
+        } else if (!abonoRow && nuevoAbono > 0) {
+          await supabase.from('transacciones').insert({
+            tipo: 'ingreso',
+            monto: nuevoAbono,
+            metodo: 'efectivo',
+            categoria: 'reparacion',
+            descripcion: 'ABONO INICIAL - AJUSTE',
+            orden_id: id,
+            cliente_id: clienteId,
+          });
+        }
       }
 
       const updated = await this._getOrderById(id);
@@ -380,50 +370,16 @@ export const OrderService = {
     }
   },
 
+  /**
+   * Soft-delete (deleted_at). El id puede ser de una orden o de una nota de venta;
+   * el update sobre la tabla equivocada simplemente no afecta filas.
+   */
   async deleteOrder(id: string): Promise<StatusResponse> {
+    const deletedAt = new Date().toISOString();
     await Promise.all([
-      supabase.from('ordenes_servicio').update({ eliminado: 1 }).eq('id', id),
-      supabase.from('notas_venta').update({ eliminado: 1 }).eq('id', id)
+      supabase.from('ordenes_servicio').update({ deleted_at: deletedAt }).eq('id', id),
+      supabase.from('notas_venta').update({ deleted_at: deletedAt }).eq('id', id)
     ]);
     return { status: 'success' };
   },
-
-  _mapOrder(order: Record<string, any>): ServiceOrder {
-    return {
-      id: order.id.toString(),
-      orderNumber: order.numero_orden,
-      status: order.estado,
-      createdAt: order.fecha_creacion,
-      deleted: order.eliminado === 1,
-      customer: order.dispositivo?.cliente ? {
-        fullName: order.dispositivo.cliente.nombre_completo,
-        documentId: order.dispositivo.cliente.cedula,
-        phone: order.dispositivo.cliente.telefono,
-        address: order.dispositivo.cliente.direccion,
-        email: order.dispositivo.cliente.email,
-      } : {
-        fullName: order.cliente?.nombre_completo || 'Cliente Desconocido',
-        documentId: order.cliente?.cedula || '',
-        phone: order.cliente?.telefono || '',
-        address: order.cliente?.direccion || '',
-        email: order.cliente?.email || '',
-      },
-      device: order.dispositivo ? {
-        brand: order.dispositivo.marca,
-        model: order.dispositivo.modelo,
-        serialNumber: order.dispositivo.imei_sn,
-        deviceType: order.dispositivo.tipo_dispositivo,
-        physicalCondition: order.dispositivo.estado_fisico,
-      } : undefined,
-      repair: {
-        reportedIssue: order.falla_reportada,
-        repairTotalCost: Number(order.costo_total_reparacion),
-        initialDeposit: Number(order.abono_inicial),
-        evidencePhotos: order.fotos ? (order.fotos as { etapa: string; url_foto: string }[]).map((f) => ({
-          stage: f.etapa as any,
-          url: f.url_foto
-        })) : []
-      }
-    };
-  }
 };

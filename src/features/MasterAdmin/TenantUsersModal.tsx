@@ -9,16 +9,15 @@ interface Props {
 }
 
 const ROLE_LABELS = {
-  admin: { label: 'Administrador', icon: Shield, color: 'text-blue-600 bg-blue-50' },
-  user: { label: 'Usuario', icon: User, color: 'text-gray-600 bg-gray-50' },
-  technician: { label: 'Técnico', icon: Wrench, color: 'text-amber-600 bg-amber-50' },
+  owner: { label: 'Dueño del taller', icon: Shield, color: 'text-blue-600 bg-blue-50' },
+  member: { label: 'Miembro', icon: Wrench, color: 'text-amber-600 bg-amber-50' },
 };
 
 export const TenantUsersModal = ({ tenant, onClose }: Props) => {
   const { users, loading, error, fetchUsers, createUser, deactivateUser, activateUser } = useTenantUsers(tenant.id);
 
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ username: '', password: '', role: 'admin' as 'admin' | 'user' | 'technician' });
+  const [formData, setFormData] = useState({ email: '', nombre: '', password: '', role: 'owner' as 'owner' | 'member' });
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,7 +29,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
     setSubmitting(true);
     try {
       await createUser(formData);
-      setFormData({ username: '', password: '', role: 'admin' });
+      setFormData({ email: '', nombre: '', password: '', role: 'owner' });
       setShowForm(false);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error creando usuario');
@@ -79,13 +78,23 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
               </h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+                    placeholder="ej: dueno@tallercentral.com"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                   <input
                     type="text"
-                    value={formData.username}
-                    onChange={e => setFormData(p => ({ ...p, username: e.target.value }))}
-                    placeholder="ej: taller_central"
-                    required minLength={3}
+                    value={formData.nombre}
+                    onChange={e => setFormData(p => ({ ...p, nombre: e.target.value }))}
+                    placeholder="ej: Carlos Gómez"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -107,9 +116,8 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
                     onChange={e => setFormData(p => ({ ...p, role: e.target.value as typeof formData.role }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="admin">Administrador</option>
-                    <option value="technician">Técnico</option>
-                    <option value="user">Usuario</option>
+                    <option value="owner">Dueño del taller</option>
+                    <option value="member">Miembro</option>
                   </select>
                 </div>
                 {formError && (
@@ -157,7 +165,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
           ) : (
             <ul className="space-y-2">
               {users.map(u => {
-                const roleConfig = ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || ROLE_LABELS.user;
+                const roleConfig = ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || ROLE_LABELS.member;
                 const RoleIcon = roleConfig.icon;
                 return (
                   <li
@@ -171,7 +179,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
                         <RoleIcon className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{u.username}</p>
+                        <p className="text-sm font-semibold text-gray-900">{u.nombre || u.email}</p>
                         <p className="text-xs text-gray-500">{roleConfig.label}</p>
                       </div>
                     </div>

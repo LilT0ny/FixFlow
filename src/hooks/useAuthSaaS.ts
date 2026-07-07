@@ -11,22 +11,21 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restaurar sesión al montar
-    const session = AuthService.getSession();
-    setUser(session);
-    setLoading(false);
+    // Restaurar sesión de Supabase Auth al montar
+    AuthService.restoreSession()
+      .then(setUser)
+      .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     try {
-      const loggedInUser = await AuthService.login(username, password);
+      const loggedInUser = await AuthService.login(email, password);
       if (!loggedInUser) {
         setUser(null);
-        throw new Error('Usuario o contraseña incorrectos');
+        throw new Error('Correo o contraseña incorrectos');
       }
 
-      AuthService.saveSession(loggedInUser, true);
       setUser(loggedInUser);
       return loggedInUser;
     } catch (error) {
@@ -37,8 +36,8 @@ export const useAuth = () => {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    AuthService.clearSession();
+  const logout = useCallback(async () => {
+    await AuthService.logout();
     setUser(null);
   }, []);
 
