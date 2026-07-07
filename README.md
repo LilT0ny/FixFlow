@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# FixFlow
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Sistema de gestión integral para talleres de reparación — SaaS multi-tenant.**
 
-Currently, two official plugins are available:
+FixFlow digitaliza el ciclo completo de un taller de reparaciones: ingreso del equipo con ticket térmico automático, seguimiento por estados con fotos de evidencia, notificaciones al cliente por WhatsApp, ventas directas, control de caja y reportes exportables a Excel. Una sola plataforma atiende a múltiples talleres, cada uno con su marca, sus usuarios y sus datos aislados.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+> 📋 La especificación completa (requerimientos funcionales, no funcionales y alcance comercial) está en [`requirements.md`](./requirements.md).
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Módulos
 
-## Expanding the ESLint configuration
+| Módulo | Descripción |
+|--------|-------------|
+| 🏠 **Inicio** | Métricas operativas del taller en tiempo real |
+| 📥 **Nuevo ingreso** | Wizard de 3 pasos con validación de cédula (Módulo 10), autocompletado de clientes e impresión térmica por duplicado |
+| 📱 **Dispositivos** | Órdenes con filtros por estado, fotos de evidencia (cámara), edición y ciclo `recibido → entregado` |
+| 💬 **WhatsApp** | Notificación al cliente en cada cambio de estado, con plantilla personalizable |
+| 🧾 **Notas de venta** | Venta de repuestos/accesorios con impresión de comprobante |
+| 👥 **Clientes** | Base de clientes con historial |
+| 💰 **Transacciones** | Arqueo de caja por fecha y medio de pago |
+| 📊 **Reportes** | Flujo de caja con gráficos y exportación a Excel |
+| ⚙️ **Configuración** | Marca del taller, formato de impresora, plantillas y usuarios |
+| 🌐 **Portal público** | El cliente final consulta su reparación en `/status/:orden` sin cuenta |
+| 🏢 **Master Admin** | Alta y gestión de talleres (tenants) y planes del SaaS |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Frontend:** React 19 · TypeScript · Vite 7 · Tailwind CSS v4 · React Router 7
+- **Datos:** Supabase (PostgreSQL multi-tenant, Auth, Storage)
+- **Extras:** Recharts (gráficos) · ExcelJS (exportación) · Lucide (iconos)
+- **Deploy:** Vercel (SPA con rewrites)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Desarrollo
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Variables de entorno (.env.local)
+VITE_SUPABASE_URL=https://<tu-proyecto>.supabase.co
+VITE_SUPABASE_ANON_KEY=<tu-anon-key>
+
+# 3. Levantar en local
+npm run dev
+
+# Producción
+npm run build && npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Estructura del proyecto
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── components/        # Design system compartido
+│   ├── atoms/         # Button, Input, Select, Card...
+│   ├── molecules/     # FormField, StatCard
+│   ├── organisms/     # PrintManager, PrintableReceipt
+│   └── design-system/ # PageHeader, Badge, DataCard, EmptyState...
+├── features/          # Un directorio por módulo de negocio
+│   ├── Dashboard/  ├── Registration/  ├── DeviceList/
+│   ├── Sales/      ├── Clients/       ├── CashRegister/
+│   ├── Reports/    ├── Settings/      └── MasterAdmin/
+├── services/          # Capa de acceso a datos (Supabase)
+├── hooks/             # Lógica de negocio reutilizable
+├── store/             # Contextos (sesión, configuración)
+├── pages/             # Login y portal público de estado
+└── utils/             # Impresión, fechas, WhatsApp
+```
+
+Cada feature sigue el patrón contenedor/presentacional: el hook (`useXxx`) concentra la lógica y los componentes solo presentan.
+
+---
+
+© FixFlow. Todos los derechos reservados.
