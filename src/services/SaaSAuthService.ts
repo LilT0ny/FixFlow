@@ -12,6 +12,13 @@ export interface AuthUser {
   is_master?: boolean;
 }
 
+/**
+ * Un usuario es master si su rol lo dice (fuente de verdad: la base de datos).
+ * Se mantiene el caso legacy "admin sin tenant" para sesiones anteriores a la migración SaaS.
+ */
+export const isMasterUser = (user: Pick<AuthUser, 'role' | 'tenant_id'>): boolean =>
+  user.role === 'master' || (!user.tenant_id && user.role === 'admin');
+
 export interface Tenant {
   id: string;
   nombre_empresa: string;
@@ -67,14 +74,14 @@ export const AuthService = {
       }
 
       const user = data[0];
-      const isSuperAdmin = user.id === 'e06642a5-a1ab-4afc-bfe7-d3519096b91d';
+      const isMaster = isMasterUser(user);
 
       return {
         id: user.id,
         username: user.username,
         role: user.role,
-        tenant_id: isSuperAdmin ? null : (user.tenant_id || null),
-        is_master: isSuperAdmin || (!user.tenant_id && user.role === 'admin'),
+        tenant_id: isMaster ? null : (user.tenant_id || null),
+        is_master: isMaster,
       };
     } catch (error) {
       console.error('[AuthService.login] Error:', error);
@@ -104,8 +111,8 @@ export const AuthService = {
     try {
       const user = JSON.parse(raw) as AuthUser;
 
-      // Master admin hardcodeado siempre válido
-      if (user && user.id === 'e06642a5-a1ab-4afc-bfe7-d3519096b91d') {
+      // Master admin: derivado del rol guardado en la sesión, nunca de un ID hardcodeado
+      if (user && isMasterUser(user)) {
         user.is_master = true;
         user.tenant_id = null;
         return user;
@@ -363,7 +370,7 @@ export const UserService = {
         username: user.username,
         role: user.role,
         tenant_id: user.tenant_id || null,
-        is_master: !user.tenant_id && user.role === 'admin',
+        is_master: isMasterUser(user),
       };
     } catch (error) {
       console.error('[UserService.createUser] Error:', error);
