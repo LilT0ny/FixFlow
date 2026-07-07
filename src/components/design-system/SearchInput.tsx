@@ -10,26 +10,26 @@ interface SearchInputProps {
   debounce?: number;
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({ 
-  value, 
-  onChange, 
+export const SearchInput: React.FC<SearchInputProps> = ({
+  value,
+  onChange,
   placeholder = "Buscar...",
-  className 
+  className
 }) => {
   return (
-    <div className={cn("relative w-full md:w-[400px] group", className)}>
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
-      <input 
-        type="text" 
+    <div className={cn("relative w-full md:w-[360px] group", className)}>
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 w-4 h-4 group-focus-within:text-primary-600 transition-colors duration-150" />
+      <input
+        type="text"
         placeholder={placeholder}
-        className="w-full pl-12 pr-10 py-3 bg-white border border-surface-100 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-bold text-sm shadow-sm placeholder:text-surface-300"
+        className="w-full pl-10 pr-9 py-2.5 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-surface-400 hover:text-surface-600 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-surface-400 hover:text-surface-600 transition-colors duration-150 animate-fade-in"
         >
           <X className="w-4 h-4" />
         </button>

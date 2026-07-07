@@ -10,26 +10,26 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ 
-  icon, 
-  title, 
-  description, 
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
+  title,
+  description,
   action,
-  className 
+  className
 }) => {
   return (
     <div className={cn(
-      "col-span-full border-2 border-dashed border-surface-200 rounded-[32px] py-16 px-8 text-center flex flex-col justify-center items-center bg-surface-50/30 animate-zoom-in",
+      "col-span-full border border-dashed border-surface-300 rounded-xl py-16 px-8 text-center flex flex-col justify-center items-center bg-surface-50/50 animate-scale-in",
       className
     )}>
-      <div className="w-20 h-20 bg-surface-100 text-surface-400 rounded-2xl flex items-center justify-center mb-6">
-        {icon || <Search className="w-10 h-10 opacity-40" />}
+      <div className="w-12 h-12 bg-surface-100 text-surface-400 rounded-full flex items-center justify-center mb-4">
+        {icon || <Search className="w-5 h-5" />}
       </div>
-      <h3 className="text-xl font-black text-surface-900 tracking-tight mb-2">
+      <h3 className="text-base font-semibold text-surface-900 mb-1">
         {title}
       </h3>
       {description && (
-        <p className="text-xs font-black text-surface-400 uppercase tracking-widest mb-6 max-w-md">
+        <p className="text-sm text-surface-500 mb-6 max-w-md">
           {description}
         </p>
       )}

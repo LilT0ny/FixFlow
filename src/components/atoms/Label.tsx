@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import type { LabelHTMLAttributes } from 'react';
-import { cn } from './Button';
+import { cn } from '../../lib/cn';
 
 export interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean;

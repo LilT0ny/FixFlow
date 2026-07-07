@@ -34,25 +34,25 @@ export const PrintManager: React.FC<PrintManagerProps> = ({ order, isOpen, onClo
   };
 
   return (
-    <div className="fixed inset-0 bg-surface-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
-        <div className="p-5 border-b border-surface-100 flex justify-between items-center bg-surface-50">
-          <h3 className="text-lg font-bold text-surface-900 flex items-center gap-2">
+    <div className="fixed inset-0 bg-surface-900/40 z-50 flex justify-center items-center py-10 px-4 animate-fade-in">
+      <div className="bg-white rounded-xl border border-surface-200 shadow-lg w-full max-w-sm flex flex-col animate-scale-in overflow-hidden">
+        <div className="p-5 border-b border-surface-200 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-surface-900 flex items-center gap-2">
             <Printer className="w-5 h-5 text-primary-600" />
-            Configurar Impresión
+            Configurar impresión
           </h3>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             title="Cerrar ventana de impresión"
-            className="text-surface-400 hover:text-surface-600"
+            className="p-2 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 transition-colors duration-150"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-bold text-surface-700 mb-2">Tipo de Documento</label>
+            <label className="block text-sm font-medium text-surface-700 mb-2">Tipo de documento</label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -76,7 +76,7 @@ export const PrintManager: React.FC<PrintManagerProps> = ({ order, isOpen, onClo
           </div>
 
 
-          <div className="bg-primary-50 border border-primary-100 rounded-xl px-4 py-2.5 text-xs text-primary-700 font-medium text-center">
+          <div className="bg-primary-50 border border-primary-100 rounded-lg px-4 py-2.5 text-xs text-primary-700 text-center">
             {docType === 'ingreso' ? (
               <>Se imprimirán <strong>2 COPIAS</strong>:<br/> (Términos + Firmas)</>
             ) : (
@@ -85,7 +85,7 @@ export const PrintManager: React.FC<PrintManagerProps> = ({ order, isOpen, onClo
           </div>
         </div>
 
-        <div className="p-5 border-t border-surface-100 bg-surface-50 flex gap-3">
+        <div className="p-5 border-t border-surface-200 bg-surface-50 flex gap-3">
           <Button type="button" variant="outline" onClick={onClose} className="flex-1">
             Cancelar
           </Button>

@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import type { HTMLAttributes } from 'react';
-import { cn } from './Button';
+import { cn } from '../../lib/cn';
 
 export interface ErrorMessageProps extends HTMLAttributes<HTMLSpanElement> {
   error?: string;
@@ -13,7 +13,7 @@ export const ErrorMessage = forwardRef<HTMLSpanElement, ErrorMessageProps>(
     return (
       <span
         ref={ref}
-        className={cn('text-xs text-danger-500 mt-1', className)}
+        className={cn('text-xs text-danger-600 mt-1 animate-fade-in', className)}
         {...props}
       >
         {error}

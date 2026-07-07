@@ -11,32 +11,32 @@ interface StatCardProps {
   isCurrency?: boolean;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ 
-  title, 
-  amount, 
-  icon: Icon, 
-  color, 
-  bgColor, 
+export const StatCard: React.FC<StatCardProps> = ({
+  title,
+  amount,
+  icon: Icon,
+  color,
+  bgColor,
   delay,
   isCurrency = true
 }) => {
-  const displayValue = typeof amount === 'number' 
+  const displayValue = typeof amount === 'number'
     ? (isCurrency ? `$${amount.toFixed(2)}` : amount.toString())
     : amount;
 
   return (
-    <div 
-      style={{ animationDelay: delay }} 
-      className="bg-white rounded-[32px] md:rounded-[40px] border border-surface-100/50 p-5 md:p-6 lg:p-7 flex items-center gap-4 md:gap-5 shadow-xl shadow-surface-200/20 hover:shadow-primary-100/30 hover:scale-[1.02] transition-all cursor-default group border-b-8 border-b-transparent hover:border-b-primary-500 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700"
+    <div
+      style={{ animationDelay: delay }}
+      className="bg-white rounded-xl border border-surface-200 p-5 flex items-center gap-4 shadow-xs hover:border-surface-300 hover:shadow-sm transition-all duration-150 cursor-default animate-fade-in-up"
     >
-      <div className={`${bgColor} ${color} w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-[18px] md:rounded-[24px] flex items-center justify-center transition-all group-hover:rotate-12 shadow-sm border border-surface-50 shrink-0`}>
-        <Icon className="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" />
+      <div className={`${bgColor} ${color} w-11 h-11 rounded-lg flex items-center justify-center shrink-0`}>
+        <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[9px] md:text-[10px] font-black text-surface-400 uppercase tracking-widest leading-none mb-1 opacity-70 truncate">
+        <p className="text-xs font-medium text-surface-500 truncate">
           {title}
         </p>
-        <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-surface-900 tracking-tighter truncate group-hover:text-primary-600 transition-colors">
+        <h3 className="text-xl md:text-2xl font-semibold text-surface-900 tracking-tight truncate mt-0.5">
           {displayValue}
         </h3>
       </div>

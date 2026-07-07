@@ -8,25 +8,25 @@ interface PageHeaderProps {
   className?: string;
 }
 
-export const PageHeader: React.FC<PageHeaderProps> = ({ 
-  title, 
-  subtitle, 
+export const PageHeader: React.FC<PageHeaderProps> = ({
+  title,
+  subtitle,
   children,
-  className 
+  className
 }) => {
   return (
-    <div className={cn("flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6", className)}>
-      <div className="space-y-1">
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-surface-900 leading-tight">
+    <div className={cn("flex flex-col gap-4 pb-8 md:flex-row md:items-center md:justify-between animate-fade-in-up", className)}>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-surface-900">
           {title}
-        </h2>
+        </h1>
         {subtitle && (
-          <p className="text-xs md:text-[11px] font-black text-surface-400 uppercase tracking-[0.2em] opacity-80 leading-relaxed">
+          <p className="mt-1 text-sm text-surface-500">
             {subtitle}
           </p>
         )}
       </div>
-      {children && <div className="flex gap-3">{children}</div>}
+      {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>
   );
 };

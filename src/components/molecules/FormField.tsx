@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Label } from '../atoms/Label';
 import { ErrorMessage } from '../atoms/ErrorMessage';
-import { cn } from '../atoms/Button';
+import { cn } from '../../lib/cn';
 
 export interface FormFieldProps {
   label: string;

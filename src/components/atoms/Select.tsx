@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import type { SelectHTMLAttributes } from 'react';
-import { cn } from './Button';
+import { cn } from '../../lib/cn';
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   error?: boolean;
@@ -13,9 +13,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           className={cn(
-            'w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow appearance-none',
+            'w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 appearance-none',
             {
-              'border-danger-500 focus:ring-danger-500': error,
+              'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20': error,
             },
             className
           )}
@@ -23,8 +23,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         >
           {children}
         </select>
-        <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
-          <svg className="w-4 h-4 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute inset-y-0 right-0 flex items-center px-3.5 pointer-events-none">
+          <svg className="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>

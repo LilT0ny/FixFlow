@@ -1,8 +1,8 @@
 import { type HTMLAttributes, forwardRef } from 'react';
-import { cn } from './Button';
+import { cn } from '../../lib/cn';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'outline' | 'elevated' | 'glass';
+  variant?: 'outline' | 'elevated';
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -11,11 +11,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-2xl',
+          'rounded-xl',
           {
-            'bg-white border border-surface-100 shadow-sm': variant === 'elevated',
+            'bg-white border border-surface-200 shadow-xs': variant === 'elevated',
             'bg-transparent border border-surface-200': variant === 'outline',
-            'bg-white/70 backdrop-blur-md border border-white/20 shadow-lg': variant === 'glass',
           },
           className
         )}
