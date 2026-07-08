@@ -1,6 +1,6 @@
 // src/services/OrderService.ts
 import { supabase } from '../lib/supabase';
-import type { ServiceOrder, EvidencePhoto, OrderStatus, DeviceCheckInForm } from '../types';
+import type { ServiceOrder, EvidencePhoto, DeviceCheckInForm, SaleItem } from '../types';
 
 /** Tipos de respuesta para mantener compatibilidad */
 interface SaveOrderResponse {
@@ -21,6 +21,11 @@ interface StatusResponse {
 export interface OrderCreationPayload extends DeviceCheckInForm {
   paymentMethod?: string;
   skipIncomeRecord?: boolean;
+  /** Orden de servicio a la que se vincula la nota de venta (flujo NT) */
+  orderId?: string;
+  /** Ítems de la venta directa (flujo NT sin orden). Si se omite, se
+   *  arma un único ítem desde repair.reportedIssue/repairTotalCost. */
+  items?: SaleItem[];
 }
 
 /** Select con todos los embeds del esquema v2: cliente vía dispositivo,
@@ -30,7 +35,8 @@ const ORDER_SELECT = `
   dispositivo:dispositivo_id (*, cliente:cliente_id (*)),
   fotos:fotos_evidencia (*),
   trabajos:orden_trabajo (id, descripcion, costo),
-  pagos:transacciones (monto, tipo)
+  pagos:transacciones (monto, tipo),
+  nota:notas_venta (id, numero_nota)
 `;
 
 type OrderRow = Record<string, any>;
@@ -43,6 +49,7 @@ function mapOrder(order: OrderRow): ServiceOrder {
     .filter(p => p.tipo === 'ingreso')
     .reduce((sum, p) => sum + Number(p.monto), 0);
   const cliente = order.dispositivo?.cliente;
+  const nota = Array.isArray(order.nota) ? order.nota[0] : order.nota;
 
   return {
     id: order.id,
@@ -50,6 +57,7 @@ function mapOrder(order: OrderRow): ServiceOrder {
     status: order.estado,
     createdAt: order.created_at,
     deleted: order.deleted_at != null,
+    notaVenta: nota ? { id: nota.id, numero: nota.numero_nota } : undefined,
     customer: {
       fullName: cliente?.nombre_completo || 'Cliente Desconocido',
       documentId: cliente?.cedula || '',
@@ -119,53 +127,19 @@ export const OrderService = {
   },
 
   /**
-   * Obtiene todas las órdenes y notas de venta activas (RLS filtra por tenant).
+   * Obtiene todas las órdenes activas (RLS filtra por tenant).
+   * La nota de venta no es una fila propia: viaja adjunta a su orden
+   * (campo notaVenta) para el badge y la impresión.
    */
   async getOrders(): Promise<ServiceOrder[]> {
-    const [repRes, ntRes] = await Promise.all([
-      supabase.from('ordenes_servicio')
-        .select(ORDER_SELECT)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false }),
-      supabase.from('notas_venta')
-        .select(`*, cliente:cliente_id (*), items:nota_venta_item (descripcion, cantidad, precio_unitario)`)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false }),
-    ]);
+    const { data, error } = await supabase
+      .from('ordenes_servicio')
+      .select(ORDER_SELECT)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
 
-    if (repRes.error) throw repRes.error;
-    if (ntRes.error) throw ntRes.error;
-
-    const repairs = (repRes.data || []).map(order => mapOrder(order));
-
-    const sales = (ntRes.data || []).map(nt => {
-      const items: { descripcion: string; cantidad: number; precio_unitario: number }[] = nt.items || [];
-      const total = items.reduce((sum, i) => sum + i.cantidad * Number(i.precio_unitario), 0);
-      return {
-        id: nt.id,
-        orderNumber: nt.numero_nota,
-        status: 'entregado' as OrderStatus,
-        createdAt: nt.created_at,
-        deleted: nt.deleted_at != null,
-        customer: {
-          fullName: nt.cliente?.nombre_completo || 'Cliente Desconocido',
-          documentId: nt.cliente?.cedula || '',
-          phone: nt.cliente?.telefono || '',
-          address: nt.cliente?.direccion || '',
-          email: nt.cliente?.email || '',
-        },
-        repair: {
-          reportedIssue: items.map(i => i.descripcion).join(', ') || 'VENTA DIRECTA',
-          repairTotalCost: total,
-          initialDeposit: total,
-          evidencePhotos: []
-        }
-      };
-    });
-
-    return [...repairs, ...sales].sort((a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    if (error) throw error;
+    return (data || []).map(order => mapOrder(order));
   },
 
   /**
@@ -198,14 +172,20 @@ export const OrderService = {
           clienteId = client.id;
         }
 
+        const items = (orderData as OrderCreationPayload).items;
+        const p_items = items && items.length > 0
+          ? items.map(i => ({ descripcion: i.description, cantidad: i.quantity, precio_unitario: i.price }))
+          : [{
+              descripcion: orderData.repair.reportedIssue || 'VENTA DIRECTA',
+              cantidad: 1,
+              precio_unitario: Number(orderData.repair.repairTotalCost) || 0,
+            }];
+
         const { data, error } = await supabase.rpc('crear_nota_venta', {
-          p_items: [{
-            descripcion: orderData.repair.reportedIssue || 'VENTA DIRECTA',
-            cantidad: 1,
-            precio_unitario: Number(orderData.repair.repairTotalCost) || 0,
-          }],
+          p_items,
           p_metodo: method,
           p_cliente_id: clienteId,
+          p_orden_id: (orderData as OrderCreationPayload).orderId || null,
           p_registrar_ingreso: !(orderData as OrderCreationPayload).skipIncomeRecord,
         });
         if (error) throw error;
@@ -321,16 +301,54 @@ export const OrderService = {
         if (error) throw error;
       }
 
-      // Total de reparación: la UI maneja un único monto → una fila en orden_trabajo
+      // Total de reparación: la UI maneja un único monto → se actualiza la
+      // primera fila de orden_trabajo (o se crea). Sin delete: los members
+      // no tienen permiso de borrado y el update les debe funcionar igual.
       if (updates.repair?.repairTotalCost !== undefined) {
         const nuevoTotal = Number(updates.repair.repairTotalCost) || 0;
-        await supabase.from('orden_trabajo').delete().eq('orden_id', id);
-        const { error } = await supabase.from('orden_trabajo').insert({
-          orden_id: id,
-          descripcion: 'Reparación',
-          costo: nuevoTotal,
-        });
+        const { data: trabajoRow } = await supabase
+          .from('orden_trabajo')
+          .select('id')
+          .eq('orden_id', id)
+          .order('id')
+          .limit(1)
+          .maybeSingle();
+
+        const { error } = trabajoRow
+          ? await supabase.from('orden_trabajo').update({ costo: nuevoTotal }).eq('id', trabajoRow.id)
+          : await supabase.from('orden_trabajo').insert({ orden_id: id, descripcion: 'Reparación', costo: nuevoTotal });
         if (error) throw error;
+      }
+
+      // Fotos de evidencia: sincronizar contra la lista que manda la UI
+      // (agrega las nuevas, borra las quitadas — el archivo en Storage
+      // lo maneja StorageService desde el modal de evidencias)
+      if (updates.repair?.evidencePhotos !== undefined) {
+        const nuevas = updates.repair.evidencePhotos;
+        const { data: existentes, error: fotosErr } = await supabase
+          .from('fotos_evidencia')
+          .select('id, etapa, url_foto')
+          .eq('orden_id', id);
+        if (fotosErr) throw fotosErr;
+
+        const urlsNuevas = new Set(nuevas.map(p => p.url));
+        const urlsExistentes = new Set((existentes || []).map(f => f.url_foto));
+
+        const aInsertar = nuevas
+          .filter(p => !urlsExistentes.has(p.url))
+          .map(p => ({ orden_id: id, etapa: p.stage, url_foto: p.url }));
+        const aBorrar = (existentes || [])
+          .filter(f => !urlsNuevas.has(f.url_foto))
+          .map(f => f.id);
+
+        if (aInsertar.length > 0) {
+          const { error } = await supabase.from('fotos_evidencia').insert(aInsertar);
+          if (error) throw error;
+        }
+        if (aBorrar.length > 0) {
+          const { error } = await supabase.from('fotos_evidencia').delete().in('id', aBorrar);
+          if (error) throw error;
+        }
       }
 
       // Abono inicial: vive en transacciones; se ajusta la fila de abono si existe
@@ -371,15 +389,14 @@ export const OrderService = {
   },
 
   /**
-   * Soft-delete (deleted_at). El id puede ser de una orden o de una nota de venta;
-   * el update sobre la tabla equivocada simplemente no afecta filas.
+   * Soft-delete (deleted_at) de una orden de servicio.
    */
   async deleteOrder(id: string): Promise<StatusResponse> {
-    const deletedAt = new Date().toISOString();
-    await Promise.all([
-      supabase.from('ordenes_servicio').update({ deleted_at: deletedAt }).eq('id', id),
-      supabase.from('notas_venta').update({ deleted_at: deletedAt }).eq('id', id)
-    ]);
+    const { error } = await supabase
+      .from('ordenes_servicio')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
     return { status: 'success' };
   },
 };

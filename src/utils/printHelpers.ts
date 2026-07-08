@@ -13,44 +13,44 @@ export const printReceipt = (
   isDoubleCopy: boolean = false,
   settings?: BusinessSettings
 ) => {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    alert('Por favor, permite las ventanas emergentes (pop-ups) en tu navegador para imprimir.');
-    return;
-  }
-
   const orderData = order as any; // Using any to handle the union of different order types safely in JS template
   const date = new Date(orderData.createdAt || orderData.date || new Date()).toLocaleDateString('es-EC');
   const time = new Date(orderData.createdAt || orderData.date || new Date()).toLocaleTimeString('es-EC', { hour12: false });
-  
+
+  // Datos del taller: SIEMPRE desde ajustes del tenant. Sin fallbacks con
+  // datos de otro negocio — si falta un dato, se omite del ticket.
   const store = {
-    name: settings?.companyName || 'CELL REPAIR CENTER',
-    address: settings?.address || 'JOSE GUERRERO Y LIZARDO RUIZ, QUITO',
-    phone: settings?.phone || '0998075071',
-    ruc: settings?.ruc || '1792456789001',
-    logo: settings?.logo || './Logo.svg'
+    name: settings?.companyName || '',
+    address: settings?.address || '',
+    phone: settings?.phone || '',
+    ruc: settings?.ruc || '',
+    logo: settings?.logo || ''
   };
+
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const logoHtml = store.logo
+    ? `<img src="${store.logo}" style="max-width: 150px; margin-bottom: 5px;" onerror="this.style.display='none'"/>`
+    : '';
+  const rucHtml = store.ruc
+    ? `<div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">RUC:</span><span>${esc(store.ruc)}</span></div>`
+    : '';
 
   const isThermal = format === '58mm' || format === '80mm';
   const width = format === '80mm' ? '80mm' : (format === '58mm' ? '58mm' : '210mm');
   const fontSize = format === '58mm' ? '8pt' : (format === '80mm' ? '10pt' : '11pt');
 
-  const termsHtml = `
+  // Términos y condiciones: los configura cada taller en Configuración
+  // (ajustes.terminos_condiciones). Sin texto configurado, no se imprimen.
+  const termsText = settings?.termsConditions?.trim() || '';
+  const termsHtml = termsText ? `
     <div style="font-size: ${format === 'A4' ? '9pt' : '7.5pt'}; line-height: 1.3; border-top: 1px dashed #000; padding-top: 8px; margin-top: 10px; text-align: justify; font-style: italic;">
       <strong>TÉRMINOS Y CONDICIONES:</strong><br/>
-      Agradecemos su confianza y hacemos de su conocimiento las siguientes condiciones de servicio:<br/>
-      - Después de 30 días los equipos pueden ser usados como remate o refacción sin responsabilidad de nuestra parte.<br/>
-      - Retire el chip y memoria, no nos hacemos responsables por tales pérdidas.<br/>
-      - En equipos mojados, software, dañados por mal uso, intervenidos no hay garantía.<br/>
-      - Si requiere más tiempo, solicite una nueva nota con ficha nueva.<br/>
-      - La entrega del equipo solo será con nota o identificación.<br/>
-      - Los reemplazos de piezas cuentan con 30 días de garantía contra defectos de fábrica. No aplica garantía si el equipo presenta daño por golpe, humedad o mal uso. Pueden existir variaciones entre la pieza origonal y reemplazo: logo, tonalidad de color, material, etc.<br/>
-      - Los tiempos para liberación por código y vía por servicios, son establecidos por proveedores terceros, en raras ocasiones pueden retrasarse. No habrá reembolso hasta completada la orden. La liberación de compañía no elimina el reporte de robo o extravío.<br/>
-      - El tiempo de entrega puede retrasarse cuando la refaccion viene de proveedores externos.<br/>
-      <br/><br/>
-      <strong>WHATSAPP:</strong> ${store.phone}
+      ${esc(termsText).replace(/\n/g, '<br/>')}
+      ${store.phone ? `<br/><br/><strong>WHATSAPP:</strong> ${esc(store.phone)}` : ''}
     </div>
-  `;
+  ` : '';
 
   const signaturesHtml = `
     <div style="display: flex; justify-content: space-around; margin-top: 40px; gap: 20px;">
@@ -82,13 +82,13 @@ export const printReceipt = (
 
     contentHtml = `
       <div class="header" style="text-align: center; margin-bottom: 10px;">
-        <img src="${store.logo}" style="max-width: 150px; margin-bottom: 5px;" onerror="this.style.display='none'"/>
-        <h1 style="margin: 0; font-size: 8pt; text-transform: uppercase;">${store.name}</h1>
+        ${logoHtml}
+        <h1 style="margin: 0; font-size: 8pt; text-transform: uppercase;">${esc(store.name)}</h1>
         <p style="margin: 5px 0 2px 0; font-size: 12pt; font-weight: bold;">NOTA DE VENTA</p>
         <div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">ORDEN:</span><span>${nNota}</span></div>
         <div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">FECHA:</span><span>${date} ${time}</span></div>
-        <p style="margin: 2px 0;">${store.address}</p>
-        <div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">RUC:</span><span>${store.ruc}</span></div>
+        <p style="margin: 2px 0;">${esc(store.address)}</p>
+        ${rucHtml}
       </div>
       <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
       <div class="client-info" style="margin-bottom: 10px; text-transform: uppercase; font-size: ${isThermal ? '8pt' : '10pt'};">
@@ -136,13 +136,13 @@ export const printReceipt = (
 
     const commonTicketHtml = `
       <div class="header" style="text-align: center; margin-bottom: 10px;">
-        <img src="${store.logo}" style="max-width: 150px; margin-bottom: 5px;" onerror="this.style.display='none'"/>
-        <h1 style="margin: 0; font-size: 8pt; text-transform: uppercase;">${store.name}</h1>
+        ${logoHtml}
+        <h1 style="margin: 0; font-size: 8pt; text-transform: uppercase;">${esc(store.name)}</h1>
         <p style="margin: 5px 0 2px 0; font-size: 12pt; font-weight: bold;">TICKET INGRESO</p>
         <div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">ORDEN:</span><span>${orderData.orderNumber}</span></div>
         <div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">FECHA:</span><span>${date} ${time}</span></div>
-        <p style="margin: 2px 0;">${store.address}</p>
-        <div style="display: flex; justify-content: center; gap: 5px;"><span style="font-weight: bold;">RUC:</span><span>${store.ruc}</span></div>
+        <p style="margin: 2px 0;">${esc(store.address)}</p>
+        ${rucHtml}
       </div>
       <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
       <div class="client-info" style="margin-bottom: 10px; text-transform: uppercase; font-size: ${isThermal ? '8pt' : '10pt'};">
@@ -221,26 +221,37 @@ export const printReceipt = (
     </html>
   `;
 
-  printWindow.document.write(finalHtml);
-  printWindow.document.close();
-  
-  // Wait for content and images to load
-  printWindow.onload = () => {
-    printWindow.focus();
+  // Impresión vía iframe oculto con srcdoc: sin pop-ups, sin la carrera de
+  // document.write + print() que producía previsualizaciones en blanco.
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.setAttribute('aria-hidden', 'true');
+
+  const cleanup = () => iframe.remove();
+
+  iframe.onload = () => {
+    const win = iframe.contentWindow;
+    if (!win) {
+      cleanup();
+      return;
+    }
+    // Pequeño margen para que carguen las imágenes (logo) antes del diálogo
     setTimeout(() => {
-      printWindow.print();
-      // On some browsers, we might need a small delay after print dialog opens
-      // printWindow.close(); // Not closing automatically to let user see it if print fails
-    }, 500);
+      win.onafterprint = cleanup;
+      win.focus();
+      win.print();
+      // Respaldo por si onafterprint no dispara en algún navegador
+      setTimeout(cleanup, 60_000);
+    }, 300);
   };
 
-  // Fallback for onload not firing (common in some browsers with document.write)
-  setTimeout(() => {
-    if (printWindow.document.readyState === 'complete') {
-      printWindow.focus();
-      printWindow.print();
-    }
-  }, 1500);
+  iframe.srcdoc = finalHtml;
+  document.body.appendChild(iframe);
 };
 
 export const printReceiptDoubleCopy = (

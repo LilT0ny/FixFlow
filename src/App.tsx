@@ -4,14 +4,12 @@ import { AppProvider, useAppContext } from './store/AppContext';
 import { SettingsProvider } from './store/SettingsContext';
 import { AdminLayout } from './layouts/AdminLayout';
 import { DashboardFeature } from './features/Dashboard/DashboardFeature';
-import { DeviceListFeature } from './features/DeviceList/DeviceListFeature';
 import { CashRegisterFeature } from './features/CashRegister/CashRegisterFeature';
 import { ReportsFeature } from './features/Reports/ReportsFeature';
 import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
 import { ChangePassword } from './pages/ChangePassword';
 import { RegistrationFeature } from './features/Registration/RegistrationFeature';
-import { SalesNotesFeature } from './features/Sales/SalesNotesFeature';
 import { ClientsFeature } from './features/Clients/ClientsFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
@@ -43,8 +41,8 @@ function App() {
             <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<DashboardFeature />} />
               <Route path="check-in" element={<RegistrationFeature />} />
-              <Route path="devices" element={<DeviceListFeature />} />
-              <Route path="sales" element={<SalesNotesFeature />} />
+              {/* Dispositivos vive ahora en el Dashboard (ruta índice) */}
+              <Route path="devices" element={<Navigate to="/" replace />} />
               <Route path="clients" element={<ClientsFeature />} />
               <Route path="cash" element={<CashRegisterFeature />} />
               <Route path="reports" element={<ReportsFeature />} />

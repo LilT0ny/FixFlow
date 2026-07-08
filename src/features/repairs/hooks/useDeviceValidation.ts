@@ -125,9 +125,10 @@ export const useDeviceValidation = () => {
 
   const validateField = useCallback((name: keyof DeviceFormData, value: string | number): string | undefined => {
     switch (name) {
+      // Sin validación de formato: hay clientes extranjeros (cédulas venezolanas,
+      // pasaportes) o casos donde no se conoce el documento. Solo se exige un valor.
       case 'cedula':
-        if (!value) return 'Requerido';
-        if (!validateEcuadorianID(String(value))) return 'Cédula/RUC inválido';
+        if (!value || String(value).trim() === '') return 'Requerido';
         break;
       case 'nombres':
       case 'apellidos':
@@ -166,7 +167,10 @@ export const useDeviceValidation = () => {
         normalizedValue = value.toUpperCase();
       } else if (field === 'email') {
         normalizedValue = value.toLowerCase();
-      } else if (field === 'cedula' || (field === 'imei' && data.deviceType === 'celular')) {
+      } else if (field === 'cedula') {
+        // Se permite alfanumérico (pasaportes, cédulas extranjeras tipo V-12345678)
+        normalizedValue = value.toUpperCase().trim();
+      } else if (field === 'imei' && data.deviceType === 'celular') {
         normalizedValue = value.replace(/\D/g, '');
       } else if (field === 'imei') {
         normalizedValue = value.toUpperCase();

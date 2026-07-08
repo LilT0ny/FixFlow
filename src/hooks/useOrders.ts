@@ -75,7 +75,12 @@ export function useOrders() {
           status:      'recibido',
           createdAt:   new Date().toISOString()
         };
-        setOrders(prev => [newOrder, ...prev]);
+        // Solo las órdenes de reparación (REP) viven en esta lista — una
+        // nota de venta directa (NT sin orden) no tiene fila propia acá,
+        // así que NUNCA se inyecta: evita una fila fantasma en la tabla.
+        if (kind === 'REP') {
+          setOrders(prev => [newOrder, ...prev]);
+        }
         return newOrder;
       } else {
         throw new Error(result.message || 'Error en la base de datos al guardar la orden');

@@ -1,13 +1,15 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useOrders } from '../../../hooks/useOrders';
+import { useAppContext } from '../../../store/AppContext';
 import { useSettings } from '../../../hooks/useSettings';
 import { PaymentService } from '../../../services/PaymentService';
 import { uploadPhoto, deletePhoto } from '../../../services/StorageService';
 import type { OrderStatus, ServiceOrder, CustomerData, DeviceCheckInForm } from '../../../types';
 
 export const useDeviceList = () => {
-  const { orders, updateOrderStatus, updateOrder, deleteOrder } = useOrders();
+  // Fuente única de verdad: el contexto — el Dashboard (KPIs) y esta tabla
+  // comparten el MISMO estado de órdenes.
+  const { orders, updateOrderStatus, updateOrder, deleteOrder, addOrder, refreshOrders } = useAppContext();
   const { settings } = useSettings();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,8 +69,6 @@ export const useDeviceList = () => {
     setSuccessMessage(msg);
     setTimeout(() => setSuccessMessage(null), 3500);
   }, []);
-
-  const { addOrder } = useOrders();
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
@@ -177,8 +177,8 @@ export const useDeviceList = () => {
         }
 
         // AUTO-GENERAR NOTA DE VENTA (NT) SI SE SOLICITÓ
-        // La nota es un DOCUMENTO para el cliente: detalla el total, pero no
-        // registra ingreso (skipIncomeRecord) — la caja ya cuadra con abono + saldo.
+        // La nota es un DOCUMENTO vinculado a la orden (orden_id): detalla el
+        // total pero no registra ingreso — la caja ya cuadra con abono + saldo.
         if (generateSalesNote) {
           const description = `REPARACIÓN: ${currentOrder.device?.brand} ${currentOrder.device?.model} - ${currentOrder.repair.reportedIssue}`;
           await addOrder({
@@ -190,8 +190,11 @@ export const useDeviceList = () => {
               evidencePhotos: []
             },
             paymentMethod: paymentMethod,
-            skipIncomeRecord: true
-          } as DeviceCheckInForm & { paymentMethod: string; skipIncomeRecord: boolean }, 'NT');
+            skipIncomeRecord: true,
+            orderId: currentOrder.id
+          } as DeviceCheckInForm & { paymentMethod: string; skipIncomeRecord: boolean; orderId: string }, 'NT');
+          // Re-fetch para que la orden muestre su nota recién generada
+          await refreshOrders();
         }
       }
 

@@ -1,26 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Minus, 
-  Search, 
-  TrendingUp, 
-  TrendingDown, 
-  Wallet, 
+import {
+  Plus,
+  Minus,
+  Search,
+  TrendingUp,
+  TrendingDown,
+  Wallet,
   CalendarDays,
   ArrowUpRight,
   Loader2,
   CheckCircle2,
-  X,
-  CreditCard
+  CreditCard,
+  Printer
 } from 'lucide-react';
 import { usePayments } from '../../hooks/usePayments';
 import { StatCard } from '../../components/molecules/StatCard';
 import { PageHeader } from '../../components/design-system';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 import { getLocalDate, formatToLocalDate } from '../../utils/dateUtils';
-import type { TransactionType, PaymentMethod, PaymentType } from '../../types';
+import { useSettings } from '../../hooks/useSettings';
+import { printReceipt } from '../../utils/printHelpers';
+import type { TransactionType, PaymentMethod, PaymentType, PaymentTransaction, ServiceOrder } from '../../types';
+
+/** Reconstruye un objeto imprimible a partir del ingreso de una nota de
+ *  venta — la única fuente de verdad post-creación es esta transacción,
+ *  ya que la nota en sí no tiene vista propia en la app. */
+function printNotaFromPayment(p: PaymentTransaction, format: string, settings: ReturnType<typeof useSettings>['settings']) {
+  printReceipt(
+    {
+      orderNumber: p.saleNumber,
+      createdAt: p.date,
+      customer: p.customer || { fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '', address: '' },
+      repair: { reportedIssue: '', repairTotalCost: p.amount, evidencePhotos: [] },
+      items: p.items,
+    } as unknown as ServiceOrder,
+    format,
+    'nota-venta',
+    false,
+    settings
+  );
+}
 
 export const CashRegisterFeature: React.FC = () => {
   const { payments, addPayment } = usePayments();
+  const { settings } = useSettings();
   const [dateFilter, setDateFilter] = useState(getLocalDate());
   const [methodFilter, setMethodFilter] = useState<'all' | PaymentMethod>('all');
   const [search, setSearch] = useState('');
@@ -174,6 +197,7 @@ export const CashRegisterFeature: React.FC = () => {
                 <th className="px-4 md:px-6 py-3">Concepto</th>
                 <th className="px-4 md:px-6 py-3 hidden lg:table-cell">Canal</th>
                 <th className="px-4 md:px-6 py-3 text-right">Monto</th>
+                <th className="px-4 md:px-6 py-3 w-12"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100">
@@ -197,7 +221,14 @@ export const CashRegisterFeature: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-3.5">
-                    <div className="text-sm font-medium text-surface-900 truncate max-w-[160px] md:max-w-none">{p.description}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium text-surface-900 truncate max-w-[160px] md:max-w-none">{p.description}</div>
+                      {p.saleNumber && (
+                        <span className="shrink-0 text-[10px] font-mono font-medium bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded border border-primary-100">
+                          {p.saleNumber}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                        <div className="md:hidden text-xs text-surface-400">
                           {new Date(p.date).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false })}
@@ -225,11 +256,22 @@ export const CashRegisterFeature: React.FC = () => {
                       {p.transactionType === 'ingreso' ? '+' : '-'}${Math.abs(p.amount).toFixed(2)}
                     </span>
                   </td>
+                  <td className="px-4 md:px-6 py-3.5 text-right">
+                    {p.saleNumber && (
+                      <button
+                        onClick={() => printNotaFromPayment(p, settings.printerType || '80mm', settings)}
+                        className="p-2 rounded-lg text-surface-400 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-150"
+                        title={`Reimprimir nota ${p.saleNumber}`}
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {filteredPayments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="w-12 h-12 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
                        <Search className="w-5 h-5 text-surface-400" />
                     </div>
@@ -243,108 +285,98 @@ export const CashRegisterFeature: React.FC = () => {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-surface-900/40 z-[100] flex justify-center items-center p-4 animate-fade-in">
-          <div className="bg-white rounded-xl border border-surface-200 shadow-lg w-full max-w-md animate-scale-in overflow-hidden">
-            <div className="px-6 py-4 border-b border-surface-200 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newPayment.transactionType === 'ingreso' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                  {newPayment.transactionType === 'ingreso' ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-surface-900 leading-tight">
-                    {newPayment.transactionType === 'ingreso' ? 'Nuevo ingreso' : 'Registrar gasto'}
-                  </h3>
-                  <p className="text-sm text-surface-500">Operación manual de caja</p>
-                </div>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-surface-100 rounded-lg transition-colors duration-150 text-surface-400">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="md">
+        <ModalHeader
+          title={newPayment.transactionType === 'ingreso' ? 'Nuevo ingreso' : 'Registrar gasto'}
+          subtitle="Operación manual de caja"
+          icon={newPayment.transactionType === 'ingreso' ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
+          iconClassName={newPayment.transactionType === 'ingreso' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}
+          onClose={() => setIsModalOpen(false)}
+          closeDisabled={saveStatus !== 'idle'}
+        />
 
-            <form onSubmit={handleCreatePayment} className="p-6 space-y-5">
-              <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Monto de la operación</label>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 text-xl group-focus-within:text-primary-600 transition-colors duration-150">$</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="w-full bg-white border border-surface-300 rounded-lg pl-9 pr-4 py-3 text-2xl font-semibold tracking-tight focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
-                    value={newPayment.amount}
-                    onChange={e => setNewPayment({...newPayment, amount: e.target.value})}
-                    required
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Concepto o destino</label>
+        <form onSubmit={handleCreatePayment} className="contents">
+          <ModalBody className="space-y-5">
+            <div>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5">Monto de la operación</label>
+              <div className="relative group">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 text-xl group-focus-within:text-primary-600 transition-colors duration-150">$</span>
                 <input
-                  type="text"
-                  placeholder="Ej: Compra de pantallas iPhone 15..."
-                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
-                  value={newPayment.description}
-                  onChange={e => setNewPayment({...newPayment, description: e.target.value.toUpperCase()})}
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="w-full bg-white border border-surface-300 rounded-lg pl-9 pr-4 py-3 text-2xl font-semibold tracking-tight focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  value={newPayment.amount}
+                  onChange={e => setNewPayment({...newPayment, amount: e.target.value})}
                   required
+                  autoFocus
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-surface-600 mb-1.5">Medio de pago</label>
-                  <select
-                    className="w-full bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
-                    value={newPayment.method}
-                    onChange={e => setNewPayment({...newPayment, method: e.target.value as PaymentMethod})}
-                  >
-                    <option value="efectivo">Efectivo</option>
-                    <option value="transferencia">Banco / Transferencia</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-surface-600 mb-1.5">Clasificación</label>
-                  <select
-                    className="w-full bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
-                    value={newPayment.type}
-                    onChange={e => setNewPayment({...newPayment, type: e.target.value as PaymentType})}
-                  >
-                    <option value="reparacion">Servicio técnico</option>
-                    <option value="repuestos">Adquisición de repuestos</option>
-                    <option value="insumos">Suministros</option>
-                    <option value="otro">Otro concepto</option>
-                  </select>
-                </div>
-              </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5">Concepto o destino</label>
+              <input
+                type="text"
+                placeholder="Ej: Compra de pantallas iPhone 15..."
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                value={newPayment.description}
+                onChange={e => setNewPayment({...newPayment, description: e.target.value.toUpperCase()})}
+                required
+              />
+            </div>
 
-              <div className="pt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150"
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5">Medio de pago</label>
+                <select
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  value={newPayment.method}
+                  onChange={e => setNewPayment({...newPayment, method: e.target.value as PaymentMethod})}
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className={`flex-[2] text-white text-sm font-medium h-11 rounded-lg transition-all duration-150 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'bg-success-600 hover:bg-success-700' : 'bg-danger-600 hover:bg-danger-700'}`}
-                  disabled={saveStatus !== 'idle'}
-                >
-                  {saveStatus === 'saving' ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      Guardar movimiento
-                    </>
-                  )}
-                </button>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="transferencia">Banco / Transferencia</option>
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <div>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5">Clasificación</label>
+                <select
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  value={newPayment.type}
+                  onChange={e => setNewPayment({...newPayment, type: e.target.value as PaymentType})}
+                >
+                  <option value="reparacion">Servicio técnico</option>
+                  <option value="repuestos">Adquisición de repuestos</option>
+                  <option value="insumos">Suministros</option>
+                  <option value="otro">Otro concepto</option>
+                </select>
+              </div>
+            </div>
+          </ModalBody>
+
+          <ModalFooter>
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="flex-1 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className={`flex-[2] text-white text-sm font-medium h-11 rounded-lg transition-all duration-150 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 ${newPayment.transactionType === 'ingreso' ? 'bg-success-600 hover:bg-success-700' : 'bg-danger-600 hover:bg-danger-700'}`}
+              disabled={saveStatus !== 'idle'}
+            >
+              {saveStatus === 'saving' ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  Guardar movimiento
+                </>
+              )}
+            </button>
+          </ModalFooter>
+        </form>
+      </Modal>
 
       {showSuccessToast && (
         <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-[100] animate-fade-in-up">

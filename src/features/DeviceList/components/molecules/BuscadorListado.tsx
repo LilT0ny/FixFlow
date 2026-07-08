@@ -9,7 +9,7 @@ interface BuscadorListadoProps {
 
 export const BuscadorListado: React.FC<BuscadorListadoProps> = ({ valor, alCambiar, placeholder = "Buscar..." }) => {
   return (
-    <div className="relative w-full md:w-[440px] group">
+    <div className="relative w-full group">
       <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 w-4 h-4 group-focus-within:text-primary-600 transition-colors duration-150 pointer-events-none" />
       <input
         type="text"

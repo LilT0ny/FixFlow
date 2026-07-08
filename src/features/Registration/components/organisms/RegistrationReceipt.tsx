@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CheckCircle, Printer, RefreshCw, X } from 'lucide-react';
+import { CheckCircle, Printer, RefreshCw } from 'lucide-react';
 import type { DeviceCheckInForm } from '../../../../types';
 import { printReceiptDoubleCopy } from '../../../../utils/printHelpers';
 import { Button } from '../../../../components/atoms/Button';
 import { Card } from '../../../../components/atoms/Card';
 import { useSettings } from '../../../../hooks/useSettings';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
 
 interface RegistrationReceiptProps {
   data: DeviceCheckInForm;
@@ -103,67 +104,57 @@ export const RegistrationReceipt: React.FC<RegistrationReceiptProps> = ({ data, 
       </div>
 
       {/* Print Configuration Modal */}
-      {isPrintModalOpen && (
-        <div className="fixed inset-0 bg-surface-900/50 backdrop-blur-sm z-50 flex justify-center items-center py-10 px-4 transition-opacity">
-          <Card className="w-full max-w-sm p-6 animate-in fade-in slide-in-from-bottom-8 duration-300 relative">
-            <button 
-              onClick={() => setIsPrintModalOpen(false)}
-              title="Close print settings"
-              className="absolute top-4 right-4 text-surface-400 hover:text-surface-600 bg-surface-100 hover:bg-surface-200 rounded-full p-1 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            <h3 className="text-lg font-semibold tracking-tight text-surface-900 mb-1 flex items-center gap-2">
-              <Printer className="w-5 h-5 text-primary-600"/>
-              Imprimir ticket
-            </h3>
-            <p className="text-sm text-surface-500 mb-6">Orden #{orderNumber}</p>
+      <Modal isOpen={isPrintModalOpen} onClose={() => setIsPrintModalOpen(false)} size="sm">
+        <ModalHeader
+          title="Imprimir ticket"
+          subtitle={`Orden #${orderNumber}`}
+          icon={<Printer className="w-5 h-5" />}
+          iconClassName="bg-primary-50 text-primary-600"
+          onClose={() => setIsPrintModalOpen(false)}
+        />
 
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-surface-700">Formato de impresión</label>
+        <ModalBody className="space-y-4">
+          <label className="block text-sm font-medium text-surface-700">Formato de impresión</label>
 
-              <div className="grid gap-2.5">
-                {[
-                  { id: '58mm', label: 'Ticket térmico (58mm)', desc: 'Impresora básica' },
-                  { id: '80mm', label: 'Ticket térmico (80mm)', desc: 'Impresora ancha' },
-                  { id: 'A4', label: 'Hoja normal (A4)', desc: 'Impresora estándar' }
-                ].map(format => (
-                  <label
-                    key={format.id}
-                    className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors duration-150 ${
-                      selectedFormat === format.id ? 'border-primary-500 bg-primary-50/50 text-surface-900' : 'border-surface-300 hover:border-surface-400 bg-white text-surface-900'
-                    }`}
-                  >
-                    <div className="flex h-5 items-center">
-                      <input 
-                        type="radio" 
-                        value={format.id}
-                        checked={selectedFormat === format.id}
-                        onChange={(e) => setSelectedFormat(e.target.value as '58mm' | '80mm')}
-                        className="h-4 w-4 text-primary-600 border-surface-300 focus:ring-primary-600" 
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="block text-sm font-medium">
-                        {format.label}
-                      </span>
-                      <span className="block text-xs text-surface-500 mt-0.5">{format.desc}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
+          <div className="grid gap-2.5">
+            {[
+              { id: '58mm', label: 'Ticket térmico (58mm)', desc: 'Impresora básica' },
+              { id: '80mm', label: 'Ticket térmico (80mm)', desc: 'Impresora ancha' },
+              { id: 'A4', label: 'Hoja normal (A4)', desc: 'Impresora estándar' }
+            ].map(format => (
+              <label
+                key={format.id}
+                className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors duration-150 ${
+                  selectedFormat === format.id ? 'border-primary-500 bg-primary-50/50 text-surface-900' : 'border-surface-300 hover:border-surface-400 bg-white text-surface-900'
+                }`}
+              >
+                <div className="flex h-5 items-center">
+                  <input
+                    type="radio"
+                    value={format.id}
+                    checked={selectedFormat === format.id}
+                    onChange={(e) => setSelectedFormat(e.target.value as '58mm' | '80mm')}
+                    className="h-4 w-4 text-primary-600 border-surface-300 focus:ring-primary-600"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="block text-sm font-medium">
+                    {format.label}
+                  </span>
+                  <span className="block text-xs text-surface-500 mt-0.5">{format.desc}</span>
+                </div>
+              </label>
+            ))}
+          </div>
+        </ModalBody>
 
-              <div className="pt-4 mt-2 border-t border-surface-200 flex flex-col gap-3">
-                <Button onClick={handlePrint} variant="primary" className="w-full">
-                  <Printer className="w-4 h-4" />
-                  Enviar a imprimir
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+        <ModalFooter>
+          <Button onClick={handlePrint} variant="primary" className="w-full">
+            <Printer className="w-4 h-4" />
+            Enviar a imprimir
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

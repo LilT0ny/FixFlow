@@ -2,6 +2,18 @@
 import { supabase } from '../lib/supabase';
 import type { PaymentTransaction } from '../types';
 
+/** Ingresos ligados a una nota de venta traen su detalle embebido —
+ *  necesario para poder reimprimir la nota desde Transacciones sin
+ *  tener que ir a buscarla a otro lado (ese "otro lado" ya no existe). */
+const PAYMENT_SELECT = `
+  *,
+  nota:notas_venta (
+    numero_nota,
+    cliente:cliente_id (nombre_completo, cedula, telefono, direccion, email),
+    items:nota_venta_item (descripcion, cantidad, precio_unitario)
+  )
+`;
+
 export const PaymentService = {
   /**
    * Obtiene todas las transacciones del tenant (RLS filtra).
@@ -10,21 +22,38 @@ export const PaymentService = {
   async getPayments(): Promise<PaymentTransaction[]> {
     const { data, error } = await supabase
       .from('transacciones')
-      .select('*')
+      .select(PAYMENT_SELECT)
       .order('fecha', { ascending: false });
 
     if (error) throw error;
 
-    return (data || []).map(t => ({
-      id: t.id,
-      date: t.fecha,
-      amount: Number(t.monto),
-      method: t.metodo,
-      type: t.categoria,
-      transactionType: t.tipo,
-      description: t.descripcion,
-      orderId: t.orden_id ?? undefined,
-    }));
+    return (data || []).map(t => {
+      const nota = Array.isArray(t.nota) ? t.nota[0] : t.nota;
+      return {
+        id: t.id,
+        date: t.fecha,
+        amount: Number(t.monto),
+        method: t.metodo,
+        type: t.categoria,
+        transactionType: t.tipo,
+        description: t.descripcion,
+        orderId: t.orden_id ?? undefined,
+        saleNumber: nota?.numero_nota,
+        customer: nota?.cliente ? {
+          fullName: nota.cliente.nombre_completo,
+          documentId: nota.cliente.cedula,
+          phone: nota.cliente.telefono,
+          address: nota.cliente.direccion,
+          email: nota.cliente.email,
+        } : undefined,
+        items: nota?.items?.map((i: { descripcion: string; cantidad: number; precio_unitario: number }, idx: number) => ({
+          id: `${t.id}-${idx}`,
+          description: i.descripcion,
+          quantity: i.cantidad,
+          price: Number(i.precio_unitario),
+        })),
+      };
+    });
   },
 
   /**

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Printer, MessageSquare, Building2, ImageIcon, Save, CheckCircle2, Loader2, Info, Plus } from 'lucide-react';
+import { Printer, MessageSquare, Building2, ImageIcon, Save, CheckCircle2, Loader2, Info, Plus, FileText } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
 import { CreateUserModal } from './components/CreateUserModal';
 import { PageHeader } from '../../components/design-system';
@@ -27,6 +27,7 @@ export const SettingsFeature: React.FC = () => {
     } catch (error) {
       console.error('Error saving settings:', error);
       setSaveStatus('idle');
+      alert('No se pudo guardar la configuración: ' + (error instanceof Error ? error.message : 'Error desconocido'));
     }
   };
 
@@ -242,6 +243,28 @@ export const SettingsFeature: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-surface-200 p-6 space-y-5 shadow-xs">
+            <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
+              <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-surface-900">Términos y condiciones</h2>
+                <p className="text-xs text-surface-500">Se imprimen al pie del ticket de ingreso</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-surface-600">Texto de términos y condiciones</label>
+              <textarea
+                className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none text-sm leading-relaxed min-h-[140px]"
+                value={formData.termsConditions || ''}
+                onChange={e => setFormData({ ...formData, termsConditions: e.target.value })}
+                placeholder="Ej. El taller no se responsabiliza por equipos no retirados después de 30 días. La garantía cubre únicamente el trabajo realizado..."
+                title="Términos y condiciones del servicio"
+              />
             </div>
           </div>
          </div>

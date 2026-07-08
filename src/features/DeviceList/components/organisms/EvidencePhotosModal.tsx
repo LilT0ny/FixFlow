@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Camera, Upload, X, Trash2, ZoomIn } from 'lucide-react';
 import type { EvidencePhoto } from '../../../../types';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
 
 interface EvidencePhotosModalProps {
   isOpen: boolean;
@@ -13,10 +14,10 @@ interface EvidencePhotosModalProps {
 
 type Stage = EvidencePhoto['stage'];
 
-const STAGES: { key: Stage; label: string; color: string; bg: string }[] = [
-  { key: 'antes',    label: 'Antes',   color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200' },
-  { key: 'durante',  label: 'Durante', color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200' },
-  { key: 'despues',  label: 'Después', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+const STAGES: { key: Stage; label: string; dot: string }[] = [
+  { key: 'antes',   label: 'Antes',   dot: 'bg-blue-500' },
+  { key: 'durante', label: 'Durante', dot: 'bg-amber-500' },
+  { key: 'despues', label: 'Después', dot: 'bg-emerald-500' },
 ];
 
 export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
@@ -84,107 +85,112 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const photosByStage = (stage: Stage) => photos.filter(p => p.stage === stage);
 
   return (
-    <div className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:rounded-xl sm:max-w-2xl max-h-[95dvh] flex flex-col shadow-lg animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+        <ModalHeader
+          title="Fotos de evidencia"
+          subtitle={`Orden #${orderNumber} · ${photos.length} foto${photos.length !== 1 ? 's' : ''}`}
+          onClose={onClose}
+        />
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-200 shrink-0">
-          <div>
-            <h3 className="text-lg font-semibold text-surface-900">Fotos de evidencia</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Orden #{orderNumber}</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-100 transition-colors duration-150">
-            <X className="w-5 h-5 text-surface-500" />
-          </button>
-        </div>
+        <ModalBody className="space-y-6">
+          {STAGES.map(({ key, label, dot }) => {
+            const stagePhotos = photosByStage(key);
+            return (
+              <section key={key}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${dot}`} />
+                    <span className="text-sm font-medium text-surface-900">{label}</span>
+                    {stagePhotos.length > 0 && (
+                      <span className="text-xs text-surface-400">({stagePhotos.length})</span>
+                    )}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => openCamera(key)}
+                      className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 text-surface-600 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-900 transition-colors duration-150"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      Cámara
+                    </button>
+                    <button
+                      onClick={() => fileInputRefs.current[key]?.click()}
+                      className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 text-surface-600 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-900 transition-colors duration-150"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      Archivo
+                    </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={el => { fileInputRefs.current[key] = el; }}
+                      onChange={e => handleFileChange(key, e)}
+                    />
+                  </div>
+                </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-5">
-          {STAGES.map(({ key, label, color, bg }) => (
-            <section key={key} className={`rounded-xl border p-4 ${bg}`}>
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm font-semibold ${color}`}>{label}</span>
-                <div className="flex gap-2">
-                  {/* Cámara */}
-                  <button
-                    onClick={() => openCamera(key)}
-                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-surface-300 rounded-lg hover:bg-surface-50 transition-colors duration-150"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    Cámara
-                  </button>
-                  {/* Subir archivo */}
+                {/* Galería */}
+                {stagePhotos.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {stagePhotos.map((photo, idx) => (
+                      <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-surface-200 bg-surface-50">
+                        <img
+                          src={photo.url}
+                          alt={`${label} ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Acciones: siempre visibles en táctil, con hover en desktop */}
+                        <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150">
+                          <button
+                            onClick={() => setLightboxUrl(photo.url)}
+                            className="p-1.5 bg-white/90 rounded-md hover:bg-white transition-colors duration-150"
+                            title="Ampliar"
+                          >
+                            <ZoomIn className="w-3.5 h-3.5 text-surface-700" />
+                          </button>
+                          <button
+                            onClick={() => onDelete(photos.indexOf(photo))}
+                            className="p-1.5 bg-white/90 rounded-md hover:bg-danger-50 transition-colors duration-150"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-danger-600" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <button
                     onClick={() => fileInputRefs.current[key]?.click()}
-                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-white border border-surface-300 rounded-lg hover:bg-surface-50 transition-colors duration-150"
+                    className="w-full flex items-center justify-center gap-2 py-5 rounded-lg border border-dashed border-surface-300 text-sm text-surface-400 hover:border-surface-400 hover:text-surface-600 transition-colors duration-150"
                   >
-                    <Upload className="w-3.5 h-3.5" />
-                    Archivo
+                    <Upload className="w-4 h-4" />
+                    Agregar foto
                   </button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    ref={el => { fileInputRefs.current[key] = el; }}
-                    onChange={e => handleFileChange(key, e)}
-                  />
-                </div>
-              </div>
-
-              {/* Galería */}
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {photosByStage(key).map((photo, idx) => (
-                  <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-surface-200">
-                    <img
-                      src={photo.url}
-                      alt={`${label} ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={() => setLightboxUrl(photo.url)}
-                        className="p-1.5 bg-white/90 rounded-lg hover:bg-white transition-colors"
-                      >
-                        <ZoomIn className="w-3.5 h-3.5 text-gray-700" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(photos.indexOf(photo))}
-                        className="p-1.5 bg-red-500/90 rounded-lg hover:bg-red-600 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-white" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {photosByStage(key).length === 0 && (
-                  <div className="col-span-full flex items-center justify-center py-6 text-sm text-surface-400">
-                    Sin fotos aún — usá Cámara o Archivo
-                  </div>
                 )}
-              </div>
-            </section>
-          ))}
-        </div>
+              </section>
+            );
+          })}
+        </ModalBody>
 
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-surface-200 shrink-0">
+        <ModalFooter>
           <button
             onClick={onClose}
-            className="w-full h-11 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 transition-colors duration-150"
+            className="w-full h-11 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 active:scale-[0.99] transition-all duration-150"
           >
-            Listo ({photos.length} foto{photos.length !== 1 ? 's' : ''})
+            Listo
           </button>
-        </div>
-      </div>
+        </ModalFooter>
+      </Modal>
 
-      {/* ─── Vista de Cámara (overlay) ─── */}
+      {/* ─── Vista de Cámara (overlay por encima del modal) ─── */}
       {cameraStage && (
-        <div className="fixed inset-0 z-[120] bg-black flex flex-col">
+        <div className="fixed inset-0 z-[210] bg-black flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 shrink-0">
             <span className="text-white font-medium text-sm">
               Foto: {STAGES.find(s => s.key === cameraStage)?.label}
@@ -215,10 +221,10 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
         </div>
       )}
 
-      {/* ─── Lightbox ─── */}
+      {/* ─── Lightbox (overlay por encima del modal) ─── */}
       {lightboxUrl && (
         <div
-          className="fixed inset-0 z-[130] bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[220] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setLightboxUrl(null)}
         >
           <button
@@ -235,6 +241,6 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
           />
         </div>
       )}
-    </div>
+    </>
   );
 };

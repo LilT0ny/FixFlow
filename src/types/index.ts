@@ -44,6 +44,8 @@ export interface ServiceOrder {
   status: OrderStatus;
   createdAt: string;
   deleted?: boolean;
+  /** Nota de venta generada al entregar (si existe) */
+  notaVenta?: { id: string; numero: string };
 }
 
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta';

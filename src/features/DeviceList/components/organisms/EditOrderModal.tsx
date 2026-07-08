@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Smartphone, Wrench, DollarSign, Loader2, Save, AlertCircle } from 'lucide-react';
+import { User, Smartphone, Wrench, DollarSign, Loader2, Save, AlertCircle } from 'lucide-react';
 import type { ServiceOrder } from '../../../../types';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
+import { useClienteLookup } from '../../../../hooks/useClienteLookup';
 
 interface EditOrderModalProps {
   order: ServiceOrder | null;
@@ -13,32 +15,6 @@ interface EditOrderModalProps {
 
 /** Convierte a mayúsculas (excepto email) */
 const toUpper = (val: string) => val.toUpperCase();
-
-/**
- * Verifica cédula ecuatoriana con algoritmo Módulo 10.
- * Acepta también CI extranjeras (11-13 dígitos) y el valor especial de Consumidor Final.
- */
-function validarCedula(ci: string): boolean {
-  const clean = ci.replace(/\s/g, '');
-  if (clean === '9999999999999') return true;   // Consumidor Final
-  if (!/^\d+$/.test(clean)) return false;
-  if (clean.length === 10) {
-    // RUC/CI 10 dígitos — Módulo 10
-    const digits = clean.split('').map(Number);
-    const prov = Number(clean.substring(0, 2));
-    if (prov < 1 || prov > 24) return false;
-    const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];
-    const sum = coef.reduce((acc, c, i) => {
-      let val = c * digits[i];
-      if (val >= 10) val -= 9;
-      return acc + val;
-    }, 0);
-    const check = sum % 10 === 0 ? 0 : 10 - (sum % 10);
-    return check === digits[9];
-  }
-  if (clean.length >= 11 && clean.length <= 13) return true; // CI extranjera / RUC
-  return false;
-}
 
 /**
  * Valida el formato de teléfono: empieza con 0 (Ecuador local) o +593 / 593.
@@ -54,7 +30,7 @@ function validarTelefono(tel: string): boolean {
 /**
  * Modal de edición completa de una orden de servicio.
  * - AUTO-MAYÚSCULAS en todos los campos excepto email.
- * - Validación Módulo 10 para cédula.
+ * - Sin validación de formato de cédula (clientes extranjeros, sin ID conocido).
  * - Validación de formato de teléfono (+593 / 09XXXXXXXX).
  * - Costos no pueden ser negativos; Abono ≤ Costo Total.
  */
@@ -62,13 +38,32 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
   const [draft,    setDraft]    = useState<ServiceOrder | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [errors,   setErrors]   = useState<Record<string, string>>({});
+  const { lookup, isSearching: isSearchingClient } = useClienteLookup();
+  const [showAutofillToast, setShowAutofillToast] = useState(false);
 
   // Clonar la orden cuando se abre el modal (evitar mutación del original)
   useEffect(() => {
     if (order) setDraft(JSON.parse(JSON.stringify(order)));
   }, [order]);
 
-  if (!isOpen || !draft) return null;
+  if (!draft) return null;
+
+  const lookupClient = async (cedula: string) => {
+    const client = await lookup(cedula);
+    if (!client) return;
+    setDraft(prev => prev ? {
+      ...prev,
+      customer: {
+        ...prev.customer,
+        fullName: client.fullName.toUpperCase(),
+        phone: client.phone || prev.customer.phone,
+        email: client.email || prev.customer.email,
+        address: client.address ? client.address.toUpperCase() : prev.customer.address,
+      }
+    } : null);
+    setShowAutofillToast(true);
+    setTimeout(() => setShowAutofillToast(false), 3000);
+  };
 
   // ── Helpers de mutación del borrador ────────────────────────────────────
   const setCustomer = (field: keyof ServiceOrder['customer'], value: string) => {
@@ -109,8 +104,8 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
       newErrors.fullName = 'El nombre es obligatorio.';
     }
 
-    if (!validarCedula(draft.customer.documentId)) {
-      newErrors.documentId = 'Cédula/RUC inválida (verifica el dígito verificador).';
+    if (!draft.customer.documentId.trim()) {
+      newErrors.documentId = 'La identificación es obligatoria.';
     }
 
     const isSale = draft.orderNumber.startsWith('NT');
@@ -168,30 +163,18 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
     ) : null;
 
   return (
-    <div className="fixed inset-0 bg-surface-900/40 z-50 flex justify-center items-center py-6 px-4 animate-fade-in">
-      <div className="bg-white rounded-xl border border-surface-200 shadow-lg w-full max-w-2xl flex flex-col max-h-[92vh] animate-scale-in overflow-hidden">
-
-        {/* Header */}
-        <div className="p-5 border-b border-surface-200 flex justify-between items-center shrink-0">
-          <div>
-            <h3 className="text-lg font-semibold text-surface-900 flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-primary-600" />
-              Editar {isSale ? 'Nota de Venta' : 'Orden'} #{isSale ? draft.orderNumber : draft.orderNumber}
-            </h3>
-            <p className="text-xs text-surface-500 mt-0.5">Los cambios se guardarán en la base de datos.</p>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={isSaving}
-            className="p-2 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-700 transition-colors duration-150 disabled:opacity-50"
-            aria-label="Cerrar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <ModalHeader
+        title={`Editar ${isSale ? 'Nota de Venta' : 'Orden'} #${draft.orderNumber}`}
+        subtitle="Los cambios se guardarán en la base de datos."
+        icon={<Wrench className="w-5 h-5" />}
+        iconClassName="bg-primary-50 text-primary-600"
+        onClose={onClose}
+        closeDisabled={isSaving}
+      />
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <ModalBody className="space-y-6">
 
           {/* ─── DATOS DEL CLIENTE ─── */}
           <section>
@@ -213,15 +196,21 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
                   <ErrorMsg field="fullName" />
                 </div>
                 <div>
-                  <label className={labelClass}>Cédula / RUC *</label>
-                  <input
-                    type="text"
-                    className={ic('documentId')}
-                    value={draft.customer.documentId}
-                    onChange={e => setCustomer('documentId', e.target.value.replace(/\D/g, ''))}
-                    placeholder="0000000000"
-                    maxLength={13}
-                  />
+                  <label className={labelClass}>Identificación (cédula, RUC o pasaporte) *</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className={ic('documentId') + ' pr-9'}
+                      value={draft.customer.documentId}
+                      onChange={e => setCustomer('documentId', e.target.value)}
+                      onBlur={() => lookupClient(draft.customer.documentId)}
+                      placeholder="Ej. 1712345678, V-12345678..."
+                      maxLength={20}
+                    />
+                    {isSearchingClient && (
+                      <Loader2 className="w-4 h-4 animate-spin text-primary-600 absolute right-3 top-1/2 -translate-y-1/2" />
+                    )}
+                  </div>
                   <ErrorMsg field="documentId" />
                 </div>
                 <div>
@@ -419,29 +408,36 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
               )}
             </div>
           </section>
-        </div>
+        </ModalBody>
 
-        {/* Footer */}
-        <div className="p-5 border-t border-surface-200 bg-surface-50 flex gap-3 shrink-0">
+        <ModalFooter>
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="flex-1 border border-surface-300 bg-white text-surface-700 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
+            className="flex-1 border border-surface-300 bg-white text-surface-700 h-11 rounded-lg text-sm font-medium hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex-1 bg-surface-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-surface-800 transition-colors duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 bg-surface-900 text-white h-11 rounded-lg text-sm font-medium hover:bg-surface-800 transition-colors duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSaving
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
               : <><Save className="w-4 h-4" /> Guardar cambios</>
             }
           </button>
-        </div>
-      </div>
-    </div>
+        </ModalFooter>
+
+        {showAutofillToast && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[230] w-max max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="bg-surface-900 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2.5">
+              <User className="w-4 h-4 text-primary-400 shrink-0" />
+              <p className="text-sm font-medium truncate">Cliente encontrado — datos actualizados</p>
+            </div>
+          </div>
+        )}
+    </Modal>
   );
 };

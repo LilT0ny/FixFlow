@@ -1,25 +1,50 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Home, LogOut, Settings, Users, ChartNoAxesCombined, SquarePlus, MonitorSmartphone, CircleDollarSign, FileText, Wrench } from 'lucide-react';
+import {
+  Menu, X, Home, LogOut, Settings, Users, ChartNoAxesCombined, SquarePlus,
+  CircleDollarSign, Wrench, PanelLeftClose, PanelLeftOpen
+} from 'lucide-react';
 import { useAppContext } from '../store/AppContext';
 import { useSettings } from '../hooks/useSettings';
 
+/** Navegación agrupada por tipo de tarea */
+const NAV_SECTIONS = [
+  {
+    title: 'Taller',
+    items: [
+      { to: '/', icon: Home, label: 'Inicio', end: true },
+      { to: '/check-in', icon: SquarePlus, label: 'Nuevo ingreso' },
+      { to: '/clients', icon: Users, label: 'Clientes' },
+    ],
+  },
+  {
+    title: 'Finanzas',
+    items: [
+      { to: '/cash', icon: CircleDollarSign, label: 'Transacciones' },
+      { to: '/reports', icon: ChartNoAxesCombined, label: 'Reportes' },
+    ],
+  },
+  {
+    title: 'Sistema',
+    items: [
+      { to: '/settings', icon: Settings, label: 'Configuración' },
+    ],
+  },
+];
+
 export const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => localStorage.getItem('sidebar_collapsed') === '1');
   const { logout } = useAppContext();
   const { settings } = useSettings();
   const location = useLocation();
 
-  const navItems = [
-    { to: "/", icon: Home, label: "Inicio", end: true },
-    { to: "/check-in", icon: SquarePlus, label: "Nuevo ingreso" },
-    { to: "/devices", icon: MonitorSmartphone, label: "Dispositivos" },
-    { to: "/sales", icon: FileText, label: "Notas de venta" },
-    { to: "/clients", icon: Users, label: "Clientes" },
-    { to: "/cash", icon: CircleDollarSign, label: "Transacciones" },
-    { to: "/reports", icon: ChartNoAxesCombined, label: "Reportes" },
-    { to: "/settings", icon: Settings, label: "Configuración" },
-  ];
+  const toggleCollapsed = () => {
+    setCollapsed(prev => {
+      localStorage.setItem('sidebar_collapsed', prev ? '0' : '1');
+      return !prev;
+    });
+  };
 
   const brandLogo = (
     <div className="w-10 h-10 flex items-center justify-center overflow-hidden rounded-lg bg-surface-900 shrink-0">
@@ -31,36 +56,55 @@ export const AdminLayout = () => {
     </div>
   );
 
-  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${isActive
+  const navLinkClass = (isActive: boolean, isCollapsed: boolean) =>
+    `flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-150 ${
+      isCollapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
+    } ${isActive
       ? 'bg-surface-100 text-surface-900'
       : 'text-surface-500 hover:text-surface-900 hover:bg-surface-50'}`;
 
-  const navigation = (
-    <nav className="flex-1 px-3 space-y-1">
-      {navItems.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          onClick={() => setSidebarOpen(false)}
-          className={navLinkClass}
-        >
-          <item.icon className="w-[18px] h-[18px] shrink-0" />
-          {item.label}
-        </NavLink>
+  const navigation = (isCollapsed: boolean) => (
+    <nav className="flex-1 px-3 space-y-4 overflow-y-auto">
+      {NAV_SECTIONS.map((section, i) => (
+        <div key={section.title}>
+          {isCollapsed ? (
+            i > 0 && <div className="border-t border-surface-100 mx-2 mb-3" />
+          ) : (
+            <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-surface-400 select-none">
+              {section.title}
+            </p>
+          )}
+          <div className="space-y-1">
+            {section.items.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={() => setSidebarOpen(false)}
+                title={isCollapsed ? item.label : undefined}
+                className={({ isActive }) => navLinkClass(isActive, isCollapsed)}
+              >
+                <item.icon className="w-[18px] h-[18px] shrink-0" />
+                {!isCollapsed && item.label}
+              </NavLink>
+            ))}
+          </div>
+        </div>
       ))}
     </nav>
   );
 
-  const logoutButton = (
+  const logoutButton = (isCollapsed: boolean) => (
     <div className="p-3 mt-auto border-t border-surface-200">
       <button
         onClick={logout}
-        className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-150"
+        title={isCollapsed ? 'Cerrar sesión' : undefined}
+        className={`flex items-center gap-3 py-2.5 w-full rounded-lg text-sm font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-150 ${
+          isCollapsed ? 'justify-center px-0' : 'px-3'
+        }`}
       >
-        <LogOut className="w-[18px] h-[18px]" />
-        Cerrar sesión
+        <LogOut className="w-[18px] h-[18px] shrink-0" />
+        {!isCollapsed && 'Cerrar sesión'}
       </button>
     </div>
   );
@@ -68,23 +112,54 @@ export const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-surface-50 font-sans text-surface-900 flex">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-surface-200 fixed h-full z-10">
-        <div className="p-4 pb-6 flex items-center gap-3">
+      <aside
+        className={`hidden md:flex flex-col bg-white border-r border-surface-200 fixed h-full z-10 transition-[width] duration-300 ease-out ${
+          collapsed ? 'w-[76px]' : 'w-64'
+        }`}
+      >
+        <div className={`p-4 pb-5 flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
           {brandLogo}
-          <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold tracking-tight text-surface-900 leading-tight truncate">
-              {settings?.companyName || 'Cargando...'}
-            </h1>
-            <p className="text-xs text-surface-500 truncate">Panel administrativo</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <h1 className="text-[15px] font-semibold tracking-tight text-surface-900 leading-tight truncate">
+                {settings?.companyName || 'Cargando...'}
+              </h1>
+              <p className="text-xs text-surface-500 truncate">Panel administrativo</p>
+            </div>
+          )}
         </div>
 
-        {navigation}
-        {logoutButton}
+        {navigation(collapsed)}
+
+        {/* Toggle contraer/expandir */}
+        <div className="px-3 pb-1">
+          <button
+            onClick={toggleCollapsed}
+            title={collapsed ? 'Expandir menú' : 'Contraer menú'}
+            className={`flex items-center gap-3 py-2.5 w-full rounded-lg text-sm font-medium text-surface-500 hover:text-surface-900 hover:bg-surface-50 transition-colors duration-150 ${
+              collapsed ? 'justify-center px-0' : 'px-3'
+            }`}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="w-[18px] h-[18px] shrink-0" />
+            ) : (
+              <>
+                <PanelLeftClose className="w-[18px] h-[18px] shrink-0" />
+                Contraer menú
+              </>
+            )}
+          </button>
+        </div>
+
+        {logoutButton(collapsed)}
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen relative p-4 md:p-8 lg:p-10 pt-20 md:pt-8">
+      <div
+        className={`flex-1 flex flex-col min-h-screen relative p-4 md:p-8 lg:p-10 pt-20 md:pt-8 transition-[margin] duration-300 ease-out ${
+          collapsed ? 'md:ml-[76px]' : 'md:ml-64'
+        }`}
+      >
         {/* Mobile header */}
         <div className="md:hidden fixed top-0 left-0 w-full h-14 bg-white/90 backdrop-blur-md border-b border-surface-200 z-20 flex items-center justify-between px-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -132,8 +207,8 @@ export const AdminLayout = () => {
             </button>
           </div>
 
-          {navigation}
-          {logoutButton}
+          {navigation(false)}
+          {logoutButton(false)}
         </aside>
 
         <main key={location.pathname} className="animate-fade-in-up">

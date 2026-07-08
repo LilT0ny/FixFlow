@@ -19,7 +19,7 @@ export const FiltroTabs: React.FC<FiltroTabsProps> = ({ activeStatuses, toggleSt
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="text-xs font-medium text-surface-500 mr-1">Filtros:</div>
+      <div className="text-xs font-medium text-surface-500 mr-1 whitespace-nowrap">Filtros:</div>
       {flags.map((flag) => {
          const isActive = activeStatuses.includes(flag.id);
          return (

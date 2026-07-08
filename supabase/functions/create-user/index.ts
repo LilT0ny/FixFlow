@@ -77,9 +77,9 @@ Deno.serve(async (req) => {
     });
 
     if (createError) {
-      const msg = createError.message.includes('already')
-        ? 'El correo ya está registrado'
-        : createError.message;
+      console.error('[create-user] admin.createUser:', JSON.stringify(createError));
+      const raw = createError.message || (createError as { code?: string }).code || JSON.stringify(createError);
+      const msg = raw.includes('already') ? 'El correo ya está registrado' : raw;
       return json({ error: msg }, 400);
     }
 

@@ -9,9 +9,10 @@ interface AppContextType {
   orders: ServiceOrder[];
   payments: PaymentTransaction[];
   addOrder: (data: DeviceCheckInForm, kind?: 'REP' | 'NT') => Promise<ServiceOrder>;
-  updateOrderStatus: (id: string, status: OrderStatus) => void;
-  updateOrder: (id: string, updates: Partial<ServiceOrder>) => void;
-  deleteOrder: (id: string) => void;
+  updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
+  updateOrder: (id: string, updates: Partial<ServiceOrder>) => Promise<void>;
+  deleteOrder: (id: string) => Promise<void>;
+  refreshOrders: () => Promise<void>;
   addPayment: (payment: Omit<PaymentTransaction, 'id' | 'date'>) => void;
   authUser: AuthUser | null;
   authLoading: boolean;
@@ -87,6 +88,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateOrderStatus,
       updateOrder,
       deleteOrder,
+      refreshOrders,
       addPayment: baseAddPayment,
       authUser,
       authLoading,

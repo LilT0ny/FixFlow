@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Loader2, CheckCircle2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, CheckCircle2, Users } from 'lucide-react';
 import type { Client } from '../../services/ClientService';
 import { useClients } from './hooks/useClients';
 import { PageHeader, SearchInput, DataCard, EmptyState, Badge } from '../../components/design-system';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 
 export const ClientsFeature: React.FC = () => {
   const { clients, fetchClients, deleteClient, saveClient } = useClients();
@@ -169,95 +170,96 @@ export const ClientsFeature: React.FC = () => {
       </DataCard>
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-surface-900/40 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-xl border border-surface-200 w-full max-w-md p-6 shadow-lg animate-scale-in max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-surface-900 mb-6">
-              {editingClient ? 'Editar cliente' : 'Nuevo cliente'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="md">
+        <ModalHeader
+          title={editingClient ? 'Editar cliente' : 'Nuevo cliente'}
+          icon={<Users className="w-5 h-5" />}
+          onClose={() => setIsModalOpen(false)}
+          closeDisabled={saveStatus !== 'idle'}
+        />
+        <form onSubmit={handleSubmit} className="contents">
+          <ModalBody className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5">Nombre completo</label>
+              <input
+                type="text"
+                required
+                value={formData.fullName}
+                onChange={e => setFormData({...formData, fullName: e.target.value.toUpperCase()})}
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Nombre completo</label>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5">Cédula / RUC</label>
                 <input
                   type="text"
                   required
-                  value={formData.fullName}
-                  onChange={e => setFormData({...formData, fullName: e.target.value.toUpperCase()})}
+                  value={formData.documentId}
+                  onChange={e => setFormData({...formData, documentId: e.target.value})}
                   className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-surface-600 mb-1.5">Cédula / RUC</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.documentId}
-                    onChange={e => setFormData({...formData, documentId: e.target.value})}
-                    className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-surface-600 mb-1.5">Teléfono</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                    className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
-                  />
-                </div>
-              </div>
               <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Correo electrónico</label>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5">Teléfono</label>
                 <input
-                  type="email"
-                  value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  type="text"
+                  required
+                  value={formData.phone}
+                  onChange={e => setFormData({...formData, phone: e.target.value})}
                   className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Dirección</label>
-                <textarea
-                  className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none min-h-[80px]"
-                  value={formData.address}
-                  onChange={e => setFormData({...formData, address: e.target.value.toUpperCase()})}
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={saveStatus !== 'idle'}
-                  className="flex-1 px-4 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saveStatus !== 'idle'}
-                  className="flex-[2] bg-surface-900 text-white text-sm font-medium h-11 rounded-lg hover:bg-surface-800 transition-all duration-150 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {saveStatus === 'saving' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Guardando...
-                    </>
-                  ) : saveStatus === 'success' ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      Guardado
-                    </>
-                  ) : (
-                    'Guardar cliente'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5">Correo electrónico</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={e => setFormData({...formData, email: e.target.value})}
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5">Dirección</label>
+              <textarea
+                className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none min-h-[80px]"
+                value={formData.address}
+                onChange={e => setFormData({...formData, address: e.target.value.toUpperCase()})}
+              />
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              disabled={saveStatus !== 'idle'}
+              className="flex-1 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saveStatus !== 'idle'}
+              className="flex-[2] bg-surface-900 text-white text-sm font-medium h-11 rounded-lg hover:bg-surface-800 transition-all duration-150 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {saveStatus === 'saving' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : saveStatus === 'success' ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  Guardado
+                </>
+              ) : (
+                'Guardar cliente'
+              )}
+            </button>
+          </ModalFooter>
+        </form>
+      </Modal>
     </div>
   );
 };
