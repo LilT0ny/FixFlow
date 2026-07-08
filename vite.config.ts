@@ -15,7 +15,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui': ['lucide-react', 'recharts', 'qrcode.react'],
-          'vendor-utils': ['date-fns', 'xlsx', 'tailwind-merge', 'clsx'],
+          'vendor-utils': ['date-fns', 'exceljs', 'tailwind-merge', 'clsx'],
         },
       },
     },
