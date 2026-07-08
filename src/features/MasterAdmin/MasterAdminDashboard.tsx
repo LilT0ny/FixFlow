@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTenants } from '../../hooks/useAuthSaaS';
 import { useAuth } from '../../hooks/useAuthSaaS';
-import { Plus, LogOut, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard } from 'lucide-react';
+import { Plus, LogOut, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard, Pencil } from 'lucide-react';
 import { CreateTenantModal } from './CreateTenantModal';
+import { EditTenantModal } from './EditTenantModal';
 import { TenantUsersModal } from './TenantUsersModal';
 import type { Tenant } from '../../services/SaaSAuthService';
 
@@ -16,9 +17,10 @@ const PLAN_COLORS: Record<string, string> = {
 export const MasterAdminDashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, logout } = useAuth();
-  const { tenants, loading, createTenant, deactivateTenant } = useTenants();
+  const { tenants, loading, createTenant, deactivateTenant, updateTenant } = useTenants();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
 
   // Validar que sea master admin
   useEffect(() => {
@@ -52,6 +54,12 @@ export const MasterAdminDashboard = () => {
     } catch (error) {
       alert('Error: ' + (error instanceof Error ? error.message : 'Error desconocido'));
     }
+  };
+
+  const handleUpdateTenant = async (data: any) => {
+    if (!editingTenant) return;
+    await updateTenant(editingTenant.id, data);
+    setEditingTenant(null);
   };
 
   if (authLoading) {
@@ -186,6 +194,13 @@ export const MasterAdminDashboard = () => {
                 {/* Actions */}
                 <div className="flex gap-2 px-5 pb-4 pt-3 border-t border-gray-100 mt-2">
                   <button
+                    onClick={() => setEditingTenant(tenant)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors duration-150 text-xs font-medium"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Editar
+                  </button>
+                  <button
                     onClick={() => setSelectedTenant(tenant)}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors duration-150 text-xs font-medium"
                   >
@@ -238,6 +253,14 @@ export const MasterAdminDashboard = () => {
         <TenantUsersModal
           tenant={selectedTenant}
           onClose={() => setSelectedTenant(null)}
+        />
+      )}
+
+      {editingTenant && (
+        <EditTenantModal
+          tenant={editingTenant}
+          onClose={() => setEditingTenant(null)}
+          onSave={handleUpdateTenant}
         />
       )}
     </div>

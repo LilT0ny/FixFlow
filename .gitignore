@@ -32,5 +32,8 @@ dist-ssr
 database.sql
 supabase.sql
 
+# Datos crudos de migración (PII de usuarios — jamás a git)
+migration/
+
 # Documentation and Business Logic
 /Informacion y contexto del sistema/

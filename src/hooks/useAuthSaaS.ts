@@ -114,6 +114,21 @@ export const useTenants = () => {
     }
   }, []);
 
+  const updateTenant = useCallback(
+    async (id: string, updates: Parameters<typeof TenantService.updateTenant>[1]) => {
+      try {
+        const updated = await TenantService.updateTenant(id, updates);
+        setTenants((prev) => prev.map((t) => (t.id === id ? updated : t)));
+        return updated;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Error desconocido';
+        setError(message);
+        throw err;
+      }
+    },
+    [],
+  );
+
   return {
     tenants,
     loading,
@@ -122,5 +137,6 @@ export const useTenants = () => {
     createTenant,
     getTenantById,
     deactivateTenant,
+    updateTenant,
   };
 };
