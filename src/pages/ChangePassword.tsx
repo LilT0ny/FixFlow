@@ -14,7 +14,7 @@ export const ChangePassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { authUser, logout } = useAppContext();
+  const { logout } = useAppContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +33,12 @@ export const ChangePassword = () => {
     setIsLoading(true);
     try {
       await AuthService.changePassword(password);
-      navigate(authUser?.is_master ? '/master/dashboard' : '/', { replace: true });
+      // Forzar re-login con la contraseña nueva en vez de seguir con la sesión actual.
+      await logout();
+      navigate('/login', {
+        replace: true,
+        state: { message: 'Contraseña actualizada. Iniciá sesión con tu nueva contraseña.' },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cambiar la contraseña.');
     } finally {

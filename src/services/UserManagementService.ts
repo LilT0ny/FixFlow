@@ -80,4 +80,22 @@ export const UserManagementService = {
     await UserService.setUserActive(userId, true);
     return true;
   },
+
+  /**
+   * Elimina un usuario de forma permanente vía la Edge Function `delete-user`
+   * (admin API, requiere service role). Falla con un mensaje claro si el
+   * usuario ya tiene actividad registrada (órdenes, dispositivos, caja).
+   */
+  async deleteUser(userId: string): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('delete-user', {
+      body: { user_id: userId },
+    });
+
+    if (error) {
+      throw new Error(data?.error || 'Error al eliminar el usuario');
+    }
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+  },
 };

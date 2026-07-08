@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../store/AppContext';
 import { Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
 
@@ -11,6 +11,8 @@ export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAppContext();
   const navigate = useNavigate();
+  const location = useLocation();
+  const infoMessage = (location.state as { message?: string } | null)?.message;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -70,6 +72,13 @@ export const Login = () => {
             </h1>
             <p className="text-sm text-surface-500 mt-1.5">Ingresá tus credenciales para administrar tu taller.</p>
           </div>
+
+          {infoMessage && (
+            <div className="mb-5 p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              {infoMessage}
+            </div>
+          )}
 
           <form className="space-y-5" onSubmit={handleLogin}>
             <div>

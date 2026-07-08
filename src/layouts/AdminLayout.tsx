@@ -6,28 +6,29 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../store/AppContext';
 import { useSettings } from '../hooks/useSettings';
+import type { ModuleKey } from '../constants/modules';
 
 /** Navegación agrupada por tipo de tarea */
-const NAV_SECTIONS = [
+const NAV_SECTIONS: { title: string; items: { to: string; icon: typeof Home; label: string; end?: boolean; module: ModuleKey }[] }[] = [
   {
     title: 'Taller',
     items: [
-      { to: '/', icon: Home, label: 'Inicio', end: true },
-      { to: '/check-in', icon: SquarePlus, label: 'Nuevo ingreso' },
-      { to: '/clients', icon: Users, label: 'Clientes' },
+      { to: '/', icon: Home, label: 'Inicio', end: true, module: 'dashboard' },
+      { to: '/check-in', icon: SquarePlus, label: 'Nuevo ingreso', module: 'registro' },
+      { to: '/clients', icon: Users, label: 'Clientes', module: 'clientes' },
     ],
   },
   {
     title: 'Finanzas',
     items: [
-      { to: '/cash', icon: CircleDollarSign, label: 'Transacciones' },
-      { to: '/reports', icon: ChartNoAxesCombined, label: 'Reportes' },
+      { to: '/cash', icon: CircleDollarSign, label: 'Transacciones', module: 'caja' },
+      { to: '/reports', icon: ChartNoAxesCombined, label: 'Reportes', module: 'reportes' },
     ],
   },
   {
     title: 'Sistema',
     items: [
-      { to: '/settings', icon: Settings, label: 'Configuración' },
+      { to: '/settings', icon: Settings, label: 'Configuración', module: 'configuracion' },
     ],
   },
 ];
@@ -35,9 +36,13 @@ const NAV_SECTIONS = [
 export const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<boolean>(() => localStorage.getItem('sidebar_collapsed') === '1');
-  const { logout } = useAppContext();
+  const { logout, canAccessModule } = useAppContext();
   const { settings } = useSettings();
   const location = useLocation();
+
+  const visibleSections = NAV_SECTIONS
+    .map(section => ({ ...section, items: section.items.filter(item => canAccessModule(item.module)) }))
+    .filter(section => section.items.length > 0);
 
   const toggleCollapsed = () => {
     setCollapsed(prev => {
@@ -65,7 +70,7 @@ export const AdminLayout = () => {
 
   const navigation = (isCollapsed: boolean) => (
     <nav className="flex-1 px-3 space-y-4 overflow-y-auto">
-      {NAV_SECTIONS.map((section, i) => (
+      {visibleSections.map((section, i) => (
         <div key={section.title}>
           {isCollapsed ? (
             i > 0 && <div className="border-t border-surface-100 mx-2 mb-3" />

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, User, Shield, Wrench, Power, PowerOff, Loader2 } from 'lucide-react';
+import { UserPlus, User, Shield, Wrench, Power, PowerOff, Loader2, CheckCircle } from 'lucide-react';
 import { useTenantUsers } from './useTenantUsers';
 import type { Tenant } from '../../services/SaaSAuthService';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
+import { GeneratedPasswordField } from '../../components/molecules/GeneratedPasswordField';
+import { generateTempPassword } from '../../utils/generatePassword';
 
 interface Props {
   tenant: Tenant;
@@ -18,9 +20,10 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
   const { users, loading, error, fetchUsers, createUser, deactivateUser, activateUser } = useTenantUsers(tenant.id);
 
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ email: '', nombre: '', password: '', role: 'owner' as 'owner' | 'member' });
+  const [formData, setFormData] = useState({ email: '', nombre: '', password: generateTempPassword(), role: 'owner' as 'owner' | 'member' });
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [createdUser, setCreatedUser] = useState<{ email: string; password: string } | null>(null);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -30,7 +33,8 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
     setSubmitting(true);
     try {
       await createUser(formData);
-      setFormData({ email: '', nombre: '', password: '', role: 'owner' });
+      setCreatedUser({ email: formData.email, password: formData.password });
+      setFormData({ email: '', nombre: '', password: generateTempPassword(), role: 'owner' });
       setShowForm(false);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error creando usuario');
@@ -64,6 +68,24 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
           <div className="mb-4 p-3 bg-danger-50 border border-danger-100 rounded-lg text-danger-700 text-sm">{error}</div>
         )}
 
+        {createdUser && (
+          <div className="mb-4 p-4 bg-success-50 border border-success-100 rounded-xl space-y-3 animate-scale-in">
+            <p className="text-success-700 text-sm font-medium flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              {`"${createdUser.email}" fue creado correctamente`}
+            </p>
+            <GeneratedPasswordField password={createdUser.password} />
+            <p className="text-xs text-surface-500">Copiá esta contraseña ahora — no se va a volver a mostrar.</p>
+            <button
+              type="button"
+              onClick={() => setCreatedUser(null)}
+              className="text-xs font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150"
+            >
+              Cerrar aviso
+            </button>
+          </div>
+        )}
+
         {showForm ? (
           <form onSubmit={handleCreate} className="mb-6 p-4 bg-surface-50 rounded-xl border border-surface-200">
             <h3 className="font-semibold text-surface-800 mb-4 flex items-center gap-2 text-sm">
@@ -91,17 +113,10 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
                   className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-surface-700 mb-1">Contraseña</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
-                  placeholder="Mínimo 8 caracteres"
-                  required minLength={8}
-                  className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-                />
-              </div>
+              <GeneratedPasswordField
+                password={formData.password}
+                onRegenerate={() => setFormData(p => ({ ...p, password: generateTempPassword() }))}
+              />
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">Rol</label>
                 <select
@@ -137,7 +152,7 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
           </form>
         ) : (
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => { setShowForm(true); setCreatedUser(null); }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-surface-300 hover:border-surface-400 hover:bg-surface-50 text-surface-600 hover:text-surface-900 rounded-lg transition-colors duration-150 mb-4 text-sm font-medium"
           >
             <UserPlus className="w-4 h-4" />

@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { ServiceOrder, PaymentTransaction, DeviceCheckInForm, OrderStatus } from '../types';
 import { useOrders } from '../hooks/useOrders';
 import { usePayments } from '../hooks/usePayments';
 import { AuthService, type AuthUser } from '../services/SaaSAuthService';
+import { PermissionsService } from '../services/PermissionsService';
+import type { ModuleKey } from '../constants/modules';
 
 interface AppContextType {
   orders: ServiceOrder[];
@@ -19,6 +21,9 @@ interface AppContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<AuthUser | null>;
   logout: () => void;
+  /** null = sin restricción (owner/master, o member sin configurar todavía) */
+  allowedModules: ModuleKey[] | null;
+  canAccessModule: (module: ModuleKey) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -26,6 +31,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [allowedModules, setAllowedModules] = useState<ModuleKey[] | null>(null);
 
   // Usuario de taller autenticado (el master usa su propio dashboard)
   const isAuthenticated = !!(authUser && !authUser.is_master && authUser.tenant_id);
@@ -51,6 +57,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .then(setAuthUser)
       .finally(() => setAuthLoading(false));
   }, []);
+
+  // Permisos por módulo: solo aplican a 'member' — owner/master nunca se restringen.
+  useEffect(() => {
+    if (authUser && authUser.role === 'member') {
+      PermissionsService.getModules(authUser.id)
+        .then(setAllowedModules)
+        .catch(() => setAllowedModules(null));
+    } else {
+      setAllowedModules(null);
+    }
+  }, [authUser]);
+
+  const canAccessModule = useCallback((module: ModuleKey) => {
+    if (!authUser || authUser.is_master || authUser.role === 'owner') return true;
+    if (allowedModules === null) return true; // sin configurar todavía = acceso total
+    return allowedModules.includes(module);
+  }, [authUser, allowedModules]);
 
   // Con sesión de taller activa, cargar datos (RLS ya filtra por tenant)
   useEffect(() => {
@@ -94,7 +117,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       authLoading,
       isAuthenticated,
       login,
-      logout
+      logout,
+      allowedModules,
+      canAccessModule
     }}>
       {children}
     </AppContext.Provider>

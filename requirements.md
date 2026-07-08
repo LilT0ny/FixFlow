@@ -14,11 +14,12 @@
 
 | Rol | Descripción | Acceso |
 |-----|-------------|--------|
-| **Master Admin** | Operador de la plataforma (dueño del SaaS) | Panel maestro: alta/baja de talleres y sus usuarios |
-| **Administrador** | Dueño o encargado del taller | Acceso completo a su tenant |
-| **Técnico** | Personal técnico del taller | Órdenes y clientes |
-| **Usuario** | Personal de mostrador | Acceso limitado |
+| **Master Admin** (`master`) | Operador de la plataforma (dueño del SaaS) | Panel maestro: alta/edición/baja de talleres (datos y plan) y gestión de sus usuarios |
+| **Dueño de taller** (`owner`) | Dueño o encargado del taller | Acceso completo a su tenant; único rol que puede dar de alta miembros |
+| **Miembro** (`member`) | Personal del taller (técnico, mostrador, etc.) | Mismo acceso operativo que el dueño hoy — ver nota en §7 sobre permisos por módulo |
 | **Cliente final** | Cliente del taller | Portal público de consulta de estado (sin login) |
+
+> El dueño del taller puede habilitar/deshabilitar, por miembro, cuáles de las 6 vistas operativas (Inicio, Nuevo ingreso, Clientes, Transacciones, Reportes, Configuración) tiene visibles — tanto en el menú lateral como por acceso directo a la URL. Un miembro recién creado ve todo por defecto hasta que el dueño configure sus permisos explícitamente (evita bloqueos accidentales). El enforcement es de capa de aplicación (rutas/menú), no de RLS — así está documentado en la propia migración de seguridad.
 
 ---
 
@@ -47,8 +48,10 @@ Todos los módulos listados están **implementados y operativos**:
 ### RF-01 · Autenticación y control de acceso
 - **RF-01.1** — Login unificado por usuario y contraseña; la sesión distingue automáticamente entre Master Admin y usuarios de tenant.
 - **RF-01.2** — Opción "mantener sesión iniciada" (persistencia de sesión).
+- **RF-01.2b** — Primer ingreso con contraseña temporal: el usuario es forzado a `/change-password`; al guardar la nueva contraseña, la sesión se cierra automáticamente y se lo redirige a `/login` con un aviso de confirmación, para que inicie sesión de cero con su contraseña definitiva (en vez de continuar con la sesión vieja).
 - **RF-01.3** — Rutas protegidas: sin sesión válida se redirige a `/login`; el panel maestro exige el flag `is_master`.
-- **RF-01.4** — Roles por tenant: administrador, técnico y usuario, con niveles de acceso diferenciados.
+- **RF-01.4** — Roles por tenant: `owner` (dueño, acceso total siempre) y `member` (personal, acceso configurable por vista desde Configuración → Usuarios). Un `member` sin permisos configurados ve todo por defecto.
+- **RF-01.5** — Menú lateral y rutas filtradas según los módulos habilitados del usuario; si un `member` intenta entrar por URL directa a una vista sin permiso, se lo redirige a la primera vista que sí tiene habilitada.
 
 ### RF-02 · Ingreso de equipos (órdenes de reparación)
 - **RF-02.1** — Wizard de 3 pasos: cliente → equipo → detalles y presupuesto, con validación por paso (no se avanza con datos inválidos).
@@ -81,6 +84,7 @@ Todos los módulos listados están **implementados y operativos**:
 ### RF-06 · Clientes
 - **RF-06.1** — CRUD completo de clientes (nombre, cédula/RUC, teléfono, email, dirección).
 - **RF-06.2** — Búsqueda por nombre o cédula; los datos alimentan el autocompletado del check-in.
+- **RF-06.3** — Contador de clientes en la cabecera de la vista (total registrado, y resultados filtrados al buscar).
 
 ### RF-07 · Caja y transacciones
 - **RF-07.1** — Registro manual de ingresos y egresos con monto, concepto, medio de pago y clasificación (servicio técnico, repuestos, insumos, otro).
@@ -96,7 +100,9 @@ Todos los módulos listados están **implementados y operativos**:
 ### RF-09 · Configuración del taller
 - **RF-09.1** — Perfil de empresa: razón social, RUC, teléfono, dirección y logo (se reflejan en tickets y en toda la interfaz).
 - **RF-09.2** — Formato de impresión predeterminado: térmica 58mm, 80mm u hoja A4.
-- **RF-09.3** — Alta de usuarios del taller con rol, desde la propia configuración (contraseña mínima de 8 caracteres).
+- **RF-09.3** — Alta de usuarios del taller con rol, desde la propia configuración. La contraseña temporal se **genera automáticamente** (12 caracteres aleatorios, sin ambigüedad visual) y se muestra en pantalla lista para copiar — quien crea el usuario nunca la tipea a mano, reduce el riesgo de contraseñas débiles y da más confianza al entregarla.
+- **RF-09.4** — Listado de miembros del taller (Configuración → pestaña Usuarios) con rol, email y estado activo/inactivo; el dueño puede activar/desactivar a cualquier miembro (no a sí mismo desde ahí), editar qué vistas tiene habilitadas cada uno, y eliminarlo definitivamente (Edge Function `delete-user`, admin API). El borrado definitivo solo es posible si el miembro no registró actividad todavía (órdenes, dispositivos, caja) — si ya tiene historial, el sistema rechaza el borrado y sugiere desactivar en su lugar, para no perder trazabilidad.
+- **RF-09.5** — Configuración organizada en pestañas (Empresa / Impresión y mensajes / Usuarios), cada una con guardado independiente; layout responsive que aprovecha el ancho disponible (grillas de 2–3 columnas en escritorio, una columna en móvil/tablet).
 
 ### RF-10 · Portal público de consulta
 - **RF-10.1** — Página pública `/status/:orden` sin autenticación, con marca del sistema.
@@ -106,8 +112,9 @@ Todos los módulos listados están **implementados y operativos**:
 - **RF-11.1** — Alta de talleres (tenants) con nombre, slug autogenerado, email, RUC, teléfono y dirección.
 - **RF-11.2** — Planes comerciales por tenant: `basic`, `professional`, `enterprise`.
 - **RF-11.3** — Activación/desactivación de tenants: un tenant inactivo bloquea el acceso de todos sus usuarios.
-- **RF-11.4** — Gestión de usuarios por tenant (crear, activar, desactivar) con rol.
+- **RF-11.4** — Gestión de usuarios por tenant (crear con contraseña autogenerada para copiar, activar, desactivar) con rol.
 - **RF-11.5** — Indicadores del SaaS: talleres activos, total de clientes, estado del sistema.
+- **RF-11.6** — Edición de un taller existente (nombre, slug, email, RUC, teléfono, dirección y **plan**) desde el panel maestro.
 
 ### RF-12 · Impresión
 - **RF-12.1** — Generación de tickets de ingreso (doble copia con términos y firmas) y notas de venta.
@@ -198,7 +205,7 @@ Todos los módulos listados están **implementados y operativos**:
 | **QR en el ticket** | El portal público existe, pero el ticket impreso aún no incluye el código QR que enlace a `/status/:orden` (`qrcode.react` está instalado sin uso) | Alta |
 | **Portal público y datos** | La página de estado consume el contexto de la app; conviene un endpoint público dedicado de solo lectura | Alta |
 | **Enforcement de planes** | Los planes existen como dato pero no limitan funcionalidades por nivel | Media |
-| **Permisos por rol en UI** | Los roles existen; falta granularidad visible por pantalla (técnico vs. admin) | Media |
+| **Alcance `propio` vs `taller` en permisos** | La UI de permisos por miembro solo controla *qué vistas* ve cada `member` (todas se asignan con alcance `taller`); el campo `alcance` (`propio`/`taller`, para limitar a "solo mis registros") existe en el esquema pero no tiene selector en la interfaz todavía | Baja |
 | **Facturación de suscripciones** | Integrar pasarela (Stripe u otra) para el cobro del SaaS | Media |
 | **Notificaciones WhatsApp API** | Hoy se usa deep-link (requiere acción del operador); migrar a WhatsApp Business API permitiría envío automático real | Baja |
 | **Auditoría** | Bitácora de acciones por usuario (quién cambió qué) | Baja |

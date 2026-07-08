@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { OrderService } from '../../../services/OrderService';
-import { useOrders } from '../../../hooks/useOrders';
+import { useAppContext } from '../../../store/AppContext';
 import type { DeviceCheckInForm, ServiceOrder, CustomerData } from '../../../types';
 import { sendWhatsappNotification } from '../utils/whatsappNotifier';
 import { useSettings } from '../../../hooks/useSettings';
@@ -12,7 +12,7 @@ import { useSettings } from '../../../hooks/useSettings';
  * @returns {Object} State variables and mutation functions for the view.
  */
 export const useRegistration = () => {
-  const { addOrder } = useOrders();
+  const { addOrder } = useAppContext();
   const { settings } = useSettings();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);

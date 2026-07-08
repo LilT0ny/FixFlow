@@ -13,12 +13,34 @@ import { RegistrationFeature } from './features/Registration/RegistrationFeature
 import { ClientsFeature } from './features/Clients/ClientsFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
+import { ALL_MODULES, MODULE_ROUTES, type ModuleKey } from './constants/modules';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, authUser, authLoading } = useAppContext();
   if (authLoading) return null; // esperar restauración de sesión antes de decidir
   if (authUser?.debe_cambiar_password) return <Navigate to="/change-password" replace />;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+/** Gatea una vista según los módulos habilitados del member (owner/master nunca se restringen).
+ *  Si no tiene acceso, redirige al primer módulo permitido; si no tiene ninguno, avisa en vez
+ *  de generar un loop de redirecciones. */
+const RequireModule = ({ module, children }: { module: ModuleKey; children: React.ReactNode }) => {
+  const { canAccessModule, logout } = useAppContext();
+  if (canAccessModule(module)) return <>{children}</>;
+
+  const fallback = ALL_MODULES.find(m => m !== module && canAccessModule(m));
+  if (fallback) return <Navigate to={MODULE_ROUTES[fallback]} replace />;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 text-center">
+      <div>
+        <p className="text-surface-900 font-semibold mb-1">Sin acceso a ningún módulo</p>
+        <p className="text-sm text-surface-500 mb-4">Pedile al dueño del taller que te habilite alguna vista.</p>
+        <button onClick={logout} className="text-sm text-primary-600 font-medium hover:underline">Cerrar sesión</button>
+      </div>
+    </div>
+  );
 };
 
 function App() {
@@ -39,14 +61,14 @@ function App() {
 
             {/* Admin routes with sidebar */}
             <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-              <Route index element={<DashboardFeature />} />
-              <Route path="check-in" element={<RegistrationFeature />} />
+              <Route index element={<RequireModule module="dashboard"><DashboardFeature /></RequireModule>} />
+              <Route path="check-in" element={<RequireModule module="registro"><RegistrationFeature /></RequireModule>} />
               {/* Dispositivos vive ahora en el Dashboard (ruta índice) */}
               <Route path="devices" element={<Navigate to="/" replace />} />
-              <Route path="clients" element={<ClientsFeature />} />
-              <Route path="cash" element={<CashRegisterFeature />} />
-              <Route path="reports" element={<ReportsFeature />} />
-              <Route path="settings" element={<SettingsFeature />} />
+              <Route path="clients" element={<RequireModule module="clientes"><ClientsFeature /></RequireModule>} />
+              <Route path="cash" element={<RequireModule module="caja"><CashRegisterFeature /></RequireModule>} />
+              <Route path="reports" element={<RequireModule module="reportes"><ReportsFeature /></RequireModule>} />
+              <Route path="settings" element={<RequireModule module="configuracion"><SettingsFeature /></RequireModule>} />
             </Route>
           </Routes>
         </BrowserRouter>

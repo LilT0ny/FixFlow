@@ -81,7 +81,11 @@ export const ClientsFeature: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         title="Clientes"
-        subtitle="Gestión de contactos y expedientes de servicio"
+        subtitle={
+          searchTerm
+            ? `${filteredClients.length} de ${clients.length} clientes`
+            : `${clients.length} cliente${clients.length === 1 ? '' : 's'} registrado${clients.length === 1 ? '' : 's'}`
+        }
       >
         <button
           onClick={openNewClientModal}
