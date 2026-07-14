@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Loader2, CheckCircle2, Users } from 'lucide-react';
 import type { Client } from '../../services/ClientService';
 import { useClients } from './hooks/useClients';
 import { PageHeader, SearchInput, DataCard, EmptyState, Badge } from '../../components/design-system';
+import { Pagination } from '../../components/molecules/Pagination';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 import { useToast } from '../../store/ToastContext';
+import { PAGE_SIZE } from '../../constants/pagination';
 
 export const ClientsFeature: React.FC = () => {
-  const { clients, fetchClients, deleteClient, saveClient } = useClients();
+  const { clients, total, page, setPage, searchTerm, setSearch, refetch, deleteClient, saveClient } = useClients();
   const { showToast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
@@ -20,15 +21,6 @@ export const ClientsFeature: React.FC = () => {
     email: '',
     address: ''
   });
-
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  const filteredClients = clients.filter(client => 
-    client.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.documentId.includes(searchTerm)
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +33,7 @@ export const ClientsFeature: React.FC = () => {
         setEditingClient(null);
         setFormData({ fullName: '', documentId: '', phone: '', email: '', address: '' });
         setSaveStatus('idle');
-        fetchClients();
+        refetch();
       }, 1000);
     } catch (error) {
       console.error('Error saving client:', error);
@@ -66,7 +58,7 @@ export const ClientsFeature: React.FC = () => {
     if (confirm('¿Estás seguro de eliminar este cliente?')) {
       try {
         await deleteClient(id);
-        fetchClients();
+        refetch();
         showToast('Cliente eliminado', 'success');
       } catch (error) {
         console.error('Error deleting client:', error);
@@ -85,11 +77,7 @@ export const ClientsFeature: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         title="Clientes"
-        subtitle={
-          searchTerm
-            ? `${filteredClients.length} de ${clients.length} clientes`
-            : `${clients.length} cliente${clients.length === 1 ? '' : 's'} registrado${clients.length === 1 ? '' : 's'}`
-        }
+        subtitle={`${total} cliente${total === 1 ? '' : 's'} registrado${total === 1 ? '' : 's'}`}
       >
         <button
           onClick={openNewClientModal}
@@ -104,7 +92,7 @@ export const ClientsFeature: React.FC = () => {
         <div className="p-4 border-b border-surface-200 dark:border-gray-800">
           <SearchInput
             value={searchTerm}
-            onChange={setSearchTerm}
+            onChange={setSearch}
             placeholder="Buscar por nombre o cédula..."
           />
         </div>
@@ -122,7 +110,7 @@ export const ClientsFeature: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100 dark:divide-gray-800">
-              {filteredClients.map(client => (
+              {clients.map(client => (
                 <tr key={client.id} className="hover:bg-surface-50 transition-colors duration-150 dark:hover:bg-gray-800/60">
                   <td className="px-4 md:px-6 py-3.5">
                     <div className="font-medium text-sm text-surface-900 dark:text-gray-100">{client.fullName}</div>
@@ -166,15 +154,17 @@ export const ClientsFeature: React.FC = () => {
             </tbody>
           </table>
           
-          {filteredClients.length === 0 && (
+          {clients.length === 0 && (
             <div className="p-8">
-              <EmptyState 
+              <EmptyState
                 title="No se encontraron clientes"
                 description="Prueba con otros parámetros de búsqueda"
               />
             </div>
           )}
         </div>
+
+        <Pagination page={page} pageSize={PAGE_SIZE} totalCount={total} onPageChange={setPage} />
       </DataCard>
 
       {/* Modal */}
