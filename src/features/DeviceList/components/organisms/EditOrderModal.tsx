@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, Smartphone, Wrench, DollarSign, Loader2, Save, AlertCircle } from 'lucide-react';
+import { User, Smartphone, Wrench, DollarSign, Loader2, Save, AlertCircle, Boxes, Plus } from 'lucide-react';
 import type { ServiceOrder } from '../../../../types';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
+import { RepuestoPicker } from '../../../../components/molecules/RepuestoPicker';
+import { OrderService } from '../../../../services/OrderService';
+import type { Repuesto } from '../../../../services/RepuestoService';
 import { useClienteLookup } from '../../../../hooks/useClienteLookup';
 import { useToast } from '../../../../store/ToastContext';
 
@@ -42,12 +45,37 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
   const { lookup, isSearching: isSearchingClient } = useClienteLookup();
   const { showToast } = useToast();
 
+  // Repuestos utilizados: agregar es una acción inmediata (descuenta stock
+  // al toque vía trigger) — no forma parte del diff de "Guardar cambios",
+  // por eso vive fuera del draft normal salvo para mostrar la lista.
+  const [repuestoAConfirmar, setRepuestoAConfirmar] = useState<Repuesto | null>(null);
+  const [cantidadRepuesto, setCantidadRepuesto] = useState(1);
+  const [isAddingRepuesto, setIsAddingRepuesto] = useState(false);
+
   // Clonar la orden cuando se abre el modal (evitar mutación del original)
   useEffect(() => {
     if (order) setDraft(JSON.parse(JSON.stringify(order)));
+    setRepuestoAConfirmar(null);
+    setCantidadRepuesto(1);
   }, [order]);
 
   if (!draft) return null;
+
+  const handleAddRepuesto = async () => {
+    if (!repuestoAConfirmar || !draft) return;
+    setIsAddingRepuesto(true);
+    try {
+      const updated = await OrderService.addRepuestoUsado(draft.id, repuestoAConfirmar.id, cantidadRepuesto);
+      if (updated) setDraft(updated);
+      setRepuestoAConfirmar(null);
+      setCantidadRepuesto(1);
+      showToast('Repuesto agregado — stock descontado', 'success');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'No se pudo agregar el repuesto', 'error');
+    } finally {
+      setIsAddingRepuesto(false);
+    }
+  };
 
   const lookupClient = async (cedula: string) => {
     const client = await lookup(cedula);
@@ -354,7 +382,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelClass}>Costo Total ($)</label>
+                  <label className={labelClass}>{isSale ? 'Costo Total ($)' : 'Costo de mano de obra ($)'}</label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400 dark:text-gray-500" />
                     <input
@@ -408,6 +436,59 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
               )}
             </div>
           </section>
+
+          {/* ─── REPUESTOS UTILIZADOS (solo órdenes de reparación) ───
+              Agregar es inmediato: descuenta stock al toque. La lista de
+              abajo es de solo lectura — no se edita ni se borra una línea
+              ya agregada (una corrección va por Inventario → Ajustar stock). */}
+          {!isSale && (
+            <section>
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3 dark:text-gray-100">
+                <Boxes className="w-4 h-4 text-primary-600" />
+                Repuestos Utilizados
+              </h4>
+              <div className={sectionClass}>
+                {draft.repair.repuestosUsados && draft.repair.repuestosUsados.length > 0 && (
+                  <div className="space-y-1.5">
+                    {draft.repair.repuestosUsados.map(r => (
+                      <div key={r.id} className="flex items-center justify-between text-sm py-1.5 border-b border-surface-200 dark:border-gray-800 last:border-0">
+                        <span className="text-surface-900 dark:text-gray-100">{r.nombre} <span className="text-surface-500 dark:text-gray-400">×{r.cantidad}</span></span>
+                        <span className="text-surface-600 dark:text-gray-400">${(r.cantidad * r.costoUnitario).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end pt-1">
+                  <div className="flex-1">
+                    <RepuestoPicker onSelect={setRepuestoAConfirmar} placeholder="Buscar repuesto para agregar..." />
+                  </div>
+                  <input
+                    type="number"
+                    min={1}
+                    aria-label="Cantidad"
+                    value={cantidadRepuesto}
+                    onChange={e => setCantidadRepuesto(Math.max(1, Number(e.target.value)))}
+                    className={`${inputBase} ${inputOk} w-full sm:w-20`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddRepuesto}
+                    disabled={!repuestoAConfirmar || isAddingRepuesto}
+                    className="h-[42px] px-4 rounded-lg text-sm font-medium bg-surface-900 text-white hover:bg-surface-800 transition-colors duration-150 disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0"
+                  >
+                    {isAddingRepuesto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Agregar
+                  </button>
+                </div>
+                {repuestoAConfirmar && (
+                  <p className="text-xs text-surface-500 dark:text-gray-400">
+                    Seleccionado: <span className="font-medium text-surface-700 dark:text-gray-300">{repuestoAConfirmar.nombre}</span> — ${repuestoAConfirmar.precioVenta.toFixed(2)} c/u
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
         </ModalBody>
 
         <ModalFooter>

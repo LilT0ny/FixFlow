@@ -19,17 +19,32 @@ export interface EvidencePhoto {
   url: string;
 }
 
+/** Repuesto del catálogo consumido por la orden (Inventario Fase 2) —
+ *  solo lectura, inmutable una vez agregado. */
+export interface RepuestoUsado {
+  id: string;
+  repuestoId: string;
+  nombre: string;
+  cantidad: number;
+  costoUnitario: number;
+}
+
 export interface RepairDetails {
   reportedIssue: string;
   evidencePhotos: EvidencePhoto[]; // Handling photo categorization
   initialDeposit?: number | ''; // Empty string allows for empty form inputs
-  repairTotalCost?: number | ''; // New field for agreed total cost
+  repairTotalCost?: number | ''; // Mano de obra + repuestos ya sumados (ver OrderService.mapOrder)
+  repuestosUsados?: RepuestoUsado[];
 }
 
 export interface DeviceCheckInForm {
   customer: CustomerData;
   device?: DeviceData;
   repair: RepairDetails;
+  /** Repuestos a vincular al crear la orden (transitorio — solo para el
+   *  payload de creación, no viene de mapOrder). Se puede seguir agregando
+   *  después vía OrderService.addRepuestoUsado. */
+  repuestos?: { repuestoId: string; cantidad: number; costoUnitario: number }[];
 }
 
 export type OrderStatus = 'recibido' | 'diagnostico' | 'esperando_repuestos' | 'listo' | 'entregado' | 'no_reparado';

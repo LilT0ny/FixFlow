@@ -5,10 +5,19 @@ import { Input } from '../../../../components/atoms/Input';
 import { TextArea } from '../../../../components/atoms/TextArea';
 import { Select } from '../../../../components/atoms/Select';
 import { FormField } from '../../../../components/molecules/FormField';
-import { Loader2, CheckCircle2, User, MonitorSmartphone, Wallet, Check } from 'lucide-react';
+import { RepuestoPicker } from '../../../../components/molecules/RepuestoPicker';
+import { Loader2, CheckCircle2, User, MonitorSmartphone, Wallet, Check, Trash2 } from 'lucide-react';
 import { useToast } from '../../../../store/ToastContext';
+import type { Repuesto } from '../../../../services/RepuestoService';
 
 import type { DeviceCheckInForm } from '../../../../types';
+
+interface RepuestoSeleccionado {
+  repuestoId: string;
+  nombre: string;
+  cantidad: number;
+  costoUnitario: number;
+}
 
 interface TitleProps {
   onSave?: (data: DeviceCheckInForm) => void;
@@ -24,6 +33,19 @@ const STEPS = [
 export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => {
   const [step, setStep] = useState(1);
   const { data, errors, touched, handleChange, handleBlur, validateAll, setData } = useDeviceValidation();
+  const [repuestosSeleccionados, setRepuestosSeleccionados] = useState<RepuestoSeleccionado[]>([]);
+
+  const handleSelectRepuesto = (r: Repuesto) => {
+    setRepuestosSeleccionados(prev => [...prev, { repuestoId: r.id, nombre: r.nombre, cantidad: 1, costoUnitario: r.precioVenta }]);
+  };
+
+  const updateRepuestoCantidad = (idx: number, cantidad: number) => {
+    setRepuestosSeleccionados(prev => prev.map((r, i) => i === idx ? { ...r, cantidad: Math.max(1, cantidad) } : r));
+  };
+
+  const removeRepuesto = (idx: number) => {
+    setRepuestosSeleccionados(prev => prev.filter((_, i) => i !== idx));
+  };
 
   // Búsqueda de cliente existente por documento (al salir del campo)
   const { lookup, isSearching: isSearchingClient } = useClienteLookup();
@@ -91,7 +113,12 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
           evidencePhotos: [],
           initialDeposit: data.abonoInicial,
           repairTotalCost: data.costoEstimado
-        }
+        },
+        repuestos: repuestosSeleccionados.map(r => ({
+          repuestoId: r.repuestoId,
+          cantidad: r.cantidad,
+          costoUnitario: r.costoUnitario,
+        })),
       });
     }
   };
@@ -117,7 +144,9 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
   const isNextDisabled = (step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid);
   const isSaveDisabled = step === 3 && !isStep3Valid;
 
-  const total = Number(data.costoEstimado) || 0;
+  const totalManoObra = Number(data.costoEstimado) || 0;
+  const totalRepuestos = repuestosSeleccionados.reduce((sum, r) => sum + r.cantidad * r.costoUnitario, 0);
+  const total = totalManoObra + totalRepuestos;
   const abono = Number(data.abonoInicial) || 0;
   const saldo = Math.max(0, total - abono);
 
@@ -342,7 +371,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             </FormField>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <FormField label="Costo total ($)" error={touched.costoEstimado ? errors.costoEstimado : undefined}>
+              <FormField label="Costo de mano de obra ($)" error={touched.costoEstimado ? errors.costoEstimado : undefined}>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold dark:text-gray-500">$</div>
                   <Input
@@ -376,12 +405,54 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
               </FormField>
             </div>
 
+            {/* Repuestos utilizados (opcional) — también se puede seguir
+                agregando después del diagnóstico, desde Editar orden. */}
+            <div>
+              <label className="block text-sm font-medium text-surface-700 mb-2 dark:text-gray-300">
+                Repuestos utilizados (opcional)
+              </label>
+              <RepuestoPicker onSelect={handleSelectRepuesto} />
+              {repuestosSeleccionados.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {repuestosSeleccionados.map((r, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-surface-50 border border-surface-200 rounded-lg dark:bg-gray-800/60 dark:border-gray-700">
+                      <span className="flex-1 text-sm text-surface-900 truncate dark:text-gray-100">{r.nombre}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        aria-label="Cantidad"
+                        value={r.cantidad}
+                        onChange={e => updateRepuestoCantidad(idx, Number(e.target.value))}
+                        className="w-16 text-center bg-white border border-surface-300 rounded-lg px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                      />
+                      <span className="text-sm text-surface-600 w-20 text-right dark:text-gray-400">
+                        ${(r.cantidad * r.costoUnitario).toFixed(2)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeRepuesto(idx)}
+                        className="p-1.5 text-surface-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors duration-150 dark:text-gray-500 dark:hover:text-red-400 dark:hover:bg-red-950/30"
+                        title="Quitar"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Resumen en vivo */}
             <div className="bg-surface-900 text-white rounded-xl p-5 sm:p-6">
               <div className="grid grid-cols-3 gap-4 text-center sm:text-left">
                 <div>
                   <span className="block text-xs text-white/50 mb-1">Total</span>
                   <span className="text-lg font-semibold tracking-tight">${total.toFixed(2)}</span>
+                  {totalRepuestos > 0 && (
+                    <span className="block text-[11px] text-white/40 mt-0.5">
+                      M.O. ${totalManoObra.toFixed(2)} + Rep. ${totalRepuestos.toFixed(2)}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <span className="block text-xs text-white/50 mb-1">Abono</span>

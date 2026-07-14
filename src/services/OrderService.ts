@@ -29,12 +29,15 @@ export interface OrderCreationPayload extends DeviceCheckInForm {
 }
 
 /** Select con todos los embeds del esquema v2: cliente vía dispositivo,
- *  trabajos + transacciones para calcular total/abonado. */
+ *  trabajos + transacciones para calcular total/abonado. `repuestos_usados`
+ *  es Fase 2 de Inventario: repuestos consumidos por la orden, inmutables
+ *  una vez agregados (ver 20260715000000_v2_inventario_fase2.sql). */
 const ORDER_SELECT = `
   *,
   dispositivo:dispositivo_id (*, cliente:cliente_id (*)),
   fotos:fotos_evidencia (*),
   trabajos:orden_trabajo (id, descripcion, costo),
+  repuestos_usados:orden_repuesto (id, repuesto_id, cantidad, costo_unitario, repuesto:repuesto_id (nombre)),
   pagos:transacciones (monto, tipo),
   nota:notas_venta (id, numero_nota)
 `;
@@ -44,7 +47,21 @@ type OrderRow = Record<string, any>;
 function mapOrder(order: OrderRow): ServiceOrder {
   const trabajos: { costo: number }[] = order.trabajos || [];
   const pagos: { monto: number; tipo: string }[] = order.pagos || [];
-  const total = trabajos.reduce((sum, t) => sum + Number(t.costo), 0);
+  const repuestosUsadosRaw: { id: string; repuesto_id: string; cantidad: number; costo_unitario: number; repuesto?: { nombre: string } }[] = order.repuestos_usados || [];
+  const repuestosUsados = repuestosUsadosRaw.map(r => ({
+    id: r.id,
+    repuestoId: r.repuesto_id,
+    nombre: r.repuesto?.nombre || 'Repuesto',
+    cantidad: Number(r.cantidad),
+    costoUnitario: Number(r.costo_unitario),
+  }));
+  // El costo de mano de obra (orden_trabajo) sigue siendo lo único que se
+  // edita desde la UI de costo — repairTotalCost, al leerse, le suma el
+  // consumo de repuestos para que el total que ve el cliente sea correcto
+  // en todos lados (lista de órdenes, WhatsApp, tickets, exportación).
+  const totalManoObra = trabajos.reduce((sum, t) => sum + Number(t.costo), 0);
+  const totalRepuestos = repuestosUsados.reduce((sum, r) => sum + r.cantidad * r.costoUnitario, 0);
+  const total = totalManoObra + totalRepuestos;
   const abonado = pagos
     .filter(p => p.tipo === 'ingreso')
     .reduce((sum, p) => sum + Number(p.monto), 0);
@@ -76,6 +93,7 @@ function mapOrder(order: OrderRow): ServiceOrder {
       reportedIssue: order.falla_reportada,
       repairTotalCost: total,
       initialDeposit: abonado,
+      repuestosUsados,
       evidencePhotos: (order.fotos || []).map((f: { etapa: EvidencePhoto['stage']; url_foto: string }) => ({
         stage: f.etapa,
         url: f.url_foto,
@@ -221,6 +239,11 @@ export const OrderService = {
         p_falla: orderData.repair.reportedIssue,
         p_abono: Number(orderData.repair.initialDeposit) || 0,
         p_metodo_abono: method,
+        p_repuestos: ((orderData as OrderCreationPayload).repuestos || []).map(r => ({
+          repuesto_id: r.repuestoId,
+          cantidad: r.cantidad,
+          costo_unitario: r.costoUnitario,
+        })),
         p_fotos: (orderData.repair.evidencePhotos || []).map(p => ({
           etapa: p.stage,
           url_foto: p.url,
@@ -398,5 +421,22 @@ export const OrderService = {
       .eq('id', id);
     if (error) throw error;
     return { status: 'success' };
+  },
+
+  /**
+   * Vincula un repuesto del catálogo a una orden ya existente (ej. después
+   * del diagnóstico). Acción inmediata e irreversible — descuenta stock al
+   * instante vía trigger; no hay edición ni borrado de esta línea después
+   * (una corrección va por Inventario → Ajustar stock). Devuelve la orden
+   * ya actualizada para refrescar la UI sin un fetch aparte.
+   */
+  async addRepuestoUsado(ordenId: string, repuestoId: string, cantidad: number): Promise<ServiceOrder | null> {
+    const { error } = await supabase.rpc('fn_agregar_repuesto_orden', {
+      p_orden_id: ordenId,
+      p_repuesto_id: repuestoId,
+      p_cantidad: cantidad,
+    });
+    if (error) throw error;
+    return this._getOrderById(ordenId);
   },
 };
