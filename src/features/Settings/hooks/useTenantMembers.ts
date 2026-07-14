@@ -43,5 +43,10 @@ export function useTenantMembers() {
     setMembers(prev => prev.filter(m => m.id !== userId));
   }, []);
 
-  return { members, loading, error, fetchMembers, toggleActive, deleteMember };
+  const updateMember = useCallback(async (userId: string, updates: { email?: string; nombre?: string }) => {
+    await UserManagementService.updateUser(userId, updates);
+    await fetchMembers();
+  }, [fetchMembers]);
+
+  return { members, loading, error, fetchMembers, toggleActive, deleteMember, updateMember };
 }

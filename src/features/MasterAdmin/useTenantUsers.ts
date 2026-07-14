@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { UserService, type AuthUser, type UserRole } from '../../services/SaaSAuthService';
+import { UserManagementService } from '../../services/UserManagementService';
 
 export interface TenantUser extends AuthUser {
   activo: boolean;
@@ -55,5 +56,15 @@ export function useTenantUsers(tenantId: string | null) {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, activo: true } : u));
   }, []);
 
-  return { users, loading, error, fetchUsers, createUser, deactivateUser, activateUser };
+  const updateUser = useCallback(async (userId: string, updates: { email?: string; nombre?: string; role?: UserRole }) => {
+    await UserService.updateUser(userId, updates);
+    await fetchUsers();
+  }, [fetchUsers]);
+
+  const deleteUser = useCallback(async (userId: string) => {
+    await UserManagementService.deleteUser(userId);
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }, []);
+
+  return { users, loading, error, fetchUsers, createUser, deactivateUser, activateUser, updateUser, deleteUser };
 }

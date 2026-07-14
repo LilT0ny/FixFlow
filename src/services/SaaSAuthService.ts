@@ -291,6 +291,31 @@ export const UserService = {
     return mapProfile(data.usuario);
   },
 
+  /**
+   * Edita email/nombre/rol de un usuario existente vía la Edge Function
+   * `update-user` (admin API, requiere service role — cambiar el email
+   * significa cambiar la identidad de login en Supabase Auth, no un simple
+   * update de tabla).
+   */
+  async updateUser(userId: string, input: { email?: string; nombre?: string; role?: UserRole }): Promise<AuthUser> {
+    const { data, error } = await supabase.functions.invoke('update-user', {
+      body: {
+        user_id: userId,
+        ...(input.email ? { email: input.email.trim().toLowerCase() } : {}),
+        ...(input.nombre !== undefined ? { nombre: input.nombre } : {}),
+        ...(input.role ? { rol: input.role } : {}),
+      },
+    });
+
+    if (error) {
+      console.error('[UserService] Error editando usuario:', error.message);
+      throw new Error(data?.error || 'Error al editar usuario');
+    }
+    if (data?.error) throw new Error(data.error);
+
+    return mapProfile(data.usuario);
+  },
+
   async getUsersByTenant(tenantId: string): Promise<(AuthUser & { activo: boolean })[]> {
     const { data, error } = await supabase
       .from('usuarios')

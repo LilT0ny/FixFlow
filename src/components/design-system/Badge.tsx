@@ -11,11 +11,11 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-surface-100 text-surface-700 border-surface-200',
-  success: 'bg-success-50 text-success-700 border-success-100',
-  warning: 'bg-warning-50 text-warning-700 border-warning-100',
-  danger: 'bg-danger-50 text-danger-700 border-danger-100',
-  info: 'bg-primary-50 text-primary-700 border-primary-100',
+  default: 'bg-surface-100 text-surface-700 border-surface-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+  success: 'bg-success-50 text-success-700 border-success-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900',
+  warning: 'bg-warning-50 text-warning-700 border-warning-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900',
+  danger: 'bg-danger-50 text-danger-700 border-danger-100 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
+  info: 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900',
 };
 
 export const Badge: React.FC<BadgeProps> = ({

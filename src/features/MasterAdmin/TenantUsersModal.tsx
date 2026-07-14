@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, User, Shield, Wrench, Power, PowerOff, Loader2, CheckCircle } from 'lucide-react';
-import { useTenantUsers } from './useTenantUsers';
+import { UserPlus, User, Shield, Wrench, Power, PowerOff, Loader2, CheckCircle, Pencil, Trash2, Check } from 'lucide-react';
+import { useTenantUsers, type TenantUser } from './useTenantUsers';
 import type { Tenant } from '../../services/SaaSAuthService';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 import { GeneratedPasswordField } from '../../components/molecules/GeneratedPasswordField';
@@ -17,13 +17,18 @@ const ROLE_LABELS = {
 };
 
 export const TenantUsersModal = ({ tenant, onClose }: Props) => {
-  const { users, loading, error, fetchUsers, createUser, deactivateUser, activateUser } = useTenantUsers(tenant.id);
+  const { users, loading, error, fetchUsers, createUser, deactivateUser, activateUser, updateUser, deleteUser } = useTenantUsers(tenant.id);
 
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ email: '', nombre: '', password: generateTempPassword(), role: 'owner' as 'owner' | 'member' });
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [createdUser, setCreatedUser] = useState<{ email: string; password: string } | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ email: '', nombre: '', role: 'member' as 'owner' | 'member' });
+  const [editError, setEditError] = useState('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -50,6 +55,34 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
       } else {
         await activateUser(userId);
       }
+    } catch (err) {
+      alert('Error: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    }
+  };
+
+  const startEdit = (u: TenantUser) => {
+    setEditingId(u.id);
+    setEditError('');
+    setEditForm({ email: u.email, nombre: u.nombre || '', role: (u.role as 'owner' | 'member') || 'member' });
+  };
+
+  const handleSaveEdit = async (userId: string) => {
+    setEditError('');
+    setEditSubmitting(true);
+    try {
+      await updateUser(userId, { email: editForm.email, nombre: editForm.nombre, role: editForm.role });
+      setEditingId(null);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Error editando usuario');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (userId: string, label: string) => {
+    if (!confirm(`¿Eliminar a "${label}" definitivamente? Esta acción no se puede deshacer.`)) return;
+    try {
+      await deleteUser(userId);
     } catch (err) {
       alert('Error: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     }
@@ -174,6 +207,53 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
             {users.map(u => {
               const roleConfig = ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || ROLE_LABELS.member;
               const RoleIcon = roleConfig.icon;
+
+              if (editingId === u.id) {
+                return (
+                  <li key={u.id} className="p-3 rounded-xl border border-primary-200 bg-primary-50/40 space-y-2.5">
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
+                      placeholder="Correo"
+                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.nombre}
+                      onChange={e => setEditForm(p => ({ ...p, nombre: e.target.value }))}
+                      placeholder="Nombre"
+                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    />
+                    <select
+                      value={editForm.role}
+                      onChange={e => setEditForm(p => ({ ...p, role: e.target.value as 'owner' | 'member' }))}
+                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    >
+                      <option value="owner">Dueño del taller</option>
+                      <option value="member">Miembro</option>
+                    </select>
+                    {editError && <p className="text-danger-600 text-xs">{editError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveEdit(u.id)}
+                        disabled={editSubmitting}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-surface-900 hover:bg-surface-800 disabled:opacity-60 text-white rounded-lg text-xs font-medium transition-colors duration-150"
+                      >
+                        {editSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="px-3 py-1.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 rounded-lg text-xs font-medium transition-colors duration-150"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </li>
+                );
+              }
+
               return (
                 <li
                   key={u.id}
@@ -190,17 +270,33 @@ export const TenantUsersModal = ({ tenant, onClose }: Props) => {
                       <p className="text-xs text-surface-500">{roleConfig.label}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleToggleUser(u.id, u.activo)}
-                    title={u.activo ? 'Desactivar' : 'Activar'}
-                    className={`p-2 rounded-lg transition shrink-0 ${
-                      u.activo
-                        ? 'text-danger-400 hover:bg-danger-50 hover:text-danger-600'
-                        : 'text-success-500 hover:bg-success-50 hover:text-success-700'
-                    }`}
-                  >
-                    {u.activo ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => startEdit(u)}
+                      title="Editar"
+                      className="p-2 rounded-lg text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors duration-150"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleUser(u.id, u.activo)}
+                      title={u.activo ? 'Desactivar' : 'Activar'}
+                      className={`p-2 rounded-lg transition-colors duration-150 ${
+                        u.activo
+                          ? 'text-warning-500 hover:bg-warning-50 hover:text-warning-600'
+                          : 'text-success-500 hover:bg-success-50 hover:text-success-700'
+                      }`}
+                    >
+                      {u.activo ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(u.id, u.nombre || u.email)}
+                      title="Eliminar definitivamente"
+                      className="p-2 rounded-lg text-danger-400 hover:bg-danger-50 hover:text-danger-600 transition-colors duration-150"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </li>
               );
             })}

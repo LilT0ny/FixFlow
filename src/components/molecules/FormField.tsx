@@ -27,7 +27,7 @@ export const FormField = ({
       <div className="flex justify-between items-end">
         <Label required={required}>{label}</Label>
         {maxChars !== undefined && (
-          <span className={cn('text-xs', charCount === maxChars ? 'text-danger-500' : 'text-surface-500')}>
+          <span className={cn('text-xs', charCount === maxChars ? 'text-danger-500 dark:text-red-400' : 'text-surface-500 dark:text-gray-400')}>
             {charCount || 0} / {maxChars}
           </span>
         )}

@@ -13,7 +13,7 @@ export const ErrorMessage = forwardRef<HTMLSpanElement, ErrorMessageProps>(
     return (
       <span
         ref={ref}
-        className={cn('text-xs text-danger-600 mt-1 animate-fade-in', className)}
+        className={cn('text-xs text-danger-600 dark:text-red-400 mt-1 animate-fade-in', className)}
         {...props}
       >
         {error}

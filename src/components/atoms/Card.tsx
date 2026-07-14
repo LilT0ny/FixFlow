@@ -13,8 +13,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           'rounded-xl',
           {
-            'bg-white border border-surface-200 shadow-xs': variant === 'elevated',
-            'bg-transparent border border-surface-200': variant === 'outline',
+            'bg-white border border-surface-200 shadow-xs dark:bg-gray-900 dark:border-gray-800': variant === 'elevated',
+            'bg-transparent border border-surface-200 dark:border-gray-700': variant === 'outline',
           },
           className
         )}

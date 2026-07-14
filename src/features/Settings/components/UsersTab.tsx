@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Shield, Wrench, Power, PowerOff, Loader2, User, ShieldCheck, Trash2 } from 'lucide-react';
+import { Plus, Shield, Wrench, Power, PowerOff, Loader2, User, ShieldCheck, Trash2, Pencil, Check } from 'lucide-react';
 import { useTenantMembers, type TenantMember } from '../hooks/useTenantMembers';
 import { CreateUserModal } from './CreateUserModal';
 import { MemberPermissionsModal } from './MemberPermissionsModal';
@@ -11,10 +11,15 @@ const ROLE_LABELS: Record<string, { label: string; icon: typeof Shield; color: s
 };
 
 export const UsersTab = () => {
-  const { members, loading, error, fetchMembers, toggleActive, deleteMember } = useTenantMembers();
+  const { members, loading, error, fetchMembers, toggleActive, deleteMember, updateMember } = useTenantMembers();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [permissionsFor, setPermissionsFor] = useState<TenantMember | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ email: '', nombre: '' });
+  const [editError, setEditError] = useState('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
@@ -35,6 +40,25 @@ export const UsersTab = () => {
       alert(err instanceof Error ? err.message : 'Error al eliminar el usuario');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const startEdit = (m: TenantMember) => {
+    setEditingId(m.id);
+    setEditError('');
+    setEditForm({ email: m.email, nombre: m.nombre || '' });
+  };
+
+  const handleSaveEdit = async (userId: string) => {
+    setEditError('');
+    setEditSubmitting(true);
+    try {
+      await updateMember(userId, editForm);
+      setEditingId(null);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Error editando usuario');
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -74,6 +98,45 @@ export const UsersTab = () => {
           {members.map(m => {
             const roleConfig = ROLE_LABELS[m.role] || ROLE_LABELS.member;
             const RoleIcon = roleConfig.icon;
+
+            if (editingId === m.id) {
+              return (
+                <li key={m.id} className="p-3 rounded-xl border border-primary-200 bg-primary-50/40 space-y-2.5">
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
+                    placeholder="Correo"
+                    className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  />
+                  <input
+                    type="text"
+                    value={editForm.nombre}
+                    onChange={e => setEditForm(p => ({ ...p, nombre: e.target.value }))}
+                    placeholder="Nombre"
+                    className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  />
+                  {editError && <p className="text-danger-600 text-xs">{editError}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSaveEdit(m.id)}
+                      disabled={editSubmitting}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-surface-900 hover:bg-surface-800 disabled:opacity-60 text-white rounded-lg text-xs font-medium transition-colors duration-150"
+                    >
+                      {editSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-3 py-1.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 rounded-lg text-xs font-medium transition-colors duration-150"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </li>
+              );
+            }
+
             return (
               <li
                 key={m.id}
@@ -93,6 +156,13 @@ export const UsersTab = () => {
                 {/* El dueño no se puede desactivar ni restringir a sí mismo desde acá (evita quedar bloqueado del taller) */}
                 {m.role !== 'owner' && (
                   <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => startEdit(m)}
+                      title="Editar"
+                      className="p-2 rounded-lg text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors duration-150"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => setPermissionsFor(m)}
                       title="Permisos de vistas"

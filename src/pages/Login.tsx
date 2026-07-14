@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../store/AppContext';
-import { Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, CheckCircle, Loader2, ChevronLeft } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,10 @@ export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const infoMessage = (location.state as { message?: string } | null)?.message;
+
+  const [mode, setMode] = useState<'login' | 'forgot' | 'forgot-sent'>('login');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -51,6 +56,23 @@ export const Login = () => {
     }
   };
 
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setForgotError('');
+    setForgotLoading(true);
+    try {
+      await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/change-password`,
+      });
+      setMode('forgot-sent');
+    } catch {
+      setForgotError('Error al enviar el link. Intentá de nuevo.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex lg:flex-row-reverse font-sans">
       {/* Credenciales — derecha en desktop, única columna en móvil */}
@@ -68,18 +90,95 @@ export const Login = () => {
 
           <div className="mb-8">
             <h1 className="text-2xl font-semibold tracking-tight text-surface-900">
-              Bienvenido
+              {mode === 'login' ? 'Bienvenido' : mode === 'forgot' ? 'Recuperar contraseña' : 'Revisá tu email'}
             </h1>
-            <p className="text-sm text-surface-500 mt-1.5">Ingresá tus credenciales para administrar tu taller.</p>
+            <p className="text-sm text-surface-500 mt-1.5">
+              {mode === 'login'
+                ? 'Ingresá tus credenciales para administrar tu taller.'
+                : mode === 'forgot'
+                ? 'Te mandamos un link para elegir una contraseña nueva.'
+                : `Si ${email.trim() || 'ese email'} está registrado, vas a recibir un link para restablecer tu contraseña.`}
+            </p>
           </div>
 
-          {infoMessage && (
+          {infoMessage && mode === 'login' && (
             <div className="mb-5 p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
               <CheckCircle className="w-4 h-4 shrink-0" />
               {infoMessage}
             </div>
           )}
 
+          {mode === 'forgot-sent' && (
+            <div className="space-y-5">
+              <div className="p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                Revisá tu bandeja de entrada (y spam) en unos minutos.
+              </div>
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                className="flex items-center gap-1.5 text-sm font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150"
+              >
+                <ChevronLeft className="w-4 h-4" /> Volver a iniciar sesión
+              </button>
+            </div>
+          )}
+
+          {mode === 'forgot' && (
+            <form className="space-y-5" onSubmit={handleForgotSubmit}>
+              <div>
+                <label htmlFor="forgot-email" className="block text-sm font-medium text-surface-700 mb-1.5">Correo</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    placeholder="tu@taller.com"
+                    disabled={forgotLoading}
+                  />
+                </div>
+              </div>
+
+              {forgotError && (
+                <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {forgotError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={forgotLoading || !email.trim()}
+                className="w-full flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white bg-surface-900 hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {forgotLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar link de recuperación'
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                className="flex items-center gap-1.5 text-sm font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150"
+              >
+                <ChevronLeft className="w-4 h-4" /> Volver a iniciar sesión
+              </button>
+            </form>
+          )}
+
+          {mode === 'login' && (
           <form className="space-y-5" onSubmit={handleLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-surface-700 mb-1.5">Correo</label>
@@ -102,7 +201,16 @@ export const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-surface-700 mb-1.5">Contraseña</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-surface-700">Contraseña</label>
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setForgotError(''); }}
+                  className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
                   <Lock className="h-4 w-4" />
@@ -154,6 +262,7 @@ export const Login = () => {
               )}
             </button>
           </form>
+          )}
 
           <p className="mt-10 text-xs text-surface-400">
             © {new Date().getFullYear()} FixFlow. Todos los derechos reservados.

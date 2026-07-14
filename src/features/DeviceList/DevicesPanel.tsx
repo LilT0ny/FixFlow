@@ -31,12 +31,12 @@ export const DevicesPanel: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-surface-200 shadow-xs p-4">
+      <div className="bg-white rounded-xl border border-surface-200 shadow-xs p-4 dark:bg-gray-900 dark:border-gray-800">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="w-full lg:w-[300px] lg:shrink-0">
             <BuscadorListado valor={ctrl.search} alCambiar={ctrl.setSearch} placeholder="Buscar cliente, cédula o equipo..." />
           </div>
-          <div className="hidden lg:block w-px self-stretch bg-surface-200" />
+          <div className="hidden lg:block w-px self-stretch bg-surface-200 dark:bg-gray-800" />
           <div className="flex-1 min-w-0">
             <FiltroTabs activeStatuses={ctrl.activeStatuses} toggleStatus={ctrl.toggleStatus} clearStatuses={ctrl.clearStatuses} />
           </div>
@@ -68,11 +68,11 @@ export const DevicesPanel: React.FC = () => {
       {/* ─── Modal: Confirmar Eliminación ─── */}
       <Modal isOpen={!!ctrl.deleteConfirmModal?.isOpen} onClose={() => ctrl.setDeleteConfirmModal(null)} size="sm">
         <ModalBody className="flex flex-col items-center text-center pt-6">
-          <div className="w-12 h-12 bg-danger-50 text-danger-600 rounded-full flex items-center justify-center mb-4">
+          <div className="w-12 h-12 bg-danger-50 text-danger-600 rounded-full flex items-center justify-center mb-4 dark:bg-red-950/40 dark:text-red-400">
             <Trash2 className="w-5 h-5" />
           </div>
-          <h3 className="text-lg font-semibold text-surface-900 mb-1">¿Eliminar registro?</h3>
-          <p className="text-sm text-surface-500">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-gray-100 mb-1">¿Eliminar registro?</h3>
+          <p className="text-sm text-surface-500 dark:text-gray-400">
             Esta operación marcará la orden como eliminada. Esta acción es monitoreada.
           </p>
         </ModalBody>

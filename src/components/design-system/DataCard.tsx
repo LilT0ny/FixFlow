@@ -23,9 +23,9 @@ export const DataCard: React.FC<DataCardProps> = ({
 
   return (
     <div className={cn(
-      "bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden",
+      "bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden dark:bg-gray-900 dark:border-gray-800",
       paddingStyles[padding],
-      hover && "transition-all duration-150 hover:shadow-sm hover:border-surface-300",
+      hover && "transition-all duration-150 hover:shadow-sm hover:border-surface-300 dark:hover:border-gray-700",
       className
     )}>
       {children}

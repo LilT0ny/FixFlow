@@ -71,6 +71,10 @@ export const UserManagementService = {
     }));
   },
 
+  async updateUser(userId: string, updates: { email?: string; nombre?: string; role?: UserRole }): Promise<void> {
+    await UserService.updateUser(userId, updates);
+  },
+
   async deactivateUser(userId: string): Promise<boolean> {
     await UserService.setUserActive(userId, false);
     return true;

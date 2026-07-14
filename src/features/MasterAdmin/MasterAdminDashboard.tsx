@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTenants } from '../../hooks/useAuthSaaS';
 import { useAuth } from '../../hooks/useAuthSaaS';
-import { Plus, LogOut, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard, Pencil } from 'lucide-react';
+import { Plus, LogOut, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard, Pencil, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../../store/ThemeContext';
 import { CreateTenantModal } from './CreateTenantModal';
 import { EditTenantModal } from './EditTenantModal';
 import { TenantUsersModal } from './TenantUsersModal';
@@ -18,6 +19,7 @@ export const MasterAdminDashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, logout } = useAuth();
   const { tenants, loading, createTenant, deactivateTenant, updateTenant } = useTenants();
+  const { theme, toggleTheme } = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
@@ -73,27 +75,34 @@ export const MasterAdminDashboard = () => {
   const activeCount = tenants.filter(t => t.activo).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10 dark:bg-gray-900 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-900 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white dark:text-gray-900" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 leading-none">FixFlow Admin</h1>
-              <p className="text-xs text-gray-500 mt-0.5">Panel de control maestro</p>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">FixFlow Admin</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Panel de control maestro</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-gray-900">{user?.nombre || user?.email}</p>
-              <p className="text-xs text-blue-600 font-medium">Master Admin</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.nombre || user?.email}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Master Admin</p>
             </div>
             <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+              className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition text-sm"
+              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-lg transition text-sm"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Salir</span>

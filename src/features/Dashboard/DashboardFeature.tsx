@@ -13,10 +13,10 @@ export const DashboardFeature: React.FC = () => {
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
 
   const stats = [
-    { label: 'Equipos en Taller', value: orders.length, icon: Wrench, color: 'text-primary-600', bg: 'bg-primary-50' },
-    { label: 'Listos para Entrega', value: orders.filter(o => o.status === 'listo').length, icon: CheckCircle, color: 'text-success-600', bg: 'bg-success-50' },
-    { label: 'En Diagnóstico', value: orders.filter(o => o.status === 'diagnostico').length, icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
-    { label: 'Esperando Repuestos', value: orders.filter(o => o.status === 'esperando_repuestos').length, icon: AlertCircle, color: 'text-danger-600', bg: 'bg-danger-50' }
+    { label: 'Equipos en Taller', value: orders.length, icon: Wrench, color: 'text-primary-600 dark:text-blue-400', bg: 'bg-primary-50 dark:bg-blue-950/40' },
+    { label: 'Listos para Entrega', value: orders.filter(o => o.status === 'listo').length, icon: CheckCircle, color: 'text-success-600 dark:text-emerald-400', bg: 'bg-success-50 dark:bg-emerald-950/40' },
+    { label: 'En Diagnóstico', value: orders.filter(o => o.status === 'diagnostico').length, icon: Clock, color: 'text-warning-600 dark:text-amber-400', bg: 'bg-warning-50 dark:bg-amber-950/40' },
+    { label: 'Esperando Repuestos', value: orders.filter(o => o.status === 'esperando_repuestos').length, icon: AlertCircle, color: 'text-danger-600 dark:text-red-400', bg: 'bg-danger-50 dark:bg-red-950/40' }
   ];
 
   return (
@@ -27,7 +27,7 @@ export const DashboardFeature: React.FC = () => {
       >
         <button
           onClick={() => setIsSaleModalOpen(true)}
-          className="w-full sm:w-auto bg-white border border-surface-300 text-surface-700 px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-50 transition-all duration-150 active:scale-[0.98] whitespace-nowrap"
+          className="w-full sm:w-auto bg-white border border-surface-300 text-surface-700 px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-50 transition-all duration-150 active:scale-[0.98] whitespace-nowrap dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           <ShoppingBag className="w-4 h-4" />
           Nueva venta

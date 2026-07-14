@@ -9,6 +9,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <title>FixFlow</title>
+
+  <!-- Aplica el tema guardado antes de pintar, para evitar el flash blanco en modo oscuro -->
+  <script>
+    (function () {
+      var stored = localStorage.getItem('ff_theme');
+      var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (dark) document.documentElement.classList.add('dark');
+    })();
+  </script>
 </head>
 
 <body>

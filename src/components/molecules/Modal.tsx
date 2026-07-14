@@ -53,13 +53,13 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, size = 'md', chil
       role="presentation"
     >
       <div
-        className={`bg-white w-full rounded-t-2xl sm:rounded-xl ${SIZE_CLASS[size]} max-h-[92dvh] flex flex-col shadow-lg border border-surface-200 animate-fade-in-up overflow-hidden`}
+        className={`bg-white w-full rounded-t-2xl sm:rounded-xl ${SIZE_CLASS[size]} max-h-[92dvh] flex flex-col shadow-lg border border-surface-200 animate-fade-in-up overflow-hidden dark:bg-gray-900 dark:border-gray-800`}
         role="dialog"
         aria-modal="true"
       >
         {/* Handle visual — solo bottom-sheet en móvil */}
         <div className="sm:hidden flex justify-center pt-2.5 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-surface-200" />
+          <div className="w-10 h-1 rounded-full bg-surface-200 dark:bg-gray-700" />
         </div>
         {children}
       </div>
@@ -80,23 +80,23 @@ interface ModalHeaderProps {
 export const ModalHeader: React.FC<ModalHeaderProps> = ({
   title, subtitle, icon, iconClassName, onClose, closeDisabled
 }) => (
-  <div className="flex items-center justify-between gap-3 px-5 py-4 shrink-0 border-b border-surface-100">
+  <div className="flex items-center justify-between gap-3 px-5 py-4 shrink-0 border-b border-surface-100 dark:border-gray-800">
     <div className="flex items-center gap-3 min-w-0">
       {icon && (
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${iconClassName || 'bg-surface-100 text-surface-500'}`}>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${iconClassName || 'bg-surface-100 text-surface-500 dark:bg-gray-800 dark:text-gray-400'}`}>
           {icon}
         </div>
       )}
       <div className="min-w-0">
-        <h3 className="text-base font-semibold tracking-tight text-surface-900 truncate">{title}</h3>
-        {subtitle && <p className="text-xs text-surface-500 mt-0.5 truncate">{subtitle}</p>}
+        <h3 className="text-base font-semibold tracking-tight text-surface-900 dark:text-gray-100 truncate">{title}</h3>
+        {subtitle && <p className="text-xs text-surface-500 dark:text-gray-400 mt-0.5 truncate">{subtitle}</p>}
       </div>
     </div>
     <button
       type="button"
       onClick={onClose}
       disabled={closeDisabled}
-      className="p-2 rounded-lg text-surface-400 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-150 shrink-0 disabled:opacity-50"
+      className="p-2 rounded-lg text-surface-400 hover:text-surface-900 hover:bg-surface-100 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 shrink-0 disabled:opacity-50"
       title="Cerrar"
     >
       <X className="w-5 h-5" />
@@ -115,7 +115,7 @@ export const ModalBody: React.FC<{ children: React.ReactNode; className?: string
  * `flex-col sm:flex-row` en className para esos casos.
  */
 export const ModalFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-  <div className={cn('shrink-0 px-5 py-4 border-t border-surface-100 bg-surface-50 flex gap-2.5', className)}>
+  <div className={cn('shrink-0 px-5 py-4 border-t border-surface-100 bg-surface-50 flex gap-2.5 dark:border-gray-800 dark:bg-gray-900/60', className)}>
     {children}
   </div>
 );
