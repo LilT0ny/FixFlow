@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Building2, AlertCircle, Loader2 } from 'lucide-react';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 import type { Tenant } from '../../services/SaaSAuthService';
+import { GrupoService, type GrupoEmpresarial } from '../../services/GrupoService';
 
 const PLAN_OPTIONS = ['basic', 'professional', 'enterprise'] as const;
+const NUEVO_GRUPO = '__nuevo__';
 
 interface EditTenantModalProps {
   tenant: Tenant;
@@ -16,6 +18,7 @@ interface EditTenantModalProps {
     telefono?: string;
     direccion?: string;
     plan: string;
+    grupo_id?: string | null;
   }) => Promise<void>;
 }
 
@@ -28,9 +31,16 @@ export const EditTenantModal = ({ tenant, onClose, onSave }: EditTenantModalProp
     telefono: tenant.telefono || '',
     direccion: tenant.direccion || '',
     plan: tenant.plan,
+    grupoId: tenant.grupo_id || '',
   });
+  const [grupos, setGrupos] = useState<GrupoEmpresarial[]>([]);
+  const [nuevoGrupoNombre, setNuevoGrupoNombre] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    GrupoService.getAllGroups().then(setGrupos).catch(() => setGrupos([]));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +58,15 @@ export const EditTenantModal = ({ tenant, onClose, onSave }: EditTenantModalProp
         throw new Error('Email válido es requerido');
       }
 
+      let grupoId: string | null = formData.grupoId || null;
+      if (formData.grupoId === NUEVO_GRUPO) {
+        if (!nuevoGrupoNombre.trim()) {
+          throw new Error('El nombre del grupo empresarial es requerido');
+        }
+        const nuevoGrupo = await GrupoService.createGroup(nuevoGrupoNombre);
+        grupoId = nuevoGrupo.id;
+      }
+
       await onSave({
         nombre_empresa: formData.nombre_empresa.trim(),
         slug: formData.slug.trim().toLowerCase(),
@@ -56,6 +75,7 @@ export const EditTenantModal = ({ tenant, onClose, onSave }: EditTenantModalProp
         telefono: formData.telefono?.trim() || undefined,
         direccion: formData.direccion?.trim() || undefined,
         plan: formData.plan,
+        grupo_id: grupoId,
       });
 
       onClose();
@@ -131,6 +151,35 @@ export const EditTenantModal = ({ tenant, onClose, onSave }: EditTenantModalProp
                 <option key={p} value={p} className="capitalize dark:bg-gray-800 dark:text-gray-100">{p}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Grupo empresarial (cadena)</label>
+            <select
+              value={formData.grupoId}
+              onChange={(e) => setFormData((prev) => ({ ...prev, grupoId: e.target.value }))}
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+              disabled={loading}
+            >
+              <option value="" className="dark:bg-gray-800 dark:text-gray-100">Sin grupo</option>
+              {grupos.map((g) => (
+                <option key={g.id} value={g.id} className="dark:bg-gray-800 dark:text-gray-100">{g.nombre}</option>
+              ))}
+              <option value={NUEVO_GRUPO} className="dark:bg-gray-800 dark:text-gray-100">+ Crear grupo nuevo</option>
+            </select>
+            {formData.grupoId === NUEVO_GRUPO && (
+              <input
+                type="text"
+                value={nuevoGrupoNombre}
+                onChange={(e) => setNuevoGrupoNombre(e.target.value)}
+                placeholder="Nombre del grupo (ej. Cadena Norte)"
+                className="w-full mt-2 px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                disabled={loading}
+              />
+            )}
+            <p className="text-xs text-surface-500 mt-1 dark:text-gray-400">
+              Sucursales del mismo grupo aparecen juntas en el dashboard consolidado del dueño.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

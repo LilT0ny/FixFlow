@@ -4,12 +4,13 @@ import { StatCard } from '../../components/molecules/StatCard';
 import { PageHeader } from '../../components/design-system';
 import { DevicesPanel } from '../DeviceList/DevicesPanel';
 import { NuevaVentaModal } from './components/organisms/NuevaVentaModal';
+import { ConsolidatedChainPanel } from './components/ConsolidatedChainPanel';
 import { useAppContext } from '../../store/AppContext';
 
 export const DashboardFeature: React.FC = () => {
   // Misma fuente de datos que el panel de dispositivos: los KPI reaccionan
   // en vivo a los cambios de estado hechos en la tabla.
-  const { orders } = useAppContext();
+  const { orders, authUser } = useAppContext();
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
 
   const stats = [
@@ -33,6 +34,8 @@ export const DashboardFeature: React.FC = () => {
           Nueva venta
         </button>
       </PageHeader>
+
+      {authUser?.role === 'owner' && <ConsolidatedChainPanel />}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
