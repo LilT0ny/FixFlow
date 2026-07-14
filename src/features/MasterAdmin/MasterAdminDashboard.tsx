@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useTenants } from '../../hooks/useAuthSaaS';
-import { useAuth } from '../../hooks/useAuthSaaS';
-import { Plus, LogOut, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard, Pencil, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../../store/ThemeContext';
+import { Plus, Trash2, Users, Building2, Activity, Mail, Phone, CreditCard, Pencil } from 'lucide-react';
+import { PageHeader } from '../../components/design-system';
 import { useToast } from '../../store/ToastContext';
 import { CreateTenantModal } from './CreateTenantModal';
 import { EditTenantModal } from './EditTenantModal';
@@ -17,30 +15,11 @@ const PLAN_COLORS: Record<string, string> = {
 };
 
 export const MasterAdminDashboard = () => {
-  const navigate = useNavigate();
-  const { user, loading: authLoading, logout } = useAuth();
   const { tenants, loading, createTenant, deactivateTenant, updateTenant } = useTenants();
-  const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-
-  // Validar que sea master admin
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        navigate('/login');
-      } else if (!user.is_master) {
-        navigate('/');
-      }
-    }
-  }, [user, authLoading, navigate]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const handleDeleteTenant = async (tenantId: string) => {
     if (!confirm('¿Desactivar este taller? Sus usuarios no podrán ingresar hasta que lo reactives.')) return;
@@ -52,7 +31,7 @@ export const MasterAdminDashboard = () => {
     }
   };
 
-  const handleCreateTenant = async (data: any) => {
+  const handleCreateTenant = async (data: Parameters<typeof createTenant>[0]) => {
     try {
       await createTenant(data);
       setShowCreateModal(false);
@@ -62,97 +41,50 @@ export const MasterAdminDashboard = () => {
     }
   };
 
-  const handleUpdateTenant = async (data: any) => {
+  const handleUpdateTenant = async (data: Parameters<typeof updateTenant>[1]) => {
     if (!editingTenant) return;
     await updateTenant(editingTenant.id, data);
     setEditingTenant(null);
     showToast('Taller actualizado', 'success');
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
-
   const activeCount = tenants.filter(t => t.activo).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10 dark:bg-gray-900 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white dark:text-gray-900" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">FixFlow Admin</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Panel de control maestro</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.nombre || user?.email}</p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Master Admin</p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-              className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-lg transition text-sm"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Salir</span>
-            </button>
+    <div className="space-y-6">
+      <PageHeader
+        title="Talleres / Clientes"
+        subtitle="Administrá las empresas que usan FixFlow"
+      >
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-4 h-10 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors duration-150 text-sm font-medium dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo taller
+        </button>
+      </PageHeader>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-fade-in-up">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+          <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Talleres activos</p>
+          <p className="text-2xl font-semibold tracking-tight text-blue-600 dark:text-blue-400">{activeCount}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+          <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Total clientes</p>
+          <p className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{tenants.length}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs col-span-2 sm:col-span-1 dark:bg-gray-900 dark:border-gray-800">
+          <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Estado sistema</p>
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-green-500 dark:text-emerald-400" />
+            <p className="text-sm font-semibold text-green-600 dark:text-emerald-400">Operativo</p>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8 animate-fade-in-up">
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs dark:bg-gray-900 dark:border-gray-800">
-            <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Talleres activos</p>
-            <p className="text-2xl font-semibold tracking-tight text-blue-600 dark:text-blue-400">{activeCount}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs dark:bg-gray-900 dark:border-gray-800">
-            <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Total clientes</p>
-            <p className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{tenants.length}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-xs col-span-2 sm:col-span-1 dark:bg-gray-900 dark:border-gray-800">
-            <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Estado sistema</p>
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-green-500 dark:text-emerald-400" />
-              <p className="text-sm font-semibold text-green-600 dark:text-emerald-400">Operativo</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Header actions */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">Talleres / Clientes</h2>
-            <p className="text-gray-500 text-sm mt-0.5 dark:text-gray-400">Administrá las empresas que usan FixFlow</p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 h-10 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors duration-150 text-sm font-medium dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo taller
-          </button>
-        </div>
-
-        {/* Loading */}
+      {/* Loading */}
         {loading && (
           <div className="flex justify-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
@@ -253,7 +185,6 @@ export const MasterAdminDashboard = () => {
             </button>
           </div>
         )}
-      </main>
 
       {/* Modals */}
       {showCreateModal && (

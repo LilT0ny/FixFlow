@@ -5,6 +5,7 @@ import { SettingsProvider } from './store/SettingsContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { ToastProvider } from './store/ToastContext';
 import { AdminLayout } from './layouts/AdminLayout';
+import { MasterAdminLayout } from './layouts/MasterAdminLayout';
 import { DashboardFeature } from './features/Dashboard/DashboardFeature';
 import { CashRegisterFeature } from './features/CashRegister/CashRegisterFeature';
 import { ReportsFeature } from './features/Reports/ReportsFeature';
@@ -15,6 +16,8 @@ import { RegistrationFeature } from './features/Registration/RegistrationFeature
 import { ClientsFeature } from './features/Clients/ClientsFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
+import { SessionsPage } from './features/MasterAdmin/SessionsPage';
+import { useAuth } from './hooks/useAuthSaaS';
 import { ALL_MODULES, MODULE_ROUTES, type ModuleKey } from './constants/modules';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -22,6 +25,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (authLoading) return null; // esperar restauración de sesión antes de decidir
   if (authUser?.debe_cambiar_password) return <Navigate to="/change-password" replace />;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+/** Master no pasa por AppContext (isAuthenticated ahí excluye is_master a
+ *  propósito), así que tiene su propio guard sobre useAuthSaaS. */
+const RequireMaster = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.is_master) return <Navigate to="/" replace />;
+  return <>{children}</>;
 };
 
 /** Gatea una vista según los módulos habilitados del member (owner/master nunca se restringen).
@@ -61,7 +74,10 @@ function App() {
             <Route path="/status/:id" element={<ClientStatus />} />
 
             {/* Master Admin routes */}
-            <Route path="/master/dashboard" element={<MasterAdminDashboard />} />
+            <Route path="/master" element={<RequireMaster><MasterAdminLayout /></RequireMaster>}>
+              <Route path="dashboard" element={<MasterAdminDashboard />} />
+              <Route path="sessions" element={<SessionsPage />} />
+            </Route>
 
             {/* Admin routes with sidebar */}
             <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
