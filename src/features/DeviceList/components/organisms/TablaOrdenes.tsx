@@ -1,5 +1,6 @@
 import React from 'react';
 import { Camera, Edit2, MessageCircle, Printer, Trash2, Smartphone, User, Hash, FileText, ChevronDown, Wrench } from 'lucide-react';
+import { Pagination } from '../../../../components/molecules/Pagination';
 import type { OrderStatus, ServiceOrder } from '../../../../types';
 
 interface TablaOrdenesProps {
@@ -12,13 +13,15 @@ interface TablaOrdenesProps {
   onStatusChange: (order: ServiceOrder, newStatus: OrderStatus) => void;
   onPrint: (order: ServiceOrder) => void;
   onNotify: (order: ServiceOrder) => void;
+  /** Paginación visual — orders ya viene recortado por página; totalCount es el total filtrado sin paginar. */
+  pagination?: { page: number; pageSize: number; totalCount: number; onPageChange: (page: number) => void };
 }
 
 const STATUS_LIST: OrderStatus[] = ['recibido', 'diagnostico', 'esperando_repuestos', 'listo', 'entregado'];
 
 /** Listado de órdenes en formato tabla (estética alineada al Dashboard) */
 export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
-  orders, getStatusLabel, getStatusColor, onEdit, onDelete, onPhotos, onStatusChange, onPrint, onNotify
+  orders, getStatusLabel, getStatusColor, onEdit, onDelete, onPhotos, onStatusChange, onPrint, onNotify, pagination
 }) => {
   const actionBtn = 'inline-flex items-center justify-center p-2 rounded-lg transition-colors duration-150';
 
@@ -210,6 +213,15 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
           </tbody>
         </table>
       </div>
+
+      {pagination && (
+        <Pagination
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          totalCount={pagination.totalCount}
+          onPageChange={pagination.onPageChange}
+        />
+      )}
     </div>
   );
 };

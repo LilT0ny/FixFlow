@@ -10,6 +10,7 @@ import { EvidencePhotosModal } from './components/organisms/EvidencePhotosModal'
 import { Button } from '../../components/atoms/Button';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 import { useClienteLookup } from '../../hooks/useClienteLookup';
+import { PAGE_SIZE } from '../../constants/pagination';
 
 /** Panel de dispositivos en taller: buscador, filtros, tabla y modales.
  *  Se embebe en el Dashboard bajo los KPI. */
@@ -44,7 +45,7 @@ export const DevicesPanel: React.FC = () => {
       </div>
 
       <TablaOrdenes
-        orders={ctrl.filteredOrders}
+        orders={ctrl.pagedOrders}
         getStatusLabel={ctrl.getStatusLabel}
         getStatusColor={ctrl.getStatusColor}
         onEdit={(order) => ctrl.setEditModal({ isOpen: true, order })}
@@ -63,6 +64,7 @@ export const DevicesPanel: React.FC = () => {
           ctrl.setIsPrintModalOpen(true);
         }}
         onNotify={(order) => ctrl.notifyWhatsApp(order, ctrl.getStatusLabel(order.status))}
+        pagination={{ page: ctrl.page, pageSize: PAGE_SIZE, totalCount: ctrl.filteredOrders.length, onPageChange: ctrl.setPage }}
       />
 
       {/* ─── Modal: Confirmar Eliminación ─── */}

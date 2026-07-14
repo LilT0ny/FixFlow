@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../../store/AppContext';
 import { useSettings } from '../../../hooks/useSettings';
 import { useToast } from '../../../store/ToastContext';
 import { PaymentService } from '../../../services/PaymentService';
 import { uploadPhoto, deletePhoto } from '../../../services/StorageService';
+import { PAGE_SIZE } from '../../../constants/pagination';
 import type { OrderStatus, ServiceOrder, CustomerData, DeviceCheckInForm } from '../../../types';
 
 export const useDeviceList = () => {
@@ -85,6 +86,19 @@ export const useDeviceList = () => {
       return true;
     });
   }, [orders, activeStatuses, search]);
+
+  // Paginación solo visual — filteredOrders sigue siendo la fuente completa
+  // que usan Dashboard/Export; acá solo se recorta lo que se renderiza.
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, activeStatuses]);
+
+  const pagedOrders = useMemo(() => {
+    const from = (page - 1) * PAGE_SIZE;
+    return filteredOrders.slice(from, from + PAGE_SIZE);
+  }, [filteredOrders, page]);
 
   const getStatusLabel = (status: OrderStatus) => {
     switch (status) {
@@ -277,7 +291,7 @@ export const useDeviceList = () => {
   };
 
   return {
-    orders, filteredOrders, activeStatuses, toggleStatus, clearStatuses, search, setSearch,
+    orders, filteredOrders, pagedOrders, page, setPage, activeStatuses, toggleStatus, clearStatuses, search, setSearch,
     isPrintModalOpen, setIsPrintModalOpen, orderToPrint, setOrderToPrint,
     statusConfirmModal, setStatusConfirmModal,
     paymentMethod, setPaymentMethod,
