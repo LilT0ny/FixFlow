@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, PackageX, Loader2, CheckCircle2, Boxes, SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import { RepuestoService, type Repuesto } from '../../services/RepuestoService';
 import { PageHeader, SearchInput, DataCard, EmptyState, Badge } from '../../components/design-system';
+import { Pagination } from '../../components/molecules/Pagination';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
 import { AdjustStockModal } from './components/AdjustStockModal';
 import { useToast } from '../../store/ToastContext';
+import { PAGE_SIZE } from '../../constants/pagination';
 
 const EMPTY_FORM = { nombre: '', sku: '', costo: '', precioVenta: '', stock: '', stockMinimo: '' };
 
 export const InventoryFeature: React.FC = () => {
   const { showToast } = useToast();
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -25,8 +29,11 @@ export const InventoryFeature: React.FC = () => {
   // para el mount, y un refetch silencioso (después de guardar/dar de
   // baja) no necesita tapar la tabla con el spinner de nuevo.
   const fetchRepuestos = () => {
-    RepuestoService.getAll()
-      .then(setRepuestos)
+    RepuestoService.getPaginated(page, PAGE_SIZE, searchTerm)
+      .then(({ repuestos: data, total: count }) => {
+        setRepuestos(data);
+        setTotal(count);
+      })
       .catch(err => {
         console.error('Error loading repuestos:', err);
         showToast('No se pudo cargar el inventario', 'error');
@@ -34,15 +41,18 @@ export const InventoryFeature: React.FC = () => {
       .finally(() => setLoading(false));
   };
 
+  // Cambiar de página es inmediato; buscar espera una pausa (debounce)
+  // antes de pegarle al server.
   useEffect(() => {
-    fetchRepuestos();
+    const timer = setTimeout(fetchRepuestos, 300);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page, searchTerm]);
 
-  const filtered = repuestos.filter(r =>
-    r.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.sku || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
 
   const openNew = () => {
     setEditingRepuesto(null);
@@ -110,7 +120,7 @@ export const InventoryFeature: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         title="Inventario"
-        subtitle={`${repuestos.length} repuesto${repuestos.length === 1 ? '' : 's'} en catálogo`}
+        subtitle={`${total} repuesto${total === 1 ? '' : 's'} en catálogo`}
       >
         <button
           onClick={openNew}
@@ -123,7 +133,7 @@ export const InventoryFeature: React.FC = () => {
 
       <DataCard padding="none" className="animate-fade-in-up">
         <div className="p-4 border-b border-surface-200 dark:border-gray-800">
-          <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por nombre o SKU..." />
+          <SearchInput value={searchTerm} onChange={handleSearch} placeholder="Buscar por nombre o SKU..." />
         </div>
 
         {loading ? (
@@ -142,7 +152,7 @@ export const InventoryFeature: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-100 dark:divide-gray-800">
-                {filtered.map(r => {
+                {repuestos.map(r => {
                   const stockBajo = r.stock <= r.stockMinimo;
                   return (
                     <tr key={r.id} className="hover:bg-surface-50 transition-colors duration-150 dark:hover:bg-gray-800/60">
@@ -196,7 +206,7 @@ export const InventoryFeature: React.FC = () => {
               </tbody>
             </table>
 
-            {filtered.length === 0 && (
+            {repuestos.length === 0 && (
               <div className="p-8">
                 <EmptyState
                   icon={<Boxes className="w-5 h-5" />}
@@ -207,6 +217,8 @@ export const InventoryFeature: React.FC = () => {
             )}
           </div>
         )}
+
+        <Pagination page={page} pageSize={PAGE_SIZE} totalCount={total} onPageChange={setPage} />
       </DataCard>
 
       {/* Alta / edición */}

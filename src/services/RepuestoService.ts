@@ -34,17 +34,28 @@ const mapRepuesto = (r: Record<string, unknown>): Repuesto => ({
 
 export const RepuestoService = {
   /**
-   * Catálogo completo (RLS filtra por tenant).
+   * Página del catálogo para la vista de Inventario, con búsqueda
+   * server-side (nombre o sku) ya que solo hay 20 filas por página.
    */
-  async getAll(): Promise<Repuesto[]> {
-    const { data, error } = await supabase
+  async getPaginated(page: number, pageSize: number, search?: string): Promise<{ repuestos: Repuesto[]; total: number }> {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
       .from('repuestos')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('activo', true)
       .order('nombre', { ascending: true });
 
+    const trimmed = search?.trim();
+    if (trimmed) {
+      query = query.or(`nombre.ilike.%${trimmed}%,sku.ilike.%${trimmed}%`);
+    }
+
+    const { data, error, count } = await query.range(from, to);
     if (error) throw error;
-    return (data || []).map(mapRepuesto);
+
+    return { repuestos: (data || []).map(mapRepuesto), total: count || 0 };
   },
 
   /**
