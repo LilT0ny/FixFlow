@@ -1,49 +1,47 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldAlert, ChevronDown, ChevronRight } from 'lucide-react';
 import { PageHeader, Badge, EmptyState } from '../../components/design-system';
-import { SessionAuditService, type SessionEntry } from '../../services/SessionAuditService';
-
-interface TenantGroup {
-  tenantId: string;
-  tenantNombre: string;
-  sesiones: SessionEntry[];
-  usuariosDistintos: number;
-  ipsDistintas: number;
-}
+import { Pagination } from '../../components/molecules/Pagination';
+import { SessionAuditService, type SessionEntry, type TenantSessionSummary } from '../../services/SessionAuditService';
+import { PAGE_SIZE } from '../../constants/pagination';
 
 export const SessionsPage: React.FC = () => {
-  const [sessions, setSessions] = useState<SessionEntry[]>([]);
+  const [groups, setGroups] = useState<TenantSessionSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detailByTenant, setDetailByTenant] = useState<Record<string, SessionEntry[]>>({});
+  const [detailLoading, setDetailLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    SessionAuditService.getRecentSessions(30)
-      .then(setSessions)
-      .catch(err => console.error('Error loading sessions:', err))
-      .finally(() => setLoading(false));
-  }, []);
+    const timer = setTimeout(() => {
+      setLoading(true);
+      SessionAuditService.getTenantSessionSummary(page, PAGE_SIZE, 30)
+        .then(({ tenants, total }) => {
+          setGroups(tenants);
+          setTotal(total);
+        })
+        .catch(err => console.error('Error loading sessions:', err))
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [page]);
 
-  // Las sesiones del propio master (sin tenant_id) no aportan a esta
-  // revisión — el objetivo es comparar sucursales de clientes, no a vos.
-  const groups: TenantGroup[] = useMemo(() => {
-    const porTenant = new Map<string, SessionEntry[]>();
-    for (const s of sessions) {
-      if (!s.tenantId) continue;
-      const lista = porTenant.get(s.tenantId) || [];
-      lista.push(s);
-      porTenant.set(s.tenantId, lista);
+  const toggleExpand = (tenantId: string) => {
+    if (expandedId === tenantId) {
+      setExpandedId(null);
+      return;
     }
-
-    return Array.from(porTenant.entries())
-      .map(([tenantId, sesiones]) => ({
-        tenantId,
-        tenantNombre: sesiones[0].tenantNombre || 'Sin nombre',
-        sesiones,
-        usuariosDistintos: new Set(sesiones.map(s => s.usuarioId)).size,
-        ipsDistintas: new Set(sesiones.map(s => s.ip)).size,
-      }))
-      .sort((a, b) => b.ipsDistintas - a.ipsDistintas);
-  }, [sessions]);
+    setExpandedId(tenantId);
+    if (!detailByTenant[tenantId]) {
+      setDetailLoading(tenantId);
+      SessionAuditService.getSessionsForTenant(tenantId, 30)
+        .then(sesiones => setDetailByTenant(prev => ({ ...prev, [tenantId]: sesiones })))
+        .catch(err => console.error('Error loading tenant sessions:', err))
+        .finally(() => setDetailLoading(null));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -89,10 +87,11 @@ export const SessionsPage: React.FC = () => {
                 {groups.map(g => {
                   const isExpanded = expandedId === g.tenantId;
                   const sospechoso = g.ipsDistintas > g.usuariosDistintos;
+                  const detalle = detailByTenant[g.tenantId];
                   return (
                     <React.Fragment key={g.tenantId}>
                       <tr
-                        onClick={() => setExpandedId(isExpanded ? null : g.tenantId)}
+                        onClick={() => toggleExpand(g.tenantId)}
                         className="cursor-pointer hover:bg-surface-50 transition-colors duration-150 dark:hover:bg-gray-800/60"
                       >
                         <td className="px-4 md:px-6 py-3.5 text-surface-400 dark:text-gray-500">
@@ -105,7 +104,7 @@ export const SessionsPage: React.FC = () => {
                           {g.usuariosDistintos}
                         </td>
                         <td className="px-4 md:px-6 py-3.5 text-sm text-surface-600 text-right dark:text-gray-400">
-                          {g.sesiones.length}
+                          {g.totalSesiones}
                         </td>
                         <td className="px-4 md:px-6 py-3.5 text-right">
                           <Badge variant={sospechoso ? 'warning' : 'default'}>{g.ipsDistintas}</Badge>
@@ -114,36 +113,40 @@ export const SessionsPage: React.FC = () => {
                       {isExpanded && (
                         <tr>
                           <td colSpan={5} className="px-4 md:px-6 py-4 bg-surface-50 dark:bg-gray-900/60">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-left min-w-[520px]">
-                                <thead>
-                                  <tr className="text-xs font-medium text-surface-500 dark:text-gray-400">
-                                    <th className="pr-4 py-2">Usuario</th>
-                                    <th className="pr-4 py-2">IP</th>
-                                    <th className="pr-4 py-2">Dispositivo</th>
-                                    <th className="py-2">Fecha</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-surface-200 dark:divide-gray-800">
-                                  {g.sesiones.map((s, idx) => (
-                                    <tr key={`${s.usuarioId}-${s.createdAt}-${idx}`}>
-                                      <td className="pr-4 py-2 text-sm text-surface-900 dark:text-gray-100">
-                                        {s.usuarioNombre || s.usuarioEmail}
-                                      </td>
-                                      <td className="pr-4 py-2 text-sm font-mono text-surface-600 dark:text-gray-400">
-                                        {s.ip || '—'}
-                                      </td>
-                                      <td className="pr-4 py-2 text-xs text-surface-500 truncate max-w-[240px] dark:text-gray-500">
-                                        {s.userAgent || '—'}
-                                      </td>
-                                      <td className="py-2 text-sm text-surface-600 dark:text-gray-400">
-                                        {new Date(s.createdAt).toLocaleString()}
-                                      </td>
+                            {detailLoading === g.tenantId ? (
+                              <div className="py-6 text-center text-sm text-surface-500 dark:text-gray-400">Cargando...</div>
+                            ) : (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left min-w-[520px]">
+                                  <thead>
+                                    <tr className="text-xs font-medium text-surface-500 dark:text-gray-400">
+                                      <th className="pr-4 py-2">Usuario</th>
+                                      <th className="pr-4 py-2">IP</th>
+                                      <th className="pr-4 py-2">Dispositivo</th>
+                                      <th className="py-2">Fecha</th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                  </thead>
+                                  <tbody className="divide-y divide-surface-200 dark:divide-gray-800">
+                                    {(detalle || []).map((s, idx) => (
+                                      <tr key={`${s.usuarioId}-${s.createdAt}-${idx}`}>
+                                        <td className="pr-4 py-2 text-sm text-surface-900 dark:text-gray-100">
+                                          {s.usuarioNombre || s.usuarioEmail}
+                                        </td>
+                                        <td className="pr-4 py-2 text-sm font-mono text-surface-600 dark:text-gray-400">
+                                          {s.ip || '—'}
+                                        </td>
+                                        <td className="pr-4 py-2 text-xs text-surface-500 truncate max-w-[240px] dark:text-gray-500">
+                                          {s.userAgent || '—'}
+                                        </td>
+                                        <td className="py-2 text-sm text-surface-600 dark:text-gray-400">
+                                          {new Date(s.createdAt).toLocaleString()}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       )}
@@ -154,6 +157,8 @@ export const SessionsPage: React.FC = () => {
             </table>
           </div>
         )}
+
+        <Pagination page={page} pageSize={PAGE_SIZE} totalCount={total} onPageChange={setPage} />
       </div>
     </div>
   );
