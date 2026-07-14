@@ -1,20 +1,36 @@
 import React, { useState } from 'react';
-import { Building2, Printer, Users } from 'lucide-react';
+import { Building2, Printer, Users, Download, History } from 'lucide-react';
 import { PageHeader } from '../../components/design-system';
 import { CompanyTab } from './components/CompanyTab';
 import { PrintingTab } from './components/PrintingTab';
 import { UsersTab } from './components/UsersTab';
+import { ExportTab } from './components/ExportTab';
+import { AuditLogTab } from './components/AuditLogTab';
+import { useAppContext } from '../../store/AppContext';
 
-type SettingsTab = 'empresa' | 'impresion' | 'usuarios';
+type SettingsTab = 'empresa' | 'impresion' | 'usuarios' | 'exportar' | 'auditoria';
 
-const TABS: { id: SettingsTab; label: string; icon: typeof Building2 }[] = [
+const BASE_TABS: { id: SettingsTab; label: string; icon: typeof Building2 }[] = [
   { id: 'empresa', label: 'Empresa', icon: Building2 },
   { id: 'impresion', label: 'Impresión y mensajes', icon: Printer },
   { id: 'usuarios', label: 'Usuarios', icon: Users },
 ];
 
 export const SettingsFeature: React.FC = () => {
+  const { authUser } = useAppContext();
   const [activeTab, setActiveTab] = useState<SettingsTab>('empresa');
+
+  // Exportar datos y ver la auditoría son acciones sensibles (PII completa
+  // de clientes finales, o el rastro de qué hizo cada miembro del taller)
+  // — solo el owner del taller puede verlas y usarlas.
+  const isOwner = authUser?.role === 'owner';
+  const TABS = isOwner
+    ? [
+        ...BASE_TABS,
+        { id: 'exportar' as const, label: 'Exportar datos', icon: Download },
+        { id: 'auditoria' as const, label: 'Auditoría', icon: History },
+      ]
+    : BASE_TABS;
 
   return (
     <div className="space-y-6">
@@ -41,6 +57,8 @@ export const SettingsFeature: React.FC = () => {
       {activeTab === 'empresa' && <CompanyTab />}
       {activeTab === 'impresion' && <PrintingTab />}
       {activeTab === 'usuarios' && <UsersTab />}
+      {activeTab === 'exportar' && isOwner && <ExportTab />}
+      {activeTab === 'auditoria' && isOwner && <AuditLogTab />}
     </div>
   );
 };
