@@ -31,6 +31,8 @@ export interface Tenant {
   activo: boolean;
   created_at: string;
   updated_at: string;
+  /** Grupo empresarial (cadena) al que pertenece, si el master lo asignó */
+  grupo_id?: string | null;
 }
 
 export interface CreateTenantInput {
@@ -69,19 +71,38 @@ function mapProfile(row: {
 export const AuthService = {
   /**
    * Login con email + contraseña (Supabase Auth) y carga del perfil.
+   * Protección contra fuerza bruta vía fn_check_login_lock/fn_record_login_attempt
+   * (5 intentos fallidos → bloqueo de 15 min, contado por email en el servidor).
    */
   async login(email: string, password: string): Promise<AuthUser | null> {
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Corta antes de intentar si la cuenta ya está bloqueada — no gasta
+    // un intento real contra Supabase Auth.
+    const { error: lockError } = await supabase.rpc('fn_check_login_lock', { p_email: cleanEmail });
+    if (lockError) throw new Error(lockError.message);
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password,
     });
 
     if (error) {
-      if (error.message.includes('Invalid login credentials')) return null;
+      if (error.message.includes('Invalid login credentials')) {
+        // fn_record_login_attempt cuenta el intento fallido y tira su propia
+        // excepción con el mensaje de "N intentos restantes" o "bloqueado".
+        const { error: attemptError } = await supabase.rpc('fn_record_login_attempt', {
+          p_email: cleanEmail,
+          p_exito: false,
+        });
+        throw new Error(attemptError?.message || 'Correo o contraseña incorrectos.');
+      }
       console.error('[AuthService.login] Error:', error.message);
       throw new Error('Error de autenticación');
     }
     if (!data.user) return null;
+
+    await supabase.rpc('fn_record_login_attempt', { p_email: cleanEmail, p_exito: true });
 
     const profile = await this.getProfile();
     if (!profile) {

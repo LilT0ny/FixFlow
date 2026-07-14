@@ -49,8 +49,11 @@ export const Login = () => {
       } else {
         setError('Correo o contraseña incorrectos.');
       }
-    } catch {
-      setError('Error de conexión. Intenta de nuevo más tarde.');
+    } catch (err) {
+      // fn_record_login_attempt tira mensajes específicos ("N intentos
+      // restantes", "cuenta bloqueada X minutos") — hay que mostrarlos,
+      // no taparlos con un genérico.
+      setError(err instanceof Error ? err.message : 'Error de conexión. Intenta de nuevo más tarde.');
     } finally {
       setIsLoading(false);
     }
