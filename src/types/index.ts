@@ -57,6 +57,8 @@ export interface SaleItem {
   description: string;
   quantity: number;
   price: number;
+  /** Repuesto del catálogo vinculado a este ítem (opcional — descuenta stock solo) */
+  repuestoId?: string;
 }
 
 export interface PaymentTransaction {

@@ -5,14 +5,15 @@
  *  Inicio) — sigue siendo un módulo con permiso propio, solo que ahora gatea
  *  un botón en vez de una ruta; por eso su entrada en MODULE_ROUTES apunta a
  *  Inicio en vez de a una página dedicada. */
-export type ModuleKey = 'dashboard' | 'registro' | 'clientes' | 'caja' | 'reportes' | 'configuracion';
+export type ModuleKey = 'dashboard' | 'registro' | 'clientes' | 'inventario' | 'caja' | 'reportes' | 'configuracion';
 
-export const ALL_MODULES: ModuleKey[] = ['dashboard', 'registro', 'clientes', 'caja', 'reportes', 'configuracion'];
+export const ALL_MODULES: ModuleKey[] = ['dashboard', 'registro', 'clientes', 'inventario', 'caja', 'reportes', 'configuracion'];
 
 export const MODULE_ROUTES: Record<ModuleKey, string> = {
   dashboard: '/',
   registro: '/',
   clientes: '/clients',
+  inventario: '/inventory',
   caja: '/cash',
   reportes: '/reports',
   configuracion: '/settings',
@@ -22,6 +23,7 @@ export const MODULE_LABELS: Record<ModuleKey, string> = {
   dashboard: 'Inicio',
   registro: 'Nuevo ingreso',
   clientes: 'Clientes',
+  inventario: 'Inventario',
   caja: 'Transacciones',
   reportes: 'Reportes',
   configuracion: 'Configuración',

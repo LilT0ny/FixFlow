@@ -174,7 +174,7 @@ export const OrderService = {
 
         const items = (orderData as OrderCreationPayload).items;
         const p_items = items && items.length > 0
-          ? items.map(i => ({ descripcion: i.description, cantidad: i.quantity, precio_unitario: i.price }))
+          ? items.map(i => ({ descripcion: i.description, cantidad: i.quantity, precio_unitario: i.price, repuesto_id: i.repuestoId || null }))
           : [{
               descripcion: orderData.repair.reportedIssue || 'VENTA DIRECTA',
               cantidad: 1,

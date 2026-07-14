@@ -13,6 +13,7 @@ import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
 import { ChangePassword } from './pages/ChangePassword';
 import { ClientsFeature } from './features/Clients/ClientsFeature';
+import { InventoryFeature } from './features/Inventory/InventoryFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
 import { SessionsPage } from './features/MasterAdmin/SessionsPage';
@@ -86,6 +87,7 @@ function App() {
               {/* Nuevo ingreso vive ahora como modal en el Dashboard */}
               <Route path="check-in" element={<Navigate to="/" replace />} />
               <Route path="clients" element={<RequireModule module="clientes"><ClientsFeature /></RequireModule>} />
+              <Route path="inventory" element={<RequireModule module="inventario"><InventoryFeature /></RequireModule>} />
               <Route path="cash" element={<RequireModule module="caja"><CashRegisterFeature /></RequireModule>} />
               <Route path="reports" element={<RequireModule module="reportes"><ReportsFeature /></RequireModule>} />
               <Route path="settings" element={<RequireModule module="configuracion"><SettingsFeature /></RequireModule>} />

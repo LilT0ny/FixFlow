@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Plus, Trash2, Loader2, Printer, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, Plus, Trash2, Loader2, Printer, CheckCircle2, Package } from 'lucide-react';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
 import { useAppContext } from '../../../../store/AppContext';
 import { useSettings } from '../../../../hooks/useSettings';
 import { useClienteLookup } from '../../../../hooks/useClienteLookup';
+import { useRepuestoLookup } from '../../../../hooks/useRepuestoLookup';
+import type { Repuesto } from '../../../../services/RepuestoService';
 import { printReceipt } from '../../../../utils/printHelpers';
 import { useToast } from '../../../../store/ToastContext';
 import type { SaleItem, PaymentMethod, CustomerData, DeviceCheckInForm, ServiceOrder } from '../../../../types';
@@ -32,8 +34,12 @@ export const NuevaVentaModal: React.FC<NuevaVentaModalProps> = ({ isOpen, onClos
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<{ orderNumber: string } | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const { lookup, isSearching: isSearchingClient } = useClienteLookup();
   const { showToast } = useToast();
+
+  const activeItem = items.find(i => i.id === activeItemId);
+  const { results: repuestoResults, isSearching: isSearchingRepuesto } = useRepuestoLookup(activeItem?.description || '');
 
   const lookupClient = async (cedula: string) => {
     const client = await lookup(cedula);
@@ -56,6 +62,7 @@ export const NuevaVentaModal: React.FC<NuevaVentaModalProps> = ({ isOpen, onClos
     setMethod('efectivo');
     setError('');
     setCreated(null);
+    setActiveItemId(null);
   };
 
   const handleClose = () => {
@@ -64,7 +71,18 @@ export const NuevaVentaModal: React.FC<NuevaVentaModalProps> = ({ isOpen, onClos
   };
 
   const updateItem = (id: string, field: keyof SaleItem, value: string | number) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
+    setItems(prev => prev.map(i => i.id === id
+      // Tipear la descripción a mano desvincula el ítem del catálogo —
+      // solo queda vinculado si se elige una sugerencia de selectRepuesto.
+      ? { ...i, [field]: value, ...(field === 'description' ? { repuestoId: undefined } : {}) }
+      : i));
+  };
+
+  const selectRepuesto = (itemId: string, repuesto: Repuesto) => {
+    setItems(prev => prev.map(i => i.id === itemId
+      ? { ...i, description: repuesto.nombre, price: repuesto.precioVenta, repuestoId: repuesto.id }
+      : i));
+    setActiveItemId(null);
   };
 
   const addItem = () => setItems(prev => [...prev, emptyItem()]);
@@ -243,14 +261,43 @@ export const NuevaVentaModal: React.FC<NuevaVentaModalProps> = ({ isOpen, onClos
                       value={item.quantity}
                       onChange={e => updateItem(item.id, 'quantity', Math.max(1, Number(e.target.value)))}
                     />
-                    <input
-                      type="text"
-                      placeholder="Repuesto o servicio..."
-                      aria-label="Descripción"
-                      className={`${inputClass} min-w-0`}
-                      value={item.description}
-                      onChange={e => updateItem(item.id, 'description', e.target.value)}
-                    />
+                    <div className="relative min-w-0">
+                      <input
+                        type="text"
+                        placeholder="Repuesto o servicio..."
+                        aria-label="Descripción"
+                        className={`${inputClass} min-w-0 ${item.repuestoId ? 'pl-8' : ''}`}
+                        value={item.description}
+                        onChange={e => updateItem(item.id, 'description', e.target.value)}
+                        onFocus={() => setActiveItemId(item.id)}
+                        onBlur={() => setTimeout(() => setActiveItemId(prev => (prev === item.id ? null : prev)), 150)}
+                      />
+                      {item.repuestoId && (
+                        <Package className="w-3.5 h-3.5 text-primary-600 dark:text-blue-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      )}
+                      {activeItemId === item.id && item.description.trim().length >= 2 && (
+                        <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-surface-200 rounded-lg shadow-lg max-h-48 overflow-y-auto dark:bg-gray-800 dark:border-gray-700">
+                          {isSearchingRepuesto ? (
+                            <div className="px-3 py-2 text-xs text-surface-500 dark:text-gray-400">Buscando...</div>
+                          ) : repuestoResults.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-surface-500 dark:text-gray-400">Sin coincidencias en el catálogo</div>
+                          ) : (
+                            repuestoResults.map(r => (
+                              <button
+                                key={r.id}
+                                type="button"
+                                onMouseDown={e => e.preventDefault()}
+                                onClick={() => selectRepuesto(item.id, r)}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-surface-50 dark:hover:bg-gray-700 flex items-center justify-between gap-2"
+                              >
+                                <span className="text-surface-900 dark:text-gray-100 truncate">{r.nombre}</span>
+                                <span className="text-surface-500 dark:text-gray-400 shrink-0">${r.precioVenta.toFixed(2)} · Stock {r.stock}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <input
                       type="number"
                       min={0}
