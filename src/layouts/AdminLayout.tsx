@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
-  Menu, X, Home, LogOut, Settings, Users, ChartNoAxesCombined, SquarePlus,
+  Menu, X, Home, LogOut, Settings, Users, ChartNoAxesCombined,
   CircleDollarSign, Wrench, PanelLeftClose, PanelLeftOpen, Sun, Moon
 } from 'lucide-react';
 import { useAppContext } from '../store/AppContext';
@@ -15,7 +15,6 @@ const NAV_SECTIONS: { title: string; items: { to: string; icon: typeof Home; lab
     title: 'Taller',
     items: [
       { to: '/', icon: Home, label: 'Inicio', end: true, module: 'dashboard' },
-      { to: '/check-in', icon: SquarePlus, label: 'Nuevo ingreso', module: 'registro' },
       { to: '/clients', icon: Users, label: 'Clientes', module: 'clientes' },
     ],
   },

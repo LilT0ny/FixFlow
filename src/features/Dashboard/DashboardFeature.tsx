@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Wrench, CheckCircle, Clock, AlertCircle, ShoppingBag } from 'lucide-react';
+import { Wrench, CheckCircle, Clock, AlertCircle, ShoppingBag, SquarePlus } from 'lucide-react';
 import { StatCard } from '../../components/molecules/StatCard';
 import { PageHeader } from '../../components/design-system';
 import { DevicesPanel } from '../DeviceList/DevicesPanel';
 import { NuevaVentaModal } from './components/organisms/NuevaVentaModal';
+import { NewDeviceModal } from './components/organisms/NewDeviceModal';
 import { ConsolidatedChainPanel } from './components/ConsolidatedChainPanel';
 import { useAppContext } from '../../store/AppContext';
 
 export const DashboardFeature: React.FC = () => {
   // Misma fuente de datos que el panel de dispositivos: los KPI reaccionan
   // en vivo a los cambios de estado hechos en la tabla.
-  const { orders, authUser } = useAppContext();
+  const { orders, authUser, canAccessModule } = useAppContext();
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
 
   const stats = [
     { label: 'Equipos en Taller', value: orders.length, icon: Wrench, color: 'text-primary-600 dark:text-blue-400', bg: 'bg-primary-50 dark:bg-blue-950/40' },
@@ -26,13 +28,24 @@ export const DashboardFeature: React.FC = () => {
         title="Inicio"
         subtitle="Monitoreo y gestión de equipos en taller"
       >
-        <button
-          onClick={() => setIsSaleModalOpen(true)}
-          className="w-full sm:w-auto bg-white border border-surface-300 text-surface-700 px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-50 transition-all duration-150 active:scale-[0.98] whitespace-nowrap dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          <ShoppingBag className="w-4 h-4" />
-          Nueva venta
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {canAccessModule('registro') && (
+            <button
+              onClick={() => setIsRegistrationModalOpen(true)}
+              className="w-full sm:w-auto bg-white border border-surface-300 text-surface-700 px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-50 transition-all duration-150 active:scale-[0.98] whitespace-nowrap dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <SquarePlus className="w-4 h-4" />
+              Nuevo ingreso
+            </button>
+          )}
+          <button
+            onClick={() => setIsSaleModalOpen(true)}
+            className="w-full sm:w-auto bg-white border border-surface-300 text-surface-700 px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-50 transition-all duration-150 active:scale-[0.98] whitespace-nowrap dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Nueva venta
+          </button>
+        </div>
       </PageHeader>
 
       {authUser?.role === 'owner' && <ConsolidatedChainPanel />}
@@ -55,6 +68,7 @@ export const DashboardFeature: React.FC = () => {
       <DevicesPanel />
 
       <NuevaVentaModal isOpen={isSaleModalOpen} onClose={() => setIsSaleModalOpen(false)} />
+      <NewDeviceModal isOpen={isRegistrationModalOpen} onClose={() => setIsRegistrationModalOpen(false)} />
     </div>
   );
 };

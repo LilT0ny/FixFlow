@@ -12,7 +12,6 @@ import { ReportsFeature } from './features/Reports/ReportsFeature';
 import { ClientStatus } from './pages/ClientStatus';
 import { Login } from './pages/Login';
 import { ChangePassword } from './pages/ChangePassword';
-import { RegistrationFeature } from './features/Registration/RegistrationFeature';
 import { ClientsFeature } from './features/Clients/ClientsFeature';
 import { SettingsFeature } from './features/Settings/SettingsFeature';
 import { MasterAdminDashboard } from './features/MasterAdmin/MasterAdminDashboard';
@@ -82,9 +81,10 @@ function App() {
             {/* Admin routes with sidebar */}
             <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<RequireModule module="dashboard"><DashboardFeature /></RequireModule>} />
-              <Route path="check-in" element={<RequireModule module="registro"><RegistrationFeature /></RequireModule>} />
               {/* Dispositivos vive ahora en el Dashboard (ruta índice) */}
               <Route path="devices" element={<Navigate to="/" replace />} />
+              {/* Nuevo ingreso vive ahora como modal en el Dashboard */}
+              <Route path="check-in" element={<Navigate to="/" replace />} />
               <Route path="clients" element={<RequireModule module="clientes"><ClientsFeature /></RequireModule>} />
               <Route path="cash" element={<RequireModule module="caja"><CashRegisterFeature /></RequireModule>} />
               <Route path="reports" element={<RequireModule module="reportes"><ReportsFeature /></RequireModule>} />
