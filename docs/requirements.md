@@ -207,8 +207,8 @@ Todos los módulos listados están **implementados y operativos**:
 | **Enforcement de planes** | Los planes existen como dato pero no limitan funcionalidades por nivel | Media |
 | **Alcance `propio` vs `taller` en permisos** | La UI de permisos por miembro solo controla *qué vistas* ve cada `member` (todas se asignan con alcance `taller`); el campo `alcance` (`propio`/`taller`, para limitar a "solo mis registros") existe en el esquema pero no tiene selector en la interfaz todavía | Baja |
 | **Facturación de suscripciones** | Integrar pasarela (Stripe u otra) para el cobro del SaaS | Media |
-| **Notificaciones WhatsApp API** | Hoy se usa deep-link (requiere acción del operador); migrar a WhatsApp Business API permitiría envío automático real | Baja |
-| **Auditoría** | Bitácora de acciones por usuario (quién cambió qué) | Baja |
+| **Notificaciones WhatsApp API** | **Decisión: no se construye.** Se evaluó migrar de deep-link a WhatsApp Business API, pero el costo de esa API es variable por mensaje enviado — a mayor volumen de notificaciones, mayor gasto recurrente. Se prefiere mantener el deep-link actual (gratis, sin límite, requiere acción manual del operador) antes que trasladar un costo variable al negocio. | Descartada |
+| **Auditoría** | Bitácora de acciones por usuario (quién cambió qué) | ✅ Implementado — Configuración → Auditoría |
 
 ---
 
