@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { History, ChevronDown, ChevronRight, ScrollText } from 'lucide-react';
 import { AuditLogService, type AuditLogEntry } from '../../../services/AuditLogService';
 import { Badge, EmptyState } from '../../../components/design-system';
+import { Pagination } from '../../../components/molecules/Pagination';
 import { useToast } from '../../../store/ToastContext';
+import { PAGE_SIZE } from '../../../constants/pagination';
 
 const TABLE_LABELS: Record<string, string> = {
   clientes: 'Cliente',
@@ -24,19 +26,25 @@ const ACTION_LABELS: Record<AuditLogEntry['action'], { label: string; variant: '
 export const AuditLogTab: React.FC = () => {
   const { showToast } = useToast();
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
-    AuditLogService.getAuditLog()
-      .then(setEntries)
+    setLoading(true);
+    AuditLogService.getAuditLog(page, PAGE_SIZE)
+      .then(({ entries, total }) => {
+        setEntries(entries);
+        setTotal(total);
+      })
       .catch(err => {
         console.error('Error loading audit log:', err);
         showToast('No se pudo cargar la bitácora de auditoría', 'error');
       })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]);
 
   return (
     <div className="bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden dark:bg-gray-900 dark:border-gray-800">
@@ -47,7 +55,7 @@ export const AuditLogTab: React.FC = () => {
         <div>
           <h2 className="text-sm font-semibold text-surface-900 dark:text-gray-100">Auditoría</h2>
           <p className="text-xs text-surface-500 dark:text-gray-400">
-            Quién cambió qué — últimos 200 eventos registrados
+            Quién cambió qué — {total} evento{total === 1 ? '' : 's'} registrado{total === 1 ? '' : 's'}
           </p>
         </div>
       </div>
@@ -131,6 +139,8 @@ export const AuditLogTab: React.FC = () => {
           </table>
         </div>
       )}
+
+      <Pagination page={page} pageSize={PAGE_SIZE} totalCount={total} onPageChange={setPage} />
     </div>
   );
 };

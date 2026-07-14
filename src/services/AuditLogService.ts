@@ -18,18 +18,22 @@ const AUDIT_SELECT = `
 
 export const AuditLogService = {
   /**
-   * Últimos 200 eventos de la bitácora (RLS filtra: solo owner/master ven).
+   * Página de la bitácora (RLS filtra: solo owner/master ven). Sin
+   * búsqueda hoy, solo orden descendente por fecha + range.
    */
-  async getAuditLog(): Promise<AuditLogEntry[]> {
-    const { data, error } = await supabase
+  async getAuditLog(page: number, pageSize: number): Promise<{ entries: AuditLogEntry[]; total: number }> {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
       .from('bitacora_auditoria')
-      .select(AUDIT_SELECT)
+      .select(AUDIT_SELECT, { count: 'exact' })
       .order('created_at', { ascending: false })
-      .limit(200);
+      .range(from, to);
 
     if (error) throw error;
 
-    return (data || []).map(row => ({
+    const entries = (data || []).map(row => ({
       id: row.id,
       table: row.tabla,
       action: row.accion,
@@ -38,5 +42,7 @@ export const AuditLogService = {
       after: row.datos_despues,
       createdAt: row.created_at,
     }));
+
+    return { entries, total: count || 0 };
   },
 };
