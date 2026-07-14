@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { PaymentService } from '../services/PaymentService';
+import { useToast } from '../store/ToastContext';
 import type { PaymentTransaction } from '../types';
 
 export function usePayments() {
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -41,10 +43,10 @@ export function usePayments() {
       }
     } catch (err: any) {
       console.error('Error in usePayments addPayment:', err);
-      // Depending on app logic, maybe show a toast here
+      showToast(err instanceof Error ? err.message : 'Error al registrar el movimiento', 'error');
       throw err;
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchPayments();

@@ -4,9 +4,11 @@ import type { Client } from '../../services/ClientService';
 import { useClients } from './hooks/useClients';
 import { PageHeader, SearchInput, DataCard, EmptyState, Badge } from '../../components/design-system';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/molecules/Modal';
+import { useToast } from '../../store/ToastContext';
 
 export const ClientsFeature: React.FC = () => {
   const { clients, fetchClients, deleteClient, saveClient } = useClients();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -44,7 +46,7 @@ export const ClientsFeature: React.FC = () => {
     } catch (error) {
       console.error('Error saving client:', error);
       setSaveStatus('idle');
-      alert('Error al guardar el cliente');
+      showToast('Error al guardar el cliente', 'error');
     }
   };
 
@@ -65,8 +67,10 @@ export const ClientsFeature: React.FC = () => {
       try {
         await deleteClient(id);
         fetchClients();
+        showToast('Cliente eliminado', 'success');
       } catch (error) {
         console.error('Error deleting client:', error);
+        showToast('Error al eliminar el cliente', 'error');
       }
     }
   };
@@ -97,8 +101,8 @@ export const ClientsFeature: React.FC = () => {
       </PageHeader>
 
       <DataCard padding="none" className="animate-fade-in-up">
-        <div className="p-4 border-b border-surface-200">
-          <SearchInput 
+        <div className="p-4 border-b border-surface-200 dark:border-gray-800">
+          <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Buscar por nombre o cédula..."
@@ -108,7 +112,7 @@ export const ClientsFeature: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[560px]">
             <thead>
-              <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200">
+              <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200 dark:bg-gray-900/60 dark:text-gray-400 dark:border-gray-800">
                 <th className="px-4 md:px-6 py-3">Cliente</th>
                 <th className="px-4 md:px-6 py-3 hidden sm:table-cell">Identidad</th>
                 <th className="px-4 md:px-6 py-3 hidden md:table-cell">Contacto</th>
@@ -117,12 +121,12 @@ export const ClientsFeature: React.FC = () => {
                 <th className="px-4 md:px-6 py-3 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-100">
+            <tbody className="divide-y divide-surface-100 dark:divide-gray-800">
               {filteredClients.map(client => (
-                <tr key={client.id} className="hover:bg-surface-50 transition-colors duration-150">
+                <tr key={client.id} className="hover:bg-surface-50 transition-colors duration-150 dark:hover:bg-gray-800/60">
                   <td className="px-4 md:px-6 py-3.5">
-                    <div className="font-medium text-sm text-surface-900">{client.fullName}</div>
-                    <div className="sm:hidden mt-1 flex gap-2 text-xs text-surface-500">
+                    <div className="font-medium text-sm text-surface-900 dark:text-gray-100">{client.fullName}</div>
+                    <div className="sm:hidden mt-1 flex gap-2 text-xs text-surface-500 dark:text-gray-400">
                       <span>{client.documentId}</span>
                       <span>{client.phone}</span>
                     </div>
@@ -134,23 +138,23 @@ export const ClientsFeature: React.FC = () => {
                     <Badge variant="info">{client.phone || 'S/N'}</Badge>
                   </td>
                   <td className="px-4 md:px-6 py-3.5 hidden lg:table-cell">
-                    <span className="text-sm text-surface-600">{client.email || 'S/N'}</span>
+                    <span className="text-sm text-surface-600 dark:text-gray-400">{client.email || 'S/N'}</span>
                   </td>
                   <td className="px-4 md:px-6 py-3.5 hidden xl:table-cell">
-                    <span className="text-sm text-surface-600">{client.address || 'S/N'}</span>
+                    <span className="text-sm text-surface-600 dark:text-gray-400">{client.address || 'S/N'}</span>
                   </td>
                   <td className="px-4 md:px-6 py-3.5 text-right">
                     <div className="flex justify-end gap-1">
                       <button
                         onClick={() => handleEdit(client)}
-                        className="p-2 text-surface-400 hover:text-surface-900 hover:bg-surface-100 rounded-lg transition-colors duration-150"
+                        className="p-2 text-surface-400 hover:text-surface-900 hover:bg-surface-100 rounded-lg transition-colors duration-150 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-gray-800"
                         title="Editar"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(client.id)}
-                        className="p-2 text-surface-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors duration-150"
+                        className="p-2 text-surface-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors duration-150 dark:text-gray-500 dark:hover:text-red-400 dark:hover:bg-red-950/30"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -184,50 +188,50 @@ export const ClientsFeature: React.FC = () => {
         <form onSubmit={handleSubmit} className="contents">
           <ModalBody className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-surface-600 mb-1.5">Nombre completo</label>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5 dark:text-gray-400">Nombre completo</label>
               <input
                 type="text"
                 required
                 value={formData.fullName}
                 onChange={e => setFormData({...formData, fullName: e.target.value.toUpperCase()})}
-                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Cédula / RUC</label>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5 dark:text-gray-400">Cédula / RUC</label>
                 <input
                   type="text"
                   required
                   value={formData.documentId}
                   onChange={e => setFormData({...formData, documentId: e.target.value})}
-                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-600 mb-1.5">Teléfono</label>
+                <label className="block text-xs font-medium text-surface-600 mb-1.5 dark:text-gray-400">Teléfono</label>
                 <input
                   type="text"
                   required
                   value={formData.phone}
                   onChange={e => setFormData({...formData, phone: e.target.value})}
-                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-600 mb-1.5">Correo electrónico</label>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5 dark:text-gray-400">Correo electrónico</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={e => setFormData({...formData, email: e.target.value})}
-                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-600 mb-1.5">Dirección</label>
+              <label className="block text-xs font-medium text-surface-600 mb-1.5 dark:text-gray-400">Dirección</label>
               <textarea
-                className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none min-h-[80px]"
+                className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none min-h-[80px] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 value={formData.address}
                 onChange={e => setFormData({...formData, address: e.target.value.toUpperCase()})}
               />
@@ -238,7 +242,7 @@ export const ClientsFeature: React.FC = () => {
               type="button"
               onClick={() => setIsModalOpen(false)}
               disabled={saveStatus !== 'idle'}
-              className="flex-1 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
+              className="flex-1 h-11 rounded-lg text-sm font-medium border border-surface-300 bg-white text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Cancelar
             </button>

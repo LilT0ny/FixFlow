@@ -79,93 +79,93 @@ export const EditTenantModal = ({ tenant, onClose, onSave }: EditTenantModalProp
       <form onSubmit={handleSubmit} className="contents">
         <ModalBody className="space-y-4">
           {error && (
-            <div className="p-3 bg-danger-50 border border-danger-100 rounded-lg flex gap-3">
-              <AlertCircle className="w-5 h-5 text-danger-600 shrink-0 mt-0.5" />
-              <p className="text-danger-700 text-sm">{error}</p>
+            <div className="p-3 bg-danger-50 border border-danger-100 rounded-lg flex gap-3 dark:bg-red-950/30 dark:border-red-900">
+              <AlertCircle className="w-5 h-5 text-danger-600 shrink-0 mt-0.5 dark:text-red-400" />
+              <p className="text-danger-700 text-sm dark:text-red-400">{error}</p>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Nombre de empresa *</label>
+            <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Nombre de empresa *</label>
             <input
               type="text"
               value={formData.nombre_empresa}
               onChange={(e) => setFormData((prev) => ({ ...prev, nombre_empresa: e.target.value }))}
-              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               disabled={loading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Slug (URL) *</label>
+            <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Slug (URL) *</label>
             <input
               type="text"
               value={formData.slug}
               onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
-              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               disabled={loading}
             />
-            <p className="text-xs text-surface-500 mt-1">Solo letras, números y guiones</p>
+            <p className="text-xs text-surface-500 mt-1 dark:text-gray-400">Solo letras, números y guiones</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Email *</label>
+            <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Email *</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               disabled={loading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Plan *</label>
+            <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Plan *</label>
             <select
               value={formData.plan}
               onChange={(e) => setFormData((prev) => ({ ...prev, plan: e.target.value }))}
-              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none capitalize"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none capitalize dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               disabled={loading}
             >
               {PLAN_OPTIONS.map((p) => (
-                <option key={p} value={p} className="capitalize">{p}</option>
+                <option key={p} value={p} className="capitalize dark:bg-gray-800 dark:text-gray-100">{p}</option>
               ))}
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1">RUC</label>
+              <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">RUC</label>
               <input
                 type="text"
                 value={formData.ruc}
                 onChange={(e) => setFormData((prev) => ({ ...prev, ruc: e.target.value }))}
                 placeholder="Opcional"
-                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 disabled={loading}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1">Teléfono</label>
+              <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Teléfono</label>
               <input
                 type="tel"
                 value={formData.telefono}
                 onChange={(e) => setFormData((prev) => ({ ...prev, telefono: e.target.value }))}
                 placeholder="Opcional"
-                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 disabled={loading}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Dirección</label>
+            <label className="block text-sm font-medium text-surface-700 mb-1 dark:text-gray-300">Dirección</label>
             <input
               type="text"
               value={formData.direccion}
               onChange={(e) => setFormData((prev) => ({ ...prev, direccion: e.target.value }))}
               placeholder="Opcional"
-              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               disabled={loading}
             />
           </div>
@@ -176,7 +176,7 @@ export const EditTenantModal = ({ tenant, onClose, onSave }: EditTenantModalProp
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 h-11 text-sm font-medium text-surface-700 bg-white border border-surface-300 hover:bg-surface-50 rounded-lg transition-colors duration-150 disabled:opacity-50"
+            className="flex-1 h-11 text-sm font-medium text-surface-700 bg-white border border-surface-300 hover:bg-surface-50 rounded-lg transition-colors duration-150 disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancelar
           </button>

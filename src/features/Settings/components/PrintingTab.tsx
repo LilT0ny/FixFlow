@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Printer, MessageSquare, FileText, Info, Save, CheckCircle2, Loader2 } from 'lucide-react';
 import { useSettings } from '../../../hooks/useSettings';
 import type { PrinterType } from '../../../types';
+import { useToast } from '../../../store/ToastContext';
 
 export const PrintingTab: React.FC = () => {
   const { settings, updateSettings, isSettingsLoading } = useSettings();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState(settings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
 
@@ -26,25 +28,25 @@ export const PrintingTab: React.FC = () => {
     } catch (error) {
       console.error('Error saving printing/messaging settings:', error);
       setSaveStatus('idle');
-      alert('No se pudo guardar: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+      showToast('No se pudo guardar: ' + (error instanceof Error ? error.message : 'Error desconocido'), 'error');
     }
   };
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <div className="bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs">
-          <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0">
+        <div className="bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+          <div className="flex items-center gap-3 border-b border-surface-100 pb-4 dark:border-gray-800">
+            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0 dark:bg-gray-800 dark:text-gray-400">
               <Printer className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-surface-900">Configuración de ticket</h2>
-              <p className="text-xs text-surface-500">Hardware de impresión</p>
+              <h2 className="text-sm font-semibold text-surface-900 dark:text-gray-100">Configuración de ticket</h2>
+              <p className="text-xs text-surface-500 dark:text-gray-400">Hardware de impresión</p>
             </div>
           </div>
           <div className="space-y-4">
-            <label className="block text-xs font-medium text-surface-600">Ancho de Papel Predeterminado</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Ancho de Papel Predeterminado</label>
             <div className="grid grid-cols-3 gap-3">
               {(['58mm', '80mm', 'A4'] as PrinterType[]).map(type => (
                 <button
@@ -53,48 +55,48 @@ export const PrintingTab: React.FC = () => {
                   onClick={() => setFormData({ ...formData, printerType: type })}
                   className={`px-4 py-2.5 border rounded-lg text-center transition-colors duration-150 text-sm font-medium ${
                     formData.printerType === type
-                      ? 'border-surface-900 bg-surface-900 text-white'
-                      : 'border-surface-300 text-surface-600 hover:border-surface-400'
+                      ? 'border-surface-900 bg-surface-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900'
+                      : 'border-surface-300 text-surface-600 hover:border-surface-400 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600'
                   }`}
                 >
                   {type}
                 </button>
               ))}
             </div>
-            <div className="bg-primary-50/50 p-3.5 rounded-lg flex gap-2.5 border border-primary-100">
-              <Info className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-surface-600 leading-snug">
+            <div className="bg-primary-50/50 p-3.5 rounded-lg flex gap-2.5 border border-primary-100 dark:bg-blue-950/20 dark:border-blue-900">
+              <Info className="w-4 h-4 text-primary-600 shrink-0 mt-0.5 dark:text-blue-400" />
+              <p className="text-sm text-surface-600 leading-snug dark:text-gray-400">
                 Esta configuración se aplicará automáticamente a todos los formatos de impresión térmica del sistema.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs">
-          <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0">
+        <div className="bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+          <div className="flex items-center gap-3 border-b border-surface-100 pb-4 dark:border-gray-800">
+            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0 dark:bg-gray-800 dark:text-gray-400">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-surface-900">Mensajería automática</h2>
-              <p className="text-xs text-surface-500">Plantillas de WhatsApp</p>
+              <h2 className="text-sm font-semibold text-surface-900 dark:text-gray-100">Mensajería automática</h2>
+              <p className="text-xs text-surface-500 dark:text-gray-400">Plantillas de WhatsApp</p>
             </div>
           </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-surface-600">Estructura del Mensaje</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Estructura del Mensaje</label>
               <textarea
-                className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none text-sm leading-relaxed min-h-[160px]"
+                className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none text-sm leading-relaxed min-h-[160px] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 value={formData.whatsappTemplate}
                 onChange={e => setFormData({ ...formData, whatsappTemplate: e.target.value })}
                 placeholder="Escribe el mensaje aquí..."
               />
             </div>
-            <div className="bg-surface-50 rounded-lg p-3.5 border border-surface-200">
-              <p className="text-xs font-medium text-surface-600 mb-2.5">Marcadores dinámicos:</p>
+            <div className="bg-surface-50 rounded-lg p-3.5 border border-surface-200 dark:bg-gray-900/60 dark:border-gray-800">
+              <p className="text-xs font-medium text-surface-600 mb-2.5 dark:text-gray-400">Marcadores dinámicos:</p>
               <div className="flex flex-wrap gap-1.5">
                 {['{{customer}}', '{{device}}', '{{model}}', '{{status}}', '{{orderNumber}}', '{{total}}', '{{abono}}', '{{saldo}}'].map(tag => (
-                  <code key={tag} className="bg-white px-2 py-0.5 rounded border border-surface-200 text-xs font-mono text-surface-700 select-all hover:bg-surface-100 transition-colors duration-150">
+                  <code key={tag} className="bg-white px-2 py-0.5 rounded border border-surface-200 text-xs font-mono text-surface-700 select-all hover:bg-surface-100 transition-colors duration-150 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">
                     {tag}
                   </code>
                 ))}
@@ -103,20 +105,20 @@ export const PrintingTab: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs">
-          <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+          <div className="flex items-center gap-3 border-b border-surface-100 pb-4 dark:border-gray-800">
+            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0 dark:bg-gray-800 dark:text-gray-400">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-surface-900">Términos y condiciones</h2>
-              <p className="text-xs text-surface-500">Se imprimen al pie del ticket de ingreso</p>
+              <h2 className="text-sm font-semibold text-surface-900 dark:text-gray-100">Términos y condiciones</h2>
+              <p className="text-xs text-surface-500 dark:text-gray-400">Se imprimen al pie del ticket de ingreso</p>
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-surface-600">Texto de términos y condiciones</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Texto de términos y condiciones</label>
             <textarea
-              className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none text-sm leading-relaxed min-h-[140px]"
+              className="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none text-sm leading-relaxed min-h-[140px] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               value={formData.termsConditions || ''}
               onChange={e => setFormData({ ...formData, termsConditions: e.target.value })}
               placeholder="Ej. El taller no se responsabiliza por equipos no retirados después de 30 días. La garantía cubre únicamente el trabajo realizado..."

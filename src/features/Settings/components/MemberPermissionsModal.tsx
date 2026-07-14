@@ -54,10 +54,10 @@ export const MemberPermissionsModal = ({ member, onClose }: Props) => {
       />
 
       <ModalBody className="space-y-4">
-        <p className="text-sm text-surface-500">Elegí qué pantallas puede ver este miembro en el menú.</p>
+        <p className="text-sm text-surface-500 dark:text-gray-400">Elegí qué pantallas puede ver este miembro en el menú.</p>
 
         {error && (
-          <div className="p-3 bg-danger-50 border border-danger-100 rounded-lg text-danger-700 text-sm flex items-center gap-2">
+          <div className="p-3 bg-danger-50 border border-danger-100 rounded-lg text-danger-700 text-sm flex items-center gap-2 dark:bg-red-950/30 dark:border-red-900 dark:text-red-400">
             <AlertCircle className="w-4 h-4 shrink-0" /> {error}
           </div>
         )}
@@ -72,7 +72,7 @@ export const MemberPermissionsModal = ({ member, onClose }: Props) => {
               <label
                 key={m}
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors duration-150 border ${
-                  selected.has(m) ? 'bg-primary-50/50 border-primary-500' : 'bg-surface-50 border-surface-200 hover:border-surface-300'
+                  selected.has(m) ? 'bg-primary-50/50 border-primary-500 dark:bg-blue-950/30 dark:border-blue-500' : 'bg-surface-50 border-surface-200 hover:border-surface-300 dark:bg-gray-900/60 dark:border-gray-800 dark:hover:border-gray-700'
                 }`}
               >
                 <input
@@ -81,7 +81,7 @@ export const MemberPermissionsModal = ({ member, onClose }: Props) => {
                   checked={selected.has(m)}
                   onChange={() => toggle(m)}
                 />
-                <span className="text-sm font-medium text-surface-900">{MODULE_LABELS[m]}</span>
+                <span className="text-sm font-medium text-surface-900 dark:text-gray-100">{MODULE_LABELS[m]}</span>
               </label>
             ))}
           </div>
@@ -93,7 +93,7 @@ export const MemberPermissionsModal = ({ member, onClose }: Props) => {
           type="button"
           onClick={onClose}
           disabled={saving}
-          className="flex-1 h-11 border border-surface-300 bg-white rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
+          className="flex-1 h-11 border border-surface-300 bg-white rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Cancelar
         </button>

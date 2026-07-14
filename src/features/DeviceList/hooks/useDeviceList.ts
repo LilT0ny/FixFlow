@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../../store/AppContext';
 import { useSettings } from '../../../hooks/useSettings';
+import { useToast } from '../../../store/ToastContext';
 import { PaymentService } from '../../../services/PaymentService';
 import { uploadPhoto, deletePhoto } from '../../../services/StorageService';
 import type { OrderStatus, ServiceOrder, CustomerData, DeviceCheckInForm } from '../../../types';
@@ -11,6 +12,7 @@ export const useDeviceList = () => {
   // comparten el MISMO estado de órdenes.
   const { orders, updateOrderStatus, updateOrder, deleteOrder, addOrder, refreshOrders } = useAppContext();
   const { settings } = useSettings();
+  const { showToast } = useToast();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const activeStatuses: OrderStatus[] = useMemo(() => {
@@ -56,19 +58,13 @@ export const useDeviceList = () => {
   const [billingCustomer, setBillingCustomer] = useState<CustomerData | null>(null);
   /** Flag para mostrar spinner mientras se guarda el state change */
   const [isConfirming, setIsConfirming] = useState(false);
-  /** Mensaje de éxito tras operación exitosa en BD — se auto-limpia en 3s */
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const deleteConfirmModal_state = useState<{ isOpen: boolean; orderId: string } | null>(null);
   const [deleteConfirmModal, setDeleteConfirmModal] = deleteConfirmModal_state;
   const [photosModal,        setPhotosModal]        = useState<{ isOpen: boolean; orderToEdit: ServiceOrder | null } | null>(null);
   const [editModal,          setEditModal]          = useState<{ isOpen: boolean; order: ServiceOrder } | null>(null);
 
-  /** Muestra un mensaje de éxito por 3 segundos y luego lo limpia */
-  const showSuccess = useCallback((msg: string) => {
-    setSuccessMessage(msg);
-    setTimeout(() => setSuccessMessage(null), 3500);
-  }, []);
+  const showSuccess = (msg: string) => showToast(msg, 'success');
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
@@ -103,12 +99,12 @@ export const useDeviceList = () => {
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case 'recibido':            return 'bg-primary-100 text-primary-800 border-primary-200';
-      case 'diagnostico':         return 'bg-warning-100 text-warning-800 border-warning-200';
-      case 'esperando_repuestos': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'listo':               return 'bg-success-100 text-success-800 border-success-200';
-      case 'entregado':           return 'bg-surface-100 text-surface-800 border-surface-200';
-      default:                    return 'bg-surface-100 text-surface-800';
+      case 'recibido':            return 'bg-primary-100 text-primary-800 border-primary-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900';
+      case 'diagnostico':         return 'bg-warning-100 text-warning-800 border-warning-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900';
+      case 'esperando_repuestos': return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-900';
+      case 'listo':               return 'bg-success-100 text-success-800 border-success-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900';
+      case 'entregado':           return 'bg-surface-100 text-surface-800 border-surface-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
+      default:                    return 'bg-surface-100 text-surface-800 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
@@ -215,9 +211,10 @@ export const useDeviceList = () => {
       setBillingCustomer(null);
       setGenerateSalesNote(false);
       
-      showSuccess(`✓ Equipo entregado y estado actualizado en la base de datos.`);
+      showSuccess(`Estado actualizado a "${getStatusLabel(newStatus)}".`);
     } catch (err) {
       console.error('Error en confirmStatusChange:', err);
+      showToast(err instanceof Error ? err.message : 'Error al actualizar el estado de la orden', 'error');
     } finally {
       setIsConfirming(false);
     }
@@ -287,7 +284,6 @@ export const useDeviceList = () => {
     generateSalesNote, setGenerateSalesNote,
     billingCustomer, setBillingCustomer,
     isConfirming,
-    successMessage,
     deleteConfirmModal, setDeleteConfirmModal,
     photosModal, setPhotosModal,
     editModal, setEditModal,

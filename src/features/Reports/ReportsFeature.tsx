@@ -26,9 +26,16 @@ import {
 import ExcelJS from "exceljs";
 import { StatCard } from "../../components/molecules/StatCard";
 import { PageHeader } from "../../components/design-system";
+import { useTheme } from "../../store/ThemeContext";
+import { useToast } from "../../store/ToastContext";
+import { getLocalDate, getLocalMonth, formatToLocalDate } from "../../utils/dateUtils";
 
 export const ReportsFeature: React.FC = () => {
   const { payments } = useAppContext();
+  const { theme } = useTheme();
+  const { showToast } = useToast();
+  const gridStroke = theme === "dark" ? "#374151" : "#E5E7EB";
+  const axisTick = { fill: theme === "dark" ? "#9CA3AF" : "#6B7280", fontSize: 12 };
 
   // View states
   const [viewMode, setViewMode] = useState<"daily" | "monthly">("monthly");
@@ -36,19 +43,19 @@ export const ReportsFeature: React.FC = () => {
     "idle" | "exporting" | "success"
   >("idle");
 
-  // Date selection states
-  const today = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().split("T")[0],
-  );
+  // Date selection states — siempre en hora de Ecuador, nunca UTC crudo
+  // (a las 19h+ en Ecuador ya es "mañana" en UTC, y comparar contra la
+  // fecha UTC hacía que las transacciones de la noche cayeran en el día
+  // equivocado).
+  const [selectedMonth, setSelectedMonth] = useState(getLocalMonth());
+  const [selectedDate, setSelectedDate] = useState(getLocalDate());
 
   // Derived data based on current view
   const filteredData = useMemo(() => {
     if (viewMode === "monthly") {
-      return payments.filter((p) => p.date.startsWith(selectedMonth));
+      return payments.filter((p) => formatToLocalDate(p.date).startsWith(selectedMonth));
     } else {
-      return payments.filter((p) => p.date.startsWith(selectedDate));
+      return payments.filter((p) => formatToLocalDate(p.date) === selectedDate);
     }
   }, [payments, viewMode, selectedMonth, selectedDate]);
 
@@ -81,7 +88,7 @@ export const ReportsFeature: React.FC = () => {
     }
 
     filteredData.forEach((p) => {
-      const dayStr = p.date.split("T")[0];
+      const dayStr = formatToLocalDate(p.date);
       const existing = daysMap.get(dayStr);
       if (existing) {
         if (p.transactionType === "ingreso") existing.Ingresos += p.amount;
@@ -95,45 +102,52 @@ export const ReportsFeature: React.FC = () => {
   const exportToExcel = async () => {
     setExportStatus("exporting");
 
-    const formattedData = filteredData.map((p) => ({
-      Fecha: new Date(p.date).toLocaleString(),
-      Concepto: p.description || "Sin descripcion",
-      Tipo: p.transactionType.toUpperCase(),
-      Categoria: p.type,
-      "Metodo de Pago": p.method,
-      Valor: p.transactionType === "egreso" ? -p.amount : p.amount,
-    }));
+    try {
+      const formattedData = filteredData.map((p) => ({
+        Fecha: new Date(p.date).toLocaleString(),
+        Concepto: p.description || "Sin descripcion",
+        Tipo: p.transactionType.toUpperCase(),
+        Categoria: p.type,
+        "Metodo de Pago": p.method,
+        Valor: p.transactionType === "egreso" ? -p.amount : p.amount,
+      }));
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Reporte");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Reporte");
 
-    worksheet.columns = [
-      { header: "Fecha", key: "Fecha" },
-      { header: "Concepto", key: "Concepto" },
-      { header: "Tipo", key: "Tipo" },
-      { header: "Categoria", key: "Categoria" },
-      { header: "Metodo de Pago", key: "Metodo de Pago" },
-      { header: "Valor", key: "Valor" },
-    ];
+      worksheet.columns = [
+        { header: "Fecha", key: "Fecha" },
+        { header: "Concepto", key: "Concepto" },
+        { header: "Tipo", key: "Tipo" },
+        { header: "Categoria", key: "Categoria" },
+        { header: "Metodo de Pago", key: "Metodo de Pago" },
+        { header: "Valor", key: "Valor" },
+      ];
 
-    formattedData.forEach((row) => worksheet.addRow(row));
+      formattedData.forEach((row) => worksheet.addRow(row));
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download =
-      viewMode === "monthly"
-        ? `Reporte_${selectedMonth}.xlsx`
-        : `Reporte_${selectedDate}.xlsx`;
-    link.click();
-    URL.revokeObjectURL(url);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download =
+        viewMode === "monthly"
+          ? `Reporte_${selectedMonth}.xlsx`
+          : `Reporte_${selectedDate}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
 
-    setExportStatus("success");
-    setTimeout(() => setExportStatus("idle"), 3000);
+      setExportStatus("success");
+      showToast("Reporte generado — el archivo se descargó correctamente", "success");
+      setTimeout(() => setExportStatus("idle"), 3000);
+    } catch (error) {
+      console.error("Error exporting report:", error);
+      setExportStatus("idle");
+      showToast("No se pudo generar el reporte", "error");
+    }
   };
 
   return (
@@ -147,7 +161,7 @@ export const ReportsFeature: React.FC = () => {
           disabled={exportStatus !== "idle"}
           className={`px-4 h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] disabled:opacity-50 ${
             exportStatus === "success"
-              ? "bg-success-50 text-success-700 border border-success-100"
+              ? "bg-success-50 text-success-700 border border-success-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900"
               : "bg-success-600 text-white hover:bg-success-700"
           }`}
         >
@@ -167,38 +181,23 @@ export const ReportsFeature: React.FC = () => {
         </button>
       </PageHeader>
 
-      {/* Success Toast */}
-      {exportStatus === "success" && (
-        <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-[100] animate-fade-in-up">
-          <div className="bg-surface-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
-            <div className="bg-emerald-500 p-1.5 rounded-full shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-medium text-sm">Reporte generado</p>
-              <p className="text-xs text-surface-300 mt-0.5">El archivo se descargó correctamente</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Total ingresos" amount={totals.ingresosTotal} icon={TrendingUp} color="text-emerald-600" bgColor="bg-emerald-50" delay="0ms" />
-        <StatCard title="Total egresos" amount={totals.egresosTotal} icon={TrendingDown} color="text-rose-600" bgColor="bg-rose-50" delay="60ms" />
-        <StatCard title="Balance neto" amount={totals.balance} icon={Wallet} color={totals.balance >= 0 ? "text-blue-600" : "text-rose-600"} bgColor={totals.balance >= 0 ? "bg-blue-50" : "bg-rose-50"} delay="120ms" />
-        <StatCard title="Transacciones" amount={filteredData.length} icon={ArrowUpRight} color="text-primary-600" bgColor="bg-primary-50" delay="180ms" />
+        <StatCard title="Total ingresos" amount={totals.ingresosTotal} icon={TrendingUp} color="text-emerald-600 dark:text-emerald-400" bgColor="bg-emerald-50 dark:bg-emerald-950/40" delay="0ms" />
+        <StatCard title="Total egresos" amount={totals.egresosTotal} icon={TrendingDown} color="text-rose-600 dark:text-rose-400" bgColor="bg-rose-50 dark:bg-rose-950/40" delay="60ms" />
+        <StatCard title="Balance neto" amount={totals.balance} icon={Wallet} color={totals.balance >= 0 ? "text-blue-600 dark:text-blue-400" : "text-rose-600 dark:text-rose-400"} bgColor={totals.balance >= 0 ? "bg-blue-50 dark:bg-blue-950/40" : "bg-rose-50 dark:bg-rose-950/40"} delay="120ms" />
+        <StatCard title="Transacciones" amount={filteredData.length} icon={ArrowUpRight} color="text-primary-600 dark:text-blue-400" bgColor="bg-primary-50 dark:bg-blue-950/40" delay="180ms" />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden animate-fade-in-up">
-        <div className="p-4 border-b border-surface-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+      <div className="bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden animate-fade-in-up dark:bg-gray-900 dark:border-gray-800">
+        <div className="p-4 border-b border-surface-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between dark:border-gray-800">
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
-            <div className="flex items-center relative w-full sm:w-auto min-w-[190px] bg-white border border-surface-300 rounded-lg px-3 py-2 hover:border-surface-400 transition-colors duration-150">
-              <CalendarDays className="w-4 h-4 text-surface-500 absolute left-3 z-10 pointer-events-none" />
+            <div className="flex items-center relative w-full sm:w-auto min-w-[190px] bg-white border border-surface-300 rounded-lg px-3 py-2 hover:border-surface-400 transition-colors duration-150 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600">
+              <CalendarDays className="w-4 h-4 text-surface-500 absolute left-3 z-10 pointer-events-none dark:text-gray-400" />
               {viewMode === "monthly" ? (
                 <div className="relative flex items-center w-full">
-                  <span className="pl-7 pr-2 text-sm font-medium text-surface-700 w-full text-center capitalize">
+                  <span className="pl-7 pr-2 text-sm font-medium text-surface-700 w-full text-center capitalize dark:text-gray-300">
                     {format(parseISO(`${selectedMonth}-01`), "MMMM yyyy", {
                       locale: es,
                     })}
@@ -212,7 +211,7 @@ export const ReportsFeature: React.FC = () => {
                 </div>
               ) : (
                 <div className="relative flex items-center w-full">
-                  <span className="pl-7 pr-2 text-sm font-medium text-surface-700 w-full text-center">
+                  <span className="pl-7 pr-2 text-sm font-medium text-surface-700 w-full text-center dark:text-gray-300">
                     {format(parseISO(selectedDate), "dd MMM, yyyy", {
                       locale: es,
                     })}
@@ -228,16 +227,16 @@ export const ReportsFeature: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex bg-surface-100 p-1 rounded-lg shrink-0 overflow-x-auto">
+          <div className="flex bg-surface-100 p-1 rounded-lg shrink-0 overflow-x-auto dark:bg-gray-800">
             <button
               onClick={() => setViewMode("monthly")}
-              className={`px-4 py-2 text-xs font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center gap-1.5 ${viewMode === "monthly" ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}
+              className={`px-4 py-2 text-xs font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center gap-1.5 ${viewMode === "monthly" ? 'bg-white shadow-xs text-surface-900 dark:bg-gray-900 dark:text-gray-100' : 'text-surface-500 hover:text-surface-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
             >
               <BarChart3 className="w-3.5 h-3.5" /> Mensual
             </button>
             <button
               onClick={() => setViewMode("daily")}
-              className={`px-4 py-2 text-xs font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center gap-1.5 ${viewMode === "daily" ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}
+              className={`px-4 py-2 text-xs font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center gap-1.5 ${viewMode === "daily" ? 'bg-white shadow-xs text-surface-900 dark:bg-gray-900 dark:text-gray-100' : 'text-surface-500 hover:text-surface-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
             >
               <ListTree className="w-3.5 h-3.5" /> Diario
             </button>
@@ -247,7 +246,7 @@ export const ReportsFeature: React.FC = () => {
         {/* Content: Chart (Monthly) or Table (Daily) */}
         {viewMode === "monthly" ? (
           <div className="p-5 md:p-6">
-            <h3 className="text-base font-semibold text-surface-900 mb-6">
+            <h3 className="text-base font-semibold text-surface-900 mb-6 dark:text-gray-100">
               Flujo de caja — {selectedMonth}
             </h3>
             <div className="h-80">
@@ -282,19 +281,19 @@ export const ReportsFeature: React.FC = () => {
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
-                      stroke="#E5E7EB"
+                      stroke={gridStroke}
                     />
                     <XAxis
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#6B7280", fontSize: 12 }}
+                      tick={axisTick}
                       dy={10}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#6B7280", fontSize: 12 }}
+                      tick={axisTick}
                       dx={-10}
                     />
                     <Tooltip
@@ -302,7 +301,10 @@ export const ReportsFeature: React.FC = () => {
                         borderRadius: "12px",
                         border: "none",
                         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        backgroundColor: theme === "dark" ? "#111827" : "#fff",
+                        color: theme === "dark" ? "#f3f4f6" : "#111827",
                       }}
+                      labelStyle={{ color: theme === "dark" ? "#f3f4f6" : "#111827" }}
                     />
                     <Area
                       type="monotone"
@@ -323,10 +325,10 @@ export const ReportsFeature: React.FC = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-surface-400">
+                <div className="h-full flex items-center justify-center text-surface-400 dark:text-gray-600">
                   <div className="text-center">
                     <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm text-surface-500">No hay datos para mostrar en este mes</p>
+                    <p className="text-sm text-surface-500 dark:text-gray-400">No hay datos para mostrar en este mes</p>
                   </div>
                 </div>
               )}
@@ -336,7 +338,7 @@ export const ReportsFeature: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[560px]">
               <thead>
-                <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200">
+                <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200 dark:bg-gray-900/60 dark:text-gray-400 dark:border-gray-800">
                   <th className="px-4 md:px-6 py-3">Hora</th>
                   <th className="px-4 md:px-6 py-3">Concepto</th>
                   <th className="px-4 md:px-6 py-3 hidden md:table-cell">Categoría</th>
@@ -344,14 +346,14 @@ export const ReportsFeature: React.FC = () => {
                   <th className="px-4 md:px-6 py-3 text-right">Monto</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-100">
+              <tbody className="divide-y divide-surface-100 dark:divide-gray-800">
                 {filteredData.map((payment) => (
                   <tr
                     key={payment.id}
-                    className="hover:bg-surface-50 transition-colors duration-150"
+                    className="hover:bg-surface-50 transition-colors duration-150 dark:hover:bg-gray-800/60"
                   >
                     <td className="px-4 md:px-6 py-3.5">
-                      <div className="text-sm text-surface-600">
+                      <div className="text-sm text-surface-600 dark:text-gray-400">
                         {new Date(payment.date).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -359,17 +361,17 @@ export const ReportsFeature: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-3.5">
-                      <div className="text-sm font-medium text-surface-900 truncate max-w-[160px] md:max-w-none">
+                      <div className="text-sm font-medium text-surface-900 truncate max-w-[160px] md:max-w-none dark:text-gray-100">
                         {payment.description || "Sin descripción"}
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-3.5 hidden md:table-cell">
-                      <span className="text-xs font-medium text-surface-600 capitalize bg-surface-100 px-2 py-0.5 rounded-md">
+                      <span className="text-xs font-medium text-surface-600 capitalize bg-surface-100 px-2 py-0.5 rounded-md dark:text-gray-400 dark:bg-gray-800">
                         {payment.type}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-3.5 hidden sm:table-cell">
-                      <span className="text-xs font-medium capitalize bg-surface-100 px-2 py-0.5 rounded-md text-surface-600">
+                      <span className="text-xs font-medium capitalize bg-surface-100 px-2 py-0.5 rounded-md text-surface-600 dark:bg-gray-800 dark:text-gray-400">
                         {payment.method}
                       </span>
                     </td>
@@ -385,11 +387,11 @@ export const ReportsFeature: React.FC = () => {
                 {filteredData.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-20 text-center">
-                      <div className="w-12 h-12 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <BarChart3 className="w-5 h-5 text-surface-400" />
+                      <div className="w-12 h-12 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-gray-800">
+                        <BarChart3 className="w-5 h-5 text-surface-400 dark:text-gray-500" />
                       </div>
-                      <h4 className="text-base font-semibold text-surface-900">Sin movimientos</h4>
-                      <p className="text-sm text-surface-500 mt-1">No se registraron movimientos en esta fecha.</p>
+                      <h4 className="text-base font-semibold text-surface-900 dark:text-gray-100">Sin movimientos</h4>
+                      <p className="text-sm text-surface-500 mt-1 dark:text-gray-400">No se registraron movimientos en esta fecha.</p>
                     </td>
                   </tr>
                 )}

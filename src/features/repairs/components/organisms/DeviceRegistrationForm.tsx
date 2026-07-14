@@ -6,6 +6,7 @@ import { TextArea } from '../../../../components/atoms/TextArea';
 import { Select } from '../../../../components/atoms/Select';
 import { FormField } from '../../../../components/molecules/FormField';
 import { Loader2, CheckCircle2, User, MonitorSmartphone, Wallet, Check } from 'lucide-react';
+import { useToast } from '../../../../store/ToastContext';
 
 import type { DeviceCheckInForm } from '../../../../types';
 
@@ -25,8 +26,8 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
   const { data, errors, touched, handleChange, handleBlur, validateAll, setData } = useDeviceValidation();
 
   // Búsqueda de cliente existente por documento (al salir del campo)
-  const { lookup, isSearching: isSearchingClient, found: foundClient } = useClienteLookup();
-  const [showAutofillToast, setShowAutofillToast] = useState(false);
+  const { lookup, isSearching: isSearchingClient } = useClienteLookup();
+  const { showToast } = useToast();
 
   const lookupClient = async (cedula: string) => {
     const client = await lookup(cedula);
@@ -49,8 +50,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
       direccion: client.address ? client.address.toUpperCase() : prev.direccion
     }));
 
-    setShowAutofillToast(true);
-    setTimeout(() => setShowAutofillToast(false), 3000);
+    showToast(`Cliente frecuente: ${client.fullName}`, 'info');
   };
 
   const handleNext = () => {
@@ -141,27 +141,27 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                 >
                   <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border transition-colors duration-300 ${
                     isDone
-                      ? 'bg-surface-900 border-surface-900 text-white'
+                      ? 'bg-surface-900 border-surface-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900'
                       : isCurrent
-                        ? 'bg-white border-surface-900 text-surface-900'
-                        : 'bg-white border-surface-200 text-surface-300'
+                        ? 'bg-white border-surface-900 text-surface-900 dark:bg-gray-900 dark:border-gray-100 dark:text-gray-100'
+                        : 'bg-white border-surface-200 text-surface-300 dark:bg-gray-900 dark:border-gray-800 dark:text-gray-600'
                   }`}>
                     {isDone ? <Check className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
                   </span>
                   <span className={`text-sm font-medium hidden sm:block ${
-                    isCurrent ? 'text-surface-900' : isDone ? 'text-surface-600' : 'text-surface-300'
+                    isCurrent ? 'text-surface-900 dark:text-gray-100' : isDone ? 'text-surface-600 dark:text-gray-400' : 'text-surface-300 dark:text-gray-600'
                   }`}>
                     {s.label}
                   </span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-px mx-3 sm:mx-4 transition-colors duration-500 ${step > s.n ? 'bg-surface-900' : 'bg-surface-200'}`} />
+                  <div className={`flex-1 h-px mx-3 sm:mx-4 transition-colors duration-500 ${step > s.n ? 'bg-surface-900 dark:bg-gray-100' : 'bg-surface-200 dark:bg-gray-800'}`} />
                 )}
               </div>
             );
           })}
         </div>
-        <p className="sm:hidden text-sm font-medium text-surface-900 mt-3">
+        <p className="sm:hidden text-sm font-medium text-surface-900 mt-3 dark:text-gray-100">
           Paso {step} de 3 · {STEPS[step - 1].label}
         </p>
       </div>
@@ -188,7 +188,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
                   </div>
                 )}
               </div>
-              <p className="text-xs text-surface-400 mt-1.5">
+              <p className="text-xs text-surface-400 mt-1.5 dark:text-gray-500">
                 Si el cliente ya existe, sus datos se completan automáticamente.
               </p>
             </FormField>
@@ -344,7 +344,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField label="Costo total ($)" error={touched.costoEstimado ? errors.costoEstimado : undefined}>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold">$</div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold dark:text-gray-500">$</div>
                   <Input
                     type="number"
                     min="0"
@@ -360,7 +360,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
               </FormField>
               <FormField label="Abono inicial ($)" error={touched.abonoInicial ? errors.abonoInicial : undefined}>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold">$</div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 font-bold dark:text-gray-500">$</div>
                   <Input
                     type="number"
                     min="0"
@@ -402,12 +402,12 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
         )}
 
         {/* ─── Navegación ─── */}
-        <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center pt-6 border-t border-surface-200 gap-3 mt-8">
+        <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center pt-6 border-t border-surface-200 gap-3 mt-8 dark:border-gray-800">
           {step > 1 ? (
             <button
               type="button"
               onClick={handlePrev}
-              className="px-5 h-11 rounded-lg text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-150 flex items-center justify-center gap-2"
+              className="px-5 h-11 rounded-lg text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-150 flex items-center justify-center gap-2 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
             >
               Regresar
             </button>
@@ -421,7 +421,7 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
             disabled={(step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting))}
             className={`px-8 h-11 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2 ${
               ((step < 3 && isNextDisabled) || (step === 3 && (isSaveDisabled || isSubmitting)))
-                ? 'bg-surface-100 text-surface-400 cursor-not-allowed'
+                ? 'bg-surface-100 text-surface-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
                 : 'bg-surface-900 text-white hover:bg-surface-800'
             }`}
           >
@@ -443,16 +443,6 @@ export const DeviceRegistrationForm = ({ onSave, isSubmitting }: TitleProps) => 
           </button>
         </div>
       </form>
-
-      {/* AUTOFILL NOTIFICATION */}
-      {showAutofillToast && foundClient && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-max max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="bg-surface-900 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2.5">
-            <User className="w-4 h-4 text-primary-400 shrink-0" />
-            <p className="text-sm font-medium truncate">Cliente frecuente: {foundClient.fullName}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

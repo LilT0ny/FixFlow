@@ -19,7 +19,7 @@ export const FiltroTabs: React.FC<FiltroTabsProps> = ({ activeStatuses, toggleSt
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="text-xs font-medium text-surface-500 mr-1 whitespace-nowrap">Filtros:</div>
+      <div className="text-xs font-medium text-surface-500 mr-1 whitespace-nowrap dark:text-gray-400">Filtros:</div>
       {flags.map((flag) => {
          const isActive = activeStatuses.includes(flag.id);
          return (
@@ -28,8 +28,8 @@ export const FiltroTabs: React.FC<FiltroTabsProps> = ({ activeStatuses, toggleSt
              onClick={() => toggleStatus(flag.id)}
              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150 border ${
                isActive
-                 ? 'bg-surface-900 text-white border-surface-900'
-                 : 'bg-white text-surface-600 border-surface-300 hover:text-surface-900 hover:border-surface-400'
+                 ? 'bg-surface-900 text-white border-surface-900 dark:bg-gray-100 dark:text-gray-900 dark:border-gray-100'
+                 : 'bg-white text-surface-600 border-surface-300 hover:text-surface-900 hover:border-surface-400 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:text-gray-100 dark:hover:border-gray-600'
              }`}
            >
              <flag.icon className="w-3.5 h-3.5" />
@@ -41,7 +41,7 @@ export const FiltroTabs: React.FC<FiltroTabsProps> = ({ activeStatuses, toggleSt
       {activeStatuses.length > 0 && (
          <button
            onClick={clearStatuses}
-           className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-150 ml-auto animate-fade-in"
+           className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-150 ml-auto animate-fade-in dark:text-red-400 dark:hover:bg-red-950/30"
            title="Limpiar filtros"
          >
            <X className="w-3.5 h-3.5" />

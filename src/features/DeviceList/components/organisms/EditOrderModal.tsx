@@ -3,6 +3,7 @@ import { User, Smartphone, Wrench, DollarSign, Loader2, Save, AlertCircle } from
 import type { ServiceOrder } from '../../../../types';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
 import { useClienteLookup } from '../../../../hooks/useClienteLookup';
+import { useToast } from '../../../../store/ToastContext';
 
 interface EditOrderModalProps {
   order: ServiceOrder | null;
@@ -39,7 +40,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
   const [isSaving, setIsSaving] = useState(false);
   const [errors,   setErrors]   = useState<Record<string, string>>({});
   const { lookup, isSearching: isSearchingClient } = useClienteLookup();
-  const [showAutofillToast, setShowAutofillToast] = useState(false);
+  const { showToast } = useToast();
 
   // Clonar la orden cuando se abre el modal (evitar mutación del original)
   useEffect(() => {
@@ -61,8 +62,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
         address: client.address ? client.address.toUpperCase() : prev.customer.address,
       }
     } : null);
-    setShowAutofillToast(true);
-    setTimeout(() => setShowAutofillToast(false), 3000);
+    showToast('Cliente encontrado — datos actualizados', 'info');
   };
 
   // ── Helpers de mutación del borrador ────────────────────────────────────
@@ -142,13 +142,13 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
   };
 
   // ── Clases reutilizables ─────────────────────────────────────────────────
-  const inputBase = 'w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 transition-colors duration-150 placeholder-surface-400';
-  const inputOk   = 'border-surface-300 focus:ring-primary-500/20 focus:border-primary-500';
-  const inputErr  = 'border-danger-500 focus:ring-danger-500/20 focus:border-danger-500';
+  const inputBase = 'w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 transition-colors duration-150 placeholder-surface-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500';
+  const inputOk   = 'border-surface-300 focus:ring-primary-500/20 focus:border-primary-500 dark:border-gray-700';
+  const inputErr  = 'border-danger-500 focus:ring-danger-500/20 focus:border-danger-500 dark:border-red-500';
   const ic = (f: string) => `${inputBase} ${errors[f] ? inputErr : inputOk}`;
 
-  const labelClass   = 'block text-xs font-medium text-surface-600 mb-1.5';
-  const sectionClass = 'bg-surface-50 rounded-xl p-4 border border-surface-200 space-y-3';
+  const labelClass   = 'block text-xs font-medium text-surface-600 mb-1.5 dark:text-gray-400';
+  const sectionClass = 'bg-surface-50 rounded-xl p-4 border border-surface-200 space-y-3 dark:bg-gray-900/60 dark:border-gray-800';
 
   const total = Number(draft.repair.repairTotalCost) || 0;
   const abono = Number(draft.repair.initialDeposit)  || 0;
@@ -168,7 +168,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
         title={`Editar ${isSale ? 'Nota de Venta' : 'Orden'} #${draft.orderNumber}`}
         subtitle="Los cambios se guardarán en la base de datos."
         icon={<Wrench className="w-5 h-5" />}
-        iconClassName="bg-primary-50 text-primary-600"
+        iconClassName="bg-primary-50 text-primary-600 dark:bg-blue-950/40 dark:text-blue-400"
         onClose={onClose}
         closeDisabled={isSaving}
       />
@@ -178,7 +178,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
 
           {/* ─── DATOS DEL CLIENTE ─── */}
           <section>
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3 dark:text-gray-100">
               <User className="w-4 h-4 text-primary-600" />
               Datos del Cliente
             </h4>
@@ -251,7 +251,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
           {/* ─── DATOS DEL DISPOSITIVO (SOLO PARA REP O SI NT TIENE UNO) ─── */}
           {(!isSale || draft.device) && (
             <section>
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3 dark:text-gray-100">
                 <Smartphone className="w-4 h-4 text-primary-600" />
                 Datos del Dispositivo
               </h4>
@@ -334,7 +334,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
 
           {/* ─── TRABAJO Y COSTOS ─── */}
           <section>
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-surface-900 mb-3 dark:text-gray-100">
               <DollarSign className="w-4 h-4 text-primary-600" />
               {isSale ? 'Detalle de Cobro' : 'Trabajo a Realizar y Costos'}
             </h4>
@@ -356,7 +356,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
                 <div>
                   <label className={labelClass}>Costo Total ($)</label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400" />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400 dark:text-gray-500" />
                     <input
                       type="number"
                       min="0"
@@ -372,7 +372,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
                 <div>
                   <label className={labelClass}>Abono / Anticipo ($)</label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400" />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400 dark:text-gray-500" />
                     <input
                       type="number"
                       min="0"
@@ -391,14 +391,14 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
               {(total > 0 || abono > 0) && (
                 <div className={`flex justify-between items-center rounded-lg px-4 py-2 border ${
                   saldo < 0
-                    ? 'bg-danger-50 border-danger-100'
+                    ? 'bg-danger-50 border-danger-100 dark:bg-red-950/30 dark:border-red-900'
                     : saldo === 0
-                    ? 'bg-success-50 border-success-100'
-                    : 'bg-primary-50 border-primary-100'
+                    ? 'bg-success-50 border-success-100 dark:bg-emerald-950/30 dark:border-emerald-900'
+                    : 'bg-primary-50 border-primary-100 dark:bg-blue-950/30 dark:border-blue-900'
                 }`}>
-                  <span className="text-sm font-medium text-surface-700">Saldo pendiente:</span>
+                  <span className="text-sm font-medium text-surface-700 dark:text-gray-300">Saldo pendiente:</span>
                   <span className={`text-base font-semibold ${
-                    saldo < 0 ? 'text-danger-700' : saldo === 0 ? 'text-success-700' : 'text-primary-700'
+                    saldo < 0 ? 'text-danger-700 dark:text-red-400' : saldo === 0 ? 'text-success-700 dark:text-emerald-400' : 'text-primary-700 dark:text-blue-400'
                   }`}>
                     ${saldo.toFixed(2)}
                     {saldo === 0 && ' ✓'}
@@ -414,7 +414,7 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="flex-1 border border-surface-300 bg-white text-surface-700 h-11 rounded-lg text-sm font-medium hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
+            className="flex-1 border border-surface-300 bg-white text-surface-700 h-11 rounded-lg text-sm font-medium hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancelar
           </button>
@@ -429,15 +429,6 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, isOpen, o
             }
           </button>
         </ModalFooter>
-
-        {showAutofillToast && (
-          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[230] w-max max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="bg-surface-900 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2.5">
-              <User className="w-4 h-4 text-primary-400 shrink-0" />
-              <p className="text-sm font-medium truncate">Cliente encontrado — datos actualizados</p>
-            </div>
-          </div>
-        )}
     </Modal>
   );
 };

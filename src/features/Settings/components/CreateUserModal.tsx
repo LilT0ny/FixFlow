@@ -78,12 +78,12 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
       {createdUser ? (
         <>
           <ModalBody className="space-y-4">
-            <div className="p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
+            <div className="p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-400">
               <CheckCircle className="w-4 h-4 shrink-0" />
               {`"${createdUser.email}" fue creado correctamente`}
             </div>
             <GeneratedPasswordField password={createdUser.password} />
-            <p className="text-xs text-surface-500 bg-surface-50 border border-surface-200 rounded-lg p-3">
+            <p className="text-xs text-surface-500 bg-surface-50 border border-surface-200 rounded-lg p-3 dark:text-gray-400 dark:bg-gray-900/60 dark:border-gray-800">
               Copiá esta contraseña ahora — no se va a volver a mostrar. El miembro deberá cambiarla en su primer inicio de sesión.
             </p>
           </ModalBody>
@@ -101,33 +101,33 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
         <form onSubmit={handleSubmit} className="contents">
           <ModalBody className="space-y-4">
             {error && (
-              <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in">
+              <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in dark:bg-red-950/30 dark:border-red-900 dark:text-red-400">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>
             )}
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-surface-600">Correo del miembro</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Correo del miembro</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 placeholder="Ej. julio@taller.com"
                 disabled={isLoading}
-                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-surface-600">Nombre</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Nombre</label>
               <input
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej. Julio Pérez"
                 disabled={isLoading}
-                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:opacity-50 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               />
             </div>
 
@@ -139,7 +139,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 h-11 border border-surface-300 bg-white rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50"
+              className="flex-1 h-11 border border-surface-300 bg-white rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150 disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Cancelar
             </button>

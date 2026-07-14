@@ -110,20 +110,20 @@ export const DevicesPanel: React.FC = () => {
 
             <ModalBody>
               <div className="flex justify-end mb-4">
-                <span className="text-xs font-medium bg-surface-900 text-white px-2.5 py-1 rounded-md">
+                <span className="text-xs font-medium bg-surface-900 text-white px-2.5 py-1 rounded-md dark:bg-gray-100 dark:text-gray-900">
                   Nuevo estado: {ctrl.getStatusLabel(newStatus)}
                 </span>
               </div>
 
-              <p className="text-sm text-surface-500 mb-6">
-                ¿Estás seguro de mover esta orden al estado <span className="text-surface-900 font-medium">{ctrl.getStatusLabel(newStatus)}</span>?
+              <p className="text-sm text-surface-500 mb-6 dark:text-gray-400">
+                ¿Estás seguro de mover esta orden al estado <span className="text-surface-900 font-medium dark:text-gray-100">{ctrl.getStatusLabel(newStatus)}</span>?
                 {newStatus !== 'entregado' && " Se enviará una notificación automática vía WhatsApp."}
               </p>
 
               {/* ─── Sub-Panel: ENTREGADO ─── */}
               {newStatus === 'entregado' && (
                 <div className="space-y-5">
-                  <div className="bg-surface-900 text-white rounded-xl p-6">
+                  <div className="bg-surface-900 text-white rounded-xl p-6 dark:bg-gray-950 dark:border dark:border-gray-800">
                     <div className="space-y-4">
                       <div className="text-xs font-medium text-white/50 border-b border-white/10 pb-3">
                         Resumen económico final
@@ -155,8 +155,8 @@ export const DevicesPanel: React.FC = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors duration-150 border ${ctrl.generateSalesNote ? 'bg-primary-50/50 border-primary-500' : 'bg-surface-50 border-surface-200 hover:border-surface-300'}`}>
-                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors duration-150 shrink-0 ${ctrl.generateSalesNote ? 'bg-primary-600 text-white' : 'bg-white border border-surface-300 text-transparent'}`}>
+                    <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors duration-150 border ${ctrl.generateSalesNote ? 'bg-primary-50/50 border-primary-500 dark:bg-blue-950/20' : 'bg-surface-50 border-surface-200 hover:border-surface-300 dark:bg-gray-900/60 dark:border-gray-800 dark:hover:border-gray-700'}`}>
+                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors duration-150 shrink-0 ${ctrl.generateSalesNote ? 'bg-primary-600 text-white' : 'bg-white border border-surface-300 text-transparent dark:bg-gray-800 dark:border-gray-700'}`}>
                         <CheckCircle className="w-3.5 h-3.5" />
                       </div>
                       <input
@@ -172,37 +172,37 @@ export const DevicesPanel: React.FC = () => {
                         }}
                       />
                       <div className="flex-1">
-                        <span className="text-sm font-medium text-surface-900 block">Generar nota de venta</span>
-                        <span className="text-xs text-surface-500 mt-0.5 block">Documento tributario formal</span>
+                        <span className="text-sm font-medium text-surface-900 block dark:text-gray-100">Generar nota de venta</span>
+                        <span className="text-xs text-surface-500 mt-0.5 block dark:text-gray-400">Documento tributario formal</span>
                       </div>
                     </label>
 
                     {ctrl.generateSalesNote && (
-                      <div className="p-4 bg-surface-50 border border-surface-200 rounded-xl space-y-3 animate-fade-in-up">
+                      <div className="p-4 bg-surface-50 border border-surface-200 rounded-xl space-y-3 animate-fade-in-up dark:bg-gray-900/60 dark:border-gray-800">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium text-surface-500">Detalle de facturación</span>
-                          <button type="button" onClick={() => ctrl.setBillingCustomer({ fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '9999999999', address: 'QUITO', email: '' })} className="text-xs font-medium bg-surface-900 text-white px-2.5 py-1 rounded-md hover:bg-surface-800 transition-colors duration-150">CF +</button>
+                          <span className="text-xs font-medium text-surface-500 dark:text-gray-400">Detalle de facturación</span>
+                          <button type="button" onClick={() => ctrl.setBillingCustomer({ fullName: 'CONSUMIDOR FINAL', documentId: '9999999999999', phone: '9999999999', address: 'QUITO', email: '' })} className="text-xs font-medium bg-surface-900 text-white px-2.5 py-1 rounded-md hover:bg-surface-800 transition-colors duration-150 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white">CF +</button>
                         </div>
-                        <input type="text" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" placeholder="Nombres / Razón social" value={ctrl.billingCustomer?.fullName || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, fullName: e.target.value.toUpperCase() })} />
+                        <input type="text" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500" placeholder="Nombres / Razón social" value={ctrl.billingCustomer?.fullName || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, fullName: e.target.value.toUpperCase() })} />
                         <div className="grid grid-cols-2 gap-3">
                           <div className="relative">
-                            <input type="text" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 pr-9 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" placeholder="Identificación" value={ctrl.billingCustomer?.documentId || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, documentId: e.target.value })} onBlur={() => lookupAndFillBillingCustomer(ctrl.billingCustomer?.documentId || '')} />
+                            <input type="text" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 pr-9 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500" placeholder="Identificación" value={ctrl.billingCustomer?.documentId || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, documentId: e.target.value })} onBlur={() => lookupAndFillBillingCustomer(ctrl.billingCustomer?.documentId || '')} />
                             {isSearchingBillingClient && (
                               <Loader2 className="w-4 h-4 animate-spin text-primary-600 absolute right-3 top-1/2 -translate-y-1/2" />
                             )}
                           </div>
-                          <input type="text" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" placeholder="Ciudad" value={ctrl.billingCustomer?.address || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, address: e.target.value.toUpperCase() })} />
+                          <input type="text" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500" placeholder="Ciudad" value={ctrl.billingCustomer?.address || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, address: e.target.value.toUpperCase() })} />
                         </div>
-                        <input type="email" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" placeholder="Correo electrónico (opcional)" value={ctrl.billingCustomer?.email || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, email: e.target.value.toLowerCase() })} />
+                        <input type="email" className="w-full bg-white border border-surface-300 px-3.5 py-2.5 rounded-lg text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500" placeholder="Correo electrónico (opcional)" value={ctrl.billingCustomer?.email || ''} onChange={e => ctrl.setBillingCustomer({ ...ctrl.billingCustomer!, email: e.target.value.toLowerCase() })} />
                       </div>
                     )}
 
                     {saldo > 0 && (
                       <div className="space-y-2">
-                        <span className="text-xs font-medium text-surface-500">Método de liquidación</span>
+                        <span className="text-xs font-medium text-surface-500 dark:text-gray-400">Método de liquidación</span>
                         <div className="grid grid-cols-2 gap-3">
                           {(['efectivo', 'transferencia'] as const).map(m => (
-                            <button type="button" key={m} onClick={() => ctrl.setPaymentMethod(m)} className={`py-2.5 px-4 text-sm font-medium capitalize rounded-lg border transition-colors duration-150 ${ctrl.paymentMethod === m ? 'bg-surface-900 text-white border-surface-900' : 'bg-white text-surface-600 border-surface-300 hover:border-surface-400'}`}>{m}</button>
+                            <button type="button" key={m} onClick={() => ctrl.setPaymentMethod(m)} className={`py-2.5 px-4 text-sm font-medium capitalize rounded-lg border transition-colors duration-150 ${ctrl.paymentMethod === m ? 'bg-surface-900 text-white border-surface-900 dark:bg-gray-100 dark:text-gray-900 dark:border-gray-100' : 'bg-white text-surface-600 border-surface-300 hover:border-surface-400 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:border-gray-600'}`}>{m}</button>
                           ))}
                         </div>
                       </div>
@@ -213,8 +213,8 @@ export const DevicesPanel: React.FC = () => {
             </ModalBody>
 
             <ModalFooter className="flex-col sm:flex-row">
-              <button type="button" onClick={closeModal} className="order-2 sm:order-1 flex-1 h-11 text-sm font-medium text-surface-500 hover:text-surface-700 transition-colors duration-150">Cancelar</button>
-              <button type="button" onClick={ctrl.confirmStatusChange} disabled={ctrl.isConfirming} className="order-1 sm:order-2 flex-[2] bg-surface-900 text-white h-11 rounded-lg text-sm font-medium hover:bg-surface-800 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-60">
+              <button type="button" onClick={closeModal} className="order-2 sm:order-1 flex-1 h-11 text-sm font-medium text-surface-500 hover:text-surface-700 transition-colors duration-150 dark:text-gray-400 dark:hover:text-gray-300">Cancelar</button>
+              <button type="button" onClick={ctrl.confirmStatusChange} disabled={ctrl.isConfirming} className="order-1 sm:order-2 flex-[2] bg-surface-900 text-white h-11 rounded-lg text-sm font-medium hover:bg-surface-800 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-60 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white">
                 {ctrl.isConfirming ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4" /> Confirmar cambio</>}
               </button>
             </ModalFooter>
@@ -245,21 +245,6 @@ export const DevicesPanel: React.FC = () => {
         order={ctrl.orderToPrint}
         onClose={() => ctrl.setIsPrintModalOpen(false)}
       />
-
-      {/* ─── Toast de éxito ─── */}
-      {ctrl.successMessage && (
-        <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-[100] animate-fade-in-up">
-          <div className="bg-surface-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
-            <div className="bg-emerald-500 p-1.5 rounded-full shrink-0">
-              <CheckCircle className="w-4 h-4 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-medium text-sm">Operación exitosa</p>
-              <p className="text-xs text-surface-300 mt-0.5 truncate">{ctrl.successMessage}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

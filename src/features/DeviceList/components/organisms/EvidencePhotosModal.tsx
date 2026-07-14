@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { Camera, Upload, X, Trash2, ZoomIn } from 'lucide-react';
 import type { EvidencePhoto } from '../../../../types';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../../components/molecules/Modal';
+import { useToast } from '../../../../store/ToastContext';
 
 interface EvidencePhotosModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
   });
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { showToast } = useToast();
 
   const [cameraStage, setCameraStage] = useState<Stage | null>(null);
   const [stream, setStream]           = useState<MediaStream | null>(null);
@@ -49,9 +51,9 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
         }
       });
     } catch {
-      alert('No se pudo acceder a la cámara. Verifica los permisos del navegador.');
+      showToast('No se pudo acceder a la cámara. Verificá los permisos del navegador.', 'error');
     }
-  }, []);
+  }, [showToast]);
 
   const closeCamera = useCallback(() => {
     stream?.getTracks().forEach(t => t.stop());
@@ -104,22 +106,22 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${dot}`} />
-                    <span className="text-sm font-medium text-surface-900">{label}</span>
+                    <span className="text-sm font-medium text-surface-900 dark:text-gray-100">{label}</span>
                     {stagePhotos.length > 0 && (
-                      <span className="text-xs text-surface-400">({stagePhotos.length})</span>
+                      <span className="text-xs text-surface-400 dark:text-gray-500">({stagePhotos.length})</span>
                     )}
                   </div>
                   <div className="flex gap-1.5">
                     <button
                       onClick={() => openCamera(key)}
-                      className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 text-surface-600 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-900 transition-colors duration-150"
+                      className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 text-surface-600 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-900 transition-colors duration-150 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                     >
                       <Camera className="w-3.5 h-3.5" />
                       Cámara
                     </button>
                     <button
                       onClick={() => fileInputRefs.current[key]?.click()}
-                      className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 text-surface-600 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-900 transition-colors duration-150"
+                      className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 text-surface-600 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-900 transition-colors duration-150 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       Archivo
@@ -138,7 +140,7 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
                 {stagePhotos.length > 0 ? (
                   <div className="grid grid-cols-3 gap-2">
                     {stagePhotos.map((photo, idx) => (
-                      <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-surface-200 bg-surface-50">
+                      <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-surface-200 bg-surface-50 dark:border-gray-800 dark:bg-gray-900/60">
                         <img
                           src={photo.url}
                           alt={`${label} ${idx + 1}`}
@@ -167,7 +169,7 @@ export const EvidencePhotosModal: React.FC<EvidencePhotosModalProps> = ({
                 ) : (
                   <button
                     onClick={() => fileInputRefs.current[key]?.click()}
-                    className="w-full flex items-center justify-center gap-2 py-5 rounded-lg border border-dashed border-surface-300 text-sm text-surface-400 hover:border-surface-400 hover:text-surface-600 transition-colors duration-150"
+                    className="w-full flex items-center justify-center gap-2 py-5 rounded-lg border border-dashed border-surface-300 text-sm text-surface-400 hover:border-surface-400 hover:text-surface-600 transition-colors duration-150 dark:border-gray-700 dark:text-gray-500 dark:hover:border-gray-600 dark:hover:text-gray-300"
                   >
                     <Upload className="w-4 h-4" />
                     Agregar foto

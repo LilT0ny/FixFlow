@@ -74,7 +74,7 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex lg:flex-row-reverse font-sans">
+    <div className="min-h-screen bg-white flex lg:flex-row-reverse font-sans dark:bg-gray-950">
       {/* Credenciales — derecha en desktop, única columna en móvil */}
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 py-12">
         <div className="w-full max-w-sm mx-auto animate-fade-in-up">
@@ -83,16 +83,16 @@ export const Login = () => {
             <div className="w-11 h-11 flex items-center justify-center overflow-hidden">
               <img src="/FixFlowIsologo.svg" alt="FixFlow Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="text-lg font-semibold tracking-tight text-surface-900">
-              Fix<span className="text-primary-600">Flow</span>
+            <span className="text-lg font-semibold tracking-tight text-surface-900 dark:text-gray-100">
+              Fix<span className="text-primary-600 dark:text-blue-400">Flow</span>
             </span>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold tracking-tight text-surface-900">
+            <h1 className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-gray-100">
               {mode === 'login' ? 'Bienvenido' : mode === 'forgot' ? 'Recuperar contraseña' : 'Revisá tu email'}
             </h1>
-            <p className="text-sm text-surface-500 mt-1.5">
+            <p className="text-sm text-surface-500 mt-1.5 dark:text-gray-400">
               {mode === 'login'
                 ? 'Ingresá tus credenciales para administrar tu taller.'
                 : mode === 'forgot'
@@ -102,7 +102,7 @@ export const Login = () => {
           </div>
 
           {infoMessage && mode === 'login' && (
-            <div className="mb-5 p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
+            <div className="mb-5 p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-400">
               <CheckCircle className="w-4 h-4 shrink-0" />
               {infoMessage}
             </div>
@@ -110,14 +110,14 @@ export const Login = () => {
 
           {mode === 'forgot-sent' && (
             <div className="space-y-5">
-              <div className="p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in">
+              <div className="p-3 rounded-lg bg-success-50 border border-success-100 text-success-700 text-sm flex items-center gap-2.5 animate-scale-in dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-400">
                 <CheckCircle className="w-4 h-4 shrink-0" />
                 Revisá tu bandeja de entrada (y spam) en unos minutos.
               </div>
               <button
                 type="button"
                 onClick={() => setMode('login')}
-                className="flex items-center gap-1.5 text-sm font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150"
+                className="flex items-center gap-1.5 text-sm font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150 dark:text-gray-400 dark:hover:text-gray-100"
               >
                 <ChevronLeft className="w-4 h-4" /> Volver a iniciar sesión
               </button>
@@ -127,9 +127,9 @@ export const Login = () => {
           {mode === 'forgot' && (
             <form className="space-y-5" onSubmit={handleForgotSubmit}>
               <div>
-                <label htmlFor="forgot-email" className="block text-sm font-medium text-surface-700 mb-1.5">Correo</label>
+                <label htmlFor="forgot-email" className="block text-sm font-medium text-surface-700 mb-1.5 dark:text-gray-300">Correo</label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400 dark:text-gray-500 dark:group-focus-within:text-blue-400">
                     <Mail className="h-4 w-4" />
                   </div>
                   <input
@@ -139,7 +139,7 @@ export const Login = () => {
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500"
                     placeholder="tu@taller.com"
                     disabled={forgotLoading}
                   />
@@ -147,7 +147,7 @@ export const Login = () => {
               </div>
 
               {forgotError && (
-                <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in">
+                <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in dark:bg-red-950/40 dark:border-red-900 dark:text-red-400">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {forgotError}
                 </div>
@@ -156,7 +156,7 @@ export const Login = () => {
               <button
                 type="submit"
                 disabled={forgotLoading || !email.trim()}
-                className="w-full flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white bg-surface-900 hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white bg-surface-900 hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
               >
                 {forgotLoading ? (
                   <>
@@ -171,7 +171,7 @@ export const Login = () => {
               <button
                 type="button"
                 onClick={() => setMode('login')}
-                className="flex items-center gap-1.5 text-sm font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150"
+                className="flex items-center gap-1.5 text-sm font-medium text-surface-600 hover:text-surface-900 transition-colors duration-150 dark:text-gray-400 dark:hover:text-gray-100"
               >
                 <ChevronLeft className="w-4 h-4" /> Volver a iniciar sesión
               </button>
@@ -181,9 +181,9 @@ export const Login = () => {
           {mode === 'login' && (
           <form className="space-y-5" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-surface-700 mb-1.5">Correo</label>
+              <label htmlFor="email" className="block text-sm font-medium text-surface-700 mb-1.5 dark:text-gray-300">Correo</label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400 dark:text-gray-500 dark:group-focus-within:text-blue-400">
                   <Mail className="h-4 w-4" />
                 </div>
                 <input
@@ -193,7 +193,7 @@ export const Login = () => {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                  className="pl-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500"
                   placeholder="tu@taller.com"
                   disabled={isLoading}
                 />
@@ -202,17 +202,17 @@ export const Login = () => {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-surface-700">Contraseña</label>
+                <label htmlFor="password" className="block text-sm font-medium text-surface-700 dark:text-gray-300">Contraseña</label>
                 <button
                   type="button"
                   onClick={() => { setMode('forgot'); setForgotError(''); }}
-                  className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                  className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-150 group-focus-within:text-primary-600 text-surface-400 dark:text-gray-500 dark:group-focus-within:text-blue-400">
                   <Lock className="h-4 w-4" />
                 </div>
                 <input
@@ -222,14 +222,14 @@ export const Login = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                  className="pl-10 pr-10 block w-full bg-white border border-surface-300 rounded-lg py-2.5 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-colors duration-150 hover:border-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500"
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-surface-400 hover:text-surface-600 transition-colors duration-150"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-surface-400 hover:text-surface-600 transition-colors duration-150 dark:text-gray-500 dark:hover:text-gray-300"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -238,7 +238,7 @@ export const Login = () => {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in">
+              <div className="p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-700 text-sm flex items-center gap-2.5 animate-scale-in dark:bg-red-950/40 dark:border-red-900 dark:text-red-400">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>
@@ -247,7 +247,7 @@ export const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full group flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white bg-surface-900 hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-1 transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full group flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white bg-surface-900 hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-1 transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
             >
               {isLoading ? (
                 <>
@@ -264,14 +264,14 @@ export const Login = () => {
           </form>
           )}
 
-          <p className="mt-10 text-xs text-surface-400">
+          <p className="mt-10 text-xs text-surface-400 dark:text-gray-600">
             © {new Date().getFullYear()} FixFlow. Todos los derechos reservados.
           </p>
         </div>
       </div>
 
       {/* Panel de marca — izquierda en desktop, oculto en móvil */}
-      <div className="hidden lg:flex w-1/2 bg-surface-900 flex-col items-center justify-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 bg-surface-900 flex-col items-center justify-center p-12 relative overflow-hidden dark:bg-gray-950 dark:border-l dark:border-gray-800">
         <div className="flex flex-col items-center text-center animate-fade-in">
           <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center p-5 mb-8">
             <img

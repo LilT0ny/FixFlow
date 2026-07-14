@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useAppContext } from './store/AppContext';
 import { SettingsProvider } from './store/SettingsContext';
 import { ThemeProvider } from './store/ThemeContext';
+import { ToastProvider } from './store/ToastContext';
 import { AdminLayout } from './layouts/AdminLayout';
 import { DashboardFeature } from './features/Dashboard/DashboardFeature';
 import { CashRegisterFeature } from './features/CashRegister/CashRegisterFeature';
@@ -47,6 +48,7 @@ const RequireModule = ({ module, children }: { module: ModuleKey; children: Reac
 function App() {
   return (
     <ThemeProvider>
+    <ToastProvider>
     <AppProvider>
       <SettingsProvider>
         <BrowserRouter>
@@ -76,6 +78,7 @@ function App() {
         </BrowserRouter>
       </SettingsProvider>
     </AppProvider>
+    </ToastProvider>
     </ThemeProvider>
   );
 }

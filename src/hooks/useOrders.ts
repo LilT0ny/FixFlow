@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { OrderService } from '../services/OrderService';
+import { useToast } from '../store/ToastContext';
 import type { ServiceOrder, DeviceCheckInForm, OrderStatus } from '../types';
 
 // ─── Debug flag ────────────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ export function useOrders() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error,   setError]   = useState<string | null>(null);
+  const { showToast } = useToast();
 
   /**
    * Carga todas las órdenes activas desde la BD.
@@ -174,12 +176,12 @@ export function useOrders() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
       dbgError('updateOrder', 'ERROR:', msg);
-      alert('Error al guardar cambios: ' + msg);
+      showToast('Error al guardar cambios: ' + msg, 'error');
       await fetchOrders();
       // Re-lanzar para que el caller (confirmEditSave) pueda detectar el fallo
       throw new Error(msg);
     }
-  }, [fetchOrders]);
+  }, [fetchOrders, showToast]);
 
 
   /**
@@ -203,10 +205,10 @@ export function useOrders() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
       dbgError('deleteOrder', 'ERROR:', msg);
-      alert('Error al eliminar: ' + msg);
+      showToast('Error al eliminar: ' + msg, 'error');
       await fetchOrders();
     }
-  }, [fetchOrders]);
+  }, [fetchOrders, showToast]);
 
   useEffect(() => {
     fetchOrders();

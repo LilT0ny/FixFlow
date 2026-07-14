@@ -23,11 +23,11 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
   const actionBtn = 'inline-flex items-center justify-center p-2 rounded-lg transition-colors duration-150';
 
   return (
-    <div className="bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden animate-fade-in-up">
+    <div className="bg-white rounded-xl border border-surface-200 shadow-xs overflow-hidden animate-fade-in-up dark:bg-gray-900 dark:border-gray-800">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1040px]">
           <thead>
-            <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200">
+            <tr className="bg-surface-50 text-xs font-medium text-surface-500 border-b border-surface-200 dark:bg-gray-900/60 dark:text-gray-400 dark:border-gray-800">
               <th className="px-4 md:px-5 py-3">
                 <div className="flex items-center gap-1.5">
                   <Hash className="w-3.5 h-3.5" />
@@ -57,7 +57,7 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
               <th className="px-4 md:px-5 py-3 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-surface-100">
+          <tbody className="divide-y divide-surface-100 dark:divide-gray-800">
             {orders.map(order => {
               const total = Number(order.repair.repairTotalCost) || 0;
               const abono = Number(order.repair.initialDeposit) || 0;
@@ -65,17 +65,17 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
               const fotos = order.repair.evidencePhotos?.length || 0;
 
               return (
-                <tr key={order.id} className="hover:bg-surface-50 transition-colors duration-150">
+                <tr key={order.id} className="hover:bg-surface-50 transition-colors duration-150 dark:hover:bg-gray-800/60">
                   {/* Orden + fecha + nota vinculada */}
                   <td className="px-4 md:px-5 py-3.5">
-                    <span className="font-mono text-xs font-medium px-2 py-1 rounded-md bg-surface-100 text-surface-700">
+                    <span className="font-mono text-xs font-medium px-2 py-1 rounded-md bg-surface-100 text-surface-700 dark:bg-gray-800 dark:text-gray-300">
                       {order.orderNumber}
                     </span>
-                    <p className="text-xs text-surface-400 mt-1.5">
+                    <p className="text-xs text-surface-400 mt-1.5 dark:text-gray-500">
                       {new Date(order.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </p>
                     {order.notaVenta && (
-                      <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary-50 text-primary-700 border border-primary-100" title={`Nota de venta ${order.notaVenta.numero}`}>
+                      <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary-50 text-primary-700 border border-primary-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900" title={`Nota de venta ${order.notaVenta.numero}`}>
                         <FileText className="w-3 h-3" />
                         {order.notaVenta.numero}
                       </span>
@@ -84,10 +84,10 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
 
                   {/* Cliente */}
                   <td className="px-4 md:px-5 py-3.5">
-                    <div className="text-sm font-medium text-surface-900 truncate max-w-[160px]">
+                    <div className="text-sm font-medium text-surface-900 truncate max-w-[160px] dark:text-gray-100">
                       {order.customer.fullName || '—'}
                     </div>
-                    <p className="text-xs text-surface-500 mt-0.5 font-mono">
+                    <p className="text-xs text-surface-500 mt-0.5 font-mono dark:text-gray-400">
                       {order.customer.documentId || order.customer.phone || '—'}
                     </p>
                   </td>
@@ -95,14 +95,14 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
                   {/* Equipo */}
                   <td className="px-4 md:px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center shrink-0">
-                        <Smartphone className="w-4 h-4 text-surface-500" />
+                      <div className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 dark:bg-gray-800">
+                        <Smartphone className="w-4 h-4 text-surface-500 dark:text-gray-400" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-surface-900 truncate max-w-[180px]">
+                        <div className="text-sm font-medium text-surface-900 truncate max-w-[180px] dark:text-gray-100">
                           {order.device ? `${order.device.brand} ${order.device.model}` : 'N/A'}
                         </div>
-                        <p className="text-xs text-surface-500 mt-0.5 truncate max-w-[180px]">
+                        <p className="text-xs text-surface-500 mt-0.5 truncate max-w-[180px] dark:text-gray-400">
                           IMEI: {order.device?.serialNumber || 'N/A'}
                         </p>
                       </div>
@@ -111,8 +111,8 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
 
                   {/* Trabajo a realizar / falla reportada */}
                   <td className="px-4 md:px-5 py-3.5 max-w-[220px]">
-                    <p className="text-sm text-surface-700 leading-snug line-clamp-2">
-                      {order.repair.reportedIssue || <span className="text-surface-400">Sin especificar</span>}
+                    <p className="text-sm text-surface-700 leading-snug line-clamp-2 dark:text-gray-300">
+                      {order.repair.reportedIssue || <span className="text-surface-400 dark:text-gray-500">Sin especificar</span>}
                     </p>
                   </td>
 
@@ -126,7 +126,7 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
                         className={`text-xs font-medium rounded-md pl-2.5 pr-7 py-1.5 cursor-pointer outline-none border transition-colors duration-150 appearance-none ${getStatusColor(order.status)}`}
                       >
                         {STATUS_LIST.map(opt => (
-                          <option key={opt} value={opt} className="bg-white text-surface-900">{getStatusLabel(opt)}</option>
+                          <option key={opt} value={opt} className="bg-white text-surface-900 dark:bg-gray-800 dark:text-gray-100">{getStatusLabel(opt)}</option>
                         ))}
                       </select>
                       <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
@@ -135,13 +135,13 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
 
                   {/* Valor */}
                   <td className="px-4 md:px-5 py-3.5 text-right">
-                    <span className="text-sm font-semibold text-surface-900 tracking-tight">
+                    <span className="text-sm font-semibold text-surface-900 tracking-tight dark:text-gray-100">
                       ${total.toFixed(2)}
                     </span>
                     {saldo > 0 ? (
-                      <p className="text-xs font-medium text-amber-600 mt-0.5">Saldo ${saldo.toFixed(2)}</p>
+                      <p className="text-xs font-medium text-amber-600 mt-0.5 dark:text-amber-400">Saldo ${saldo.toFixed(2)}</p>
                     ) : total > 0 ? (
-                      <p className="text-xs font-medium text-emerald-600 mt-0.5">Pagado</p>
+                      <p className="text-xs font-medium text-emerald-600 mt-0.5 dark:text-emerald-400">Pagado</p>
                     ) : null}
                   </td>
 
@@ -151,8 +151,8 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
                       <button
                         onClick={() => onPhotos(order)}
                         className={`${actionBtn} relative ${fotos > 0
-                          ? 'text-primary-600 hover:bg-primary-50'
-                          : 'text-surface-400 hover:text-surface-900 hover:bg-surface-100'}`}
+                          ? 'text-primary-600 hover:bg-primary-50 dark:text-blue-400 dark:hover:bg-blue-950/30'
+                          : 'text-surface-400 hover:text-surface-900 hover:bg-surface-100 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-gray-800'}`}
                         title={fotos > 0 ? `Evidencias (${fotos})` : 'Cargar fotos'}
                       >
                         <Camera className="w-4 h-4" />
@@ -164,28 +164,28 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
                       </button>
                       <button
                         onClick={() => onNotify(order)}
-                        className={`${actionBtn} text-[#25D366] hover:bg-emerald-50`}
+                        className={`${actionBtn} text-[#25D366] hover:bg-emerald-50 dark:hover:bg-emerald-950/30`}
                         title="Notificar por WhatsApp"
                       >
                         <MessageCircle className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onPrint(order)}
-                        className={`${actionBtn} text-surface-400 hover:text-surface-900 hover:bg-surface-100`}
+                        className={`${actionBtn} text-surface-400 hover:text-surface-900 hover:bg-surface-100 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-gray-800`}
                         title="Imprimir ticket / nota"
                       >
                         <Printer className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onEdit(order)}
-                        className={`${actionBtn} text-surface-400 hover:text-surface-900 hover:bg-surface-100`}
+                        className={`${actionBtn} text-surface-400 hover:text-surface-900 hover:bg-surface-100 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-gray-800`}
                         title="Editar registro"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDelete(order)}
-                        className={`${actionBtn} text-surface-400 hover:text-danger-600 hover:bg-danger-50`}
+                        className={`${actionBtn} text-surface-400 hover:text-danger-600 hover:bg-danger-50 dark:text-gray-500 dark:hover:text-red-400 dark:hover:bg-red-950/30`}
                         title="Eliminar registro"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -200,9 +200,9 @@ export const TablaOrdenes: React.FC<TablaOrdenesProps> = ({
               <tr>
                 <td colSpan={7} className="px-6 py-16 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
-                    <Smartphone className="w-10 h-10 text-surface-300" />
-                    <p className="text-sm text-surface-500">Sin correspondencias encontradas</p>
-                    <p className="text-xs text-surface-400">Probá ajustando los criterios de búsqueda o los filtros.</p>
+                    <Smartphone className="w-10 h-10 text-surface-300 dark:text-gray-700" />
+                    <p className="text-sm text-surface-500 dark:text-gray-400">Sin correspondencias encontradas</p>
+                    <p className="text-xs text-surface-400 dark:text-gray-500">Probá ajustando los criterios de búsqueda o los filtros.</p>
                   </div>
                 </td>
               </tr>

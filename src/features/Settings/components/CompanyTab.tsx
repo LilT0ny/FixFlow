@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, ImageIcon, Save, CheckCircle2, Loader2 } from 'lucide-react';
 import { useSettings } from '../../../hooks/useSettings';
+import { useToast } from '../../../store/ToastContext';
 
 export const CompanyTab: React.FC = () => {
   const { settings, updateSettings, isSettingsLoading } = useSettings();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState(settings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
 
@@ -27,7 +29,7 @@ export const CompanyTab: React.FC = () => {
     } catch (error) {
       console.error('Error saving company profile:', error);
       setSaveStatus('idle');
-      alert('No se pudo guardar el perfil de empresa: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+      showToast('No se pudo guardar el perfil de empresa: ' + (error instanceof Error ? error.message : 'Error desconocido'), 'error');
     }
   };
 
@@ -45,62 +47,65 @@ export const CompanyTab: React.FC = () => {
   return (
     <form onSubmit={handleSave} className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs">
-          <div className="flex items-center gap-3 border-b border-surface-100 pb-4">
-            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-5 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+          <div className="flex items-center gap-3 border-b border-surface-100 pb-4 dark:border-gray-800">
+            <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 shrink-0 dark:bg-gray-800 dark:text-gray-400">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-surface-900">Perfil de empresa</h2>
-              <p className="text-xs text-surface-500">Datos para facturación</p>
+              <h2 className="text-sm font-semibold text-surface-900 dark:text-gray-100">Perfil de empresa</h2>
+              <p className="text-xs text-surface-500 dark:text-gray-400">Datos para facturación</p>
             </div>
           </div>
 
           <div className="space-y-5">
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-surface-600">Nombre Comercial / Razón Social</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Nombre Comercial / Razón Social</label>
               <input
                 value={formData.companyName}
                 onChange={e => setFormData({ ...formData, companyName: e.target.value.toUpperCase() })}
-                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-surface-600">RUC / Identificación Fiscal</label>
+                <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">RUC / Identificación Fiscal</label>
                 <input
                   value={formData.ruc || ''}
                   onChange={e => setFormData({ ...formData, ruc: e.target.value })}
                   placeholder="Ej. 1712345678001"
-                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-surface-600">Teléfono / WhatsApp</label>
+                <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Teléfono / WhatsApp</label>
                 <input
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                  className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-surface-600">Dirección Matriz</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-gray-400">Dirección Matriz</label>
               <input
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value.toUpperCase() })}
-                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none"
+                className="w-full bg-white border border-surface-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors duration-150 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
               />
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-1 bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-4 shadow-xs">
+        <div className="lg:col-span-1 bg-white rounded-xl border border-surface-200 p-4 sm:p-6 space-y-4 shadow-xs dark:bg-gray-900 dark:border-gray-800">
           <div>
-            <h2 className="text-sm font-semibold text-surface-900">Identidad visual</h2>
-            <p className="text-xs text-surface-500 mt-0.5">Logo del taller</p>
+            <h2 className="text-sm font-semibold text-surface-900 dark:text-gray-100">Identidad visual</h2>
+            <p className="text-xs text-surface-500 mt-0.5 dark:text-gray-400">Logo del taller</p>
           </div>
-          <div className="w-full aspect-square max-w-[180px] mx-auto bg-white rounded-lg flex items-center justify-center overflow-hidden border border-surface-200">
+          {/* Fondo siempre blanco a propósito: la mayoría de logos se diseñan
+              para lienzo claro y con texto oscuro; oscurecerlo los volvería
+              ilegibles. */}
+          <div className="w-full aspect-square max-w-[180px] mx-auto bg-white rounded-lg flex items-center justify-center overflow-hidden border border-surface-200 dark:border-gray-700">
             {formData.logo ? (
               <img src={formData.logo} alt="Logo" className="w-full h-full object-contain p-3" />
             ) : (
@@ -111,11 +116,11 @@ export const CompanyTab: React.FC = () => {
             <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={handleLogoChange} />
             <label
               htmlFor="logo-upload"
-              className="cursor-pointer inline-flex px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150"
+              className="cursor-pointer inline-flex px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors duration-150 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Seleccionar imagen
             </label>
-            <p className="text-xs text-surface-500 mt-2 leading-snug">PNG, JPG o SVG. Fondo transparente recomendado.</p>
+            <p className="text-xs text-surface-500 mt-2 leading-snug dark:text-gray-400">PNG, JPG o SVG. Fondo transparente recomendado.</p>
           </div>
         </div>
       </div>

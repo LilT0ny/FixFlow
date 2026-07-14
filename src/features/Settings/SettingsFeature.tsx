@@ -23,13 +23,13 @@ export const SettingsFeature: React.FC = () => {
         subtitle="Parámetros del negocio y preferencias de la aplicación"
       />
 
-      <div className="flex gap-1 bg-surface-100 p-1 rounded-lg w-fit overflow-x-auto max-w-full">
+      <div className="flex gap-1 bg-surface-100 p-1 rounded-lg w-fit overflow-x-auto max-w-full dark:bg-gray-800">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 whitespace-nowrap ${
-              activeTab === tab.id ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-700'
+              activeTab === tab.id ? 'bg-white shadow-xs text-surface-900 dark:bg-gray-900 dark:text-gray-100' : 'text-surface-500 hover:text-surface-700 dark:text-gray-400 dark:hover:text-gray-300'
             }`}
           >
             <tab.icon className="w-4 h-4" />
